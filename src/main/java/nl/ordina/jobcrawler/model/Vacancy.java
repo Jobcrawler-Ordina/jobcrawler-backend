@@ -1,14 +1,21 @@
 package nl.ordina.jobcrawler.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import nl.ordina.jobcrawler.controller.exception.VacancyURLMalformedException;
 import org.hibernate.annotations.GenericGenerator;
 
-import javax.persistence.*;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
+import javax.persistence.ManyToMany;
 import javax.validation.constraints.NotNull;
 import java.io.IOException;
 import java.net.HttpURLConnection;
@@ -16,7 +23,8 @@ import java.net.URL;
 import java.util.Set;
 import java.util.UUID;
 
-@Data
+@Getter
+@Setter
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
@@ -42,45 +50,13 @@ public class Vacancy {
     @Column(columnDefinition = "TEXT")
     private String about;
 
-    // Without eager fetch type, the program gives an error when executing the scheduled deleting of jobs, any other ideas?
-    @ManyToMany(cascade = CascadeType.PERSIST, fetch = FetchType.EAGER)  //saves the skills when a vacancy gets saved
+    @ManyToMany
     @JoinTable(
             name = "vacancy_skills",
             joinColumns = @JoinColumn(name = "vacancy_id"),
             inverseJoinColumns = @JoinColumn(name = "skill_id"))
-    @JsonIgnoreProperties("vacancies") // so that when printing a vacancy, it doesn't list all the vacancies of a skill (so no looping)
-            Set<Skill> skills;  //a set is a collection that has no duplicates
-
-    public void addSkill(String skillsToBeAdded) {
-        Skill skill = new Skill(skillsToBeAdded);
-        this.skills.add(skill);
-        skill.addVacancy(this);
-    }
-
-    public void addSkill(Skill skillsToBeAdded) {
-        this.skills.add(skillsToBeAdded);
-        skillsToBeAdded.addVacancy(this);
-    }
-
-    public void removeSkill(Skill skillsToBeRemoved) {
-        this.skills.remove(skillsToBeRemoved);
-        skillsToBeRemoved.removeVacancy(this);
-    }
-
-    public void addSkills(Set<Skill> skillsToBeAdded) {
-        for (Skill skill : skillsToBeAdded) {
-            this.skills.add(skill);
-            skill.addVacancy(this);
-        }
-    }
-
-    public void removeSkills(Set<Skill> skillsToBeRemoved) {
-        for (Skill skill : skillsToBeRemoved) {
-            this.skills.remove(skill);
-            skill.removeVacancy(this);
-        }
-    }
-
+    @JsonIgnore
+    Set<Skill> skills;  //a set is a collection that has no duplicates
 
     public boolean hasValidURL() {
         if (!this.vacancyURL.startsWith("http"))

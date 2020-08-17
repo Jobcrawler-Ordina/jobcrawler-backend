@@ -1,0 +1,36 @@
+{
+  "currentPage": 1,
+  "pages": 1,
+  "resultsPerPage": 20,
+  "totalResults": 64,
+  "resultsItemsFrom": 1,
+  "resultsItemsTo": 20,
+  "hasGeoLocationError": false,
+  "vacancies": [
+    {
+      "title": "Vacancy 1",
+      "company": "Jobcrawler",
+      "meta": {
+        "hours": "36 uur",
+        "location": "Moerdijk",
+        "salary": "4.500"
+      },
+      "date": "02 juni 2020",
+      "detailUrl": "https://raw.githubusercontent.com/mostafa-221/jobcrawler-backend/develop/src/test/resources/yacht/yachtvacancy.html",
+      "vacancyNumber": "9082737"
+    },
+    {
+      "title": "Vacancy 2",
+      "company": "YachtScraper",
+      "meta": {
+        "hours": "40 uur",
+        "location": "Amsterdam"
+      },
+      "date": "02 juni 2020",
+      "detailUrl": "https://raw.githubusercontent.com/mostafa-221/jobcrawler-backend/develop/src/test/resources/yacht/yachtvacancy.html",
+      "vacancyNumber": "9082737"
+    }
+  ],
+  "promoBanner": null,
+  "zeroResultsRecommendations": null
+}

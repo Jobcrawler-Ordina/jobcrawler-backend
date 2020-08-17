@@ -7,11 +7,7 @@ import java.util.UUID;
 
 @ResponseStatus(HttpStatus.NOT_FOUND)
 public class VacancyNotFoundException extends RuntimeException {
-    public VacancyNotFoundException(String message) {
-        super(message);
-    }
-
     public VacancyNotFoundException(UUID id) {
-        super("Could not find Job " + id);
+        super("Could not find vacancy with id: " + id);
     }
 }
