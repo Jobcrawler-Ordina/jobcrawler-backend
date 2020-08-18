@@ -40,16 +40,33 @@ Edit the ScraperService.java and uncomment line @ PostConstruct before the scrap
 
 What do I see: application starts and starts scraping
 
-What do I see: when I again enter the docker container and connect to the jobcrawler database I can type
-select title from vacancies
+Enter the docker container:
 
-I should now see a number of vacancies
+docker exec -it jobcrawler-postgres bash
+
+Log in to Postgres:
+
+psql -U postgres
+
+Connect to the jobcrawler database:
+
+\c jobcrawler
+
+Perform the query to find the vacancies:
+
+select title from vacancy;
+
+What do I see: I should now see a number of vacancies
 
 ### Start frontend
 
 #### 1. Start frontend in IntelliJ and in the browser
 
-Open the frontend in IntelliJ, start the frontend with ng serve
+Open the frontend in IntelliJ
+
+Install required dependencies with the command: npm install
+
+Start the frontend with: npm start
 
 What do I see: the application compiles successfully
 
@@ -76,3 +93,7 @@ Click the relink button
 What do I see: in the IntelliJ console log it is visible that all vacancies are relinked to the Java skill.
 
 What do I see: in the container, in the database, I can see that the link table now has a number of entries.
+
+Click on "back to Vacancies".
+Click on "By skill:", select "Java", and click "Search".
+The list of Vacancies should be updated.
