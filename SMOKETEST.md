@@ -96,4 +96,5 @@ What do I see: in the container, in the database, I can see that the link table 
 
 Click on "back to Vacancies".
 Click on "By skill:", select "Java", and click "Search".
-The list of Vacancies should be updated.
+
+What do I see: The list of Vacancies is now updated with less entries, only those containing "Java".
