@@ -12,6 +12,7 @@ import org.springframework.dao.IncorrectResultSizeDataAccessException;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.PostConstruct;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -47,7 +48,7 @@ public class ScraperService {
         }
     };
 
-    //@PostConstruct
+    @PostConstruct
     @Scheduled(cron = "0 0 12,18 * * *") // Runs two times a day. At 12pm and 6pm
     public void scrape() {
         log.info("CRON Scheduled -- Scrape vacancies");

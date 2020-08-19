@@ -1,10 +1,14 @@
 package nl.ordina.jobcrawler.scrapers;
 
+import lombok.extern.java.Log;
 import lombok.extern.slf4j.Slf4j;
 import nl.ordina.jobcrawler.model.Vacancy;
+import nl.ordina.jobcrawler.service.LogService;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -36,14 +40,25 @@ import java.util.concurrent.CopyOnWriteArrayList;
 @Slf4j
 @Component
 public class JobBirdScraper extends VacancyScraper {
+    public void setLogService(LogService logService) {
+        this.logService = logService;
+    }
 
+    public void setDocumentService(DocumentService documentService) {
+        this.documentService = documentService;
+    }
+
+    private LogService logService = new LogService();
+    private DocumentService documentService  = new DocumentService();
 
     public static final int MAX_NR_OF_PAGES = 25;  // 25 seems enough for demo purposes, can be up to approx 60
     // at a certain point the vacancy date will be missing
 
+
     /**
      * Default constructor that calls the constructor from the abstract class.
      */
+
     public JobBirdScraper() {
         super(
                 "https://www.jobbird.com/nl/vacature?s=java&rad=30&page=", // Required search URL. Can be retrieved using getSEARCH_URL()
@@ -51,21 +66,19 @@ public class JobBirdScraper extends VacancyScraper {
         );
     }
 
-    /**
-     * Default function to start scraping vacancies.
-     *
-     * @return List with vacancies.
-     */
-    @Override
-    public List<Vacancy> getVacancies() {
+
+
+    private List<String> retrieveURLs() {
         log.info(String.format("%s -- Start scraping", getBROKER().toUpperCase()));
-        /*
-        getVacancies retrieves all vacancyURLs via the getVacancyURLs method and set the various elements of Vacancy below.
-         */
-        List<Vacancy> vacancies = new CopyOnWriteArrayList<>();
         List<String> vacancyURLs = getVacancyURLs();
+        return vacancyURLs;
+    }
+
+    private List<Vacancy> retrieveVacancies(List<String> vacancyURLs) {
+        List<Vacancy> vacancies = new CopyOnWriteArrayList<>();
+
         vacancyURLs.parallelStream().forEach(vacancyURL -> {
-            Document doc = getDocument(vacancyURL);
+            Document doc = documentService.getDocument(vacancyURL);
             if (doc != null) {
                 Vacancy vacancy = Vacancy.builder()
                         .vacancyURL(vacancyURL)
@@ -89,13 +102,55 @@ public class JobBirdScraper extends VacancyScraper {
     }
 
     /**
+     * Default function to start scraping vacancies.
+     *
+     * @return List with vacancies.
+     */
+    @Override
+    public List<Vacancy> getVacancies() {
+
+        List<String> vacancyURLs = retrieveURLs();
+        return retrieveVacancies(vacancyURLs);
+
+//        log.info(String.format("%s -- Start scraping", getBROKER().toUpperCase()));
+//        /*
+//        getVacancies retrieves all vacancyURLs via the getVacancyURLs method and set the various elements of Vacancy below.
+//         */
+//        List<Vacancy> vacancies = new CopyOnWriteArrayList<>();
+//
+//        List<String> vacancyURLs = getVacancyURLs();
+//        vacancyURLs.parallelStream().forEach(vacancyURL -> {
+//            Document doc = documentService.getDocument(vacancyURL);
+//            if (doc != null) {
+//                Vacancy vacancy = Vacancy.builder()
+//                        .vacancyURL(vacancyURL)
+//                        .title(getVacancyTitle(doc))
+//                        .hours(getHoursFromPage(doc))
+//                        .broker(getBROKER())
+//                        .location(getLocation(doc))
+//                        .postingDate(getPublishDate(doc))
+//                        .about(getVacancyAbout(doc))
+//                        .build();
+//
+//                vacancies.add(vacancy);
+//
+//                log.info(String.format("%s - Vacancy found: %s", getBROKER(), vacancy.getTitle()));
+//            }
+//        });
+//        log.info(String.format("%s -- Returning scraped vacancies", getBROKER()));
+//
+//
+//        return vacancies;
+    }
+
+    /**
      * Create seach url based on pageNumber.
      *
      * @param pageNumber number that's needed to create search url.
      * @return String, full search url for specific page.
      * @throws Exception when pageNumber is below 1.
      */
-    private String createSearchURL(int pageNumber) throws Exception {
+    protected String createSearchURL(int pageNumber) throws Exception {
         if (pageNumber < 1) {
             throw new Exception("JobBirdScraper:createSearchURL: pagenr must be 1 or greater");
         }
@@ -113,12 +168,13 @@ public class JobBirdScraper extends VacancyScraper {
         ArrayList<String> vacancyURLs = new ArrayList<>();
 
         try {
-            Document doc = getDocument(createSearchURL(1));
+
+            Document doc = documentService.getDocument(createSearchURL(1));
 
             boolean continueSearching = true;
             for (int i = 1; continueSearching && i <= getLastPageToScrape(doc); i++) {
                 String searchURL = createSearchURL(i);
-                doc = getDocument(searchURL);
+                doc = documentService.getDocument(searchURL);
 
                 ArrayList<String> vacancyUrlsOnPage = retrieveVacancyURLsFromDoc(doc);
 
@@ -130,7 +186,7 @@ public class JobBirdScraper extends VacancyScraper {
             }
 
         } catch (Exception e) {
-            log.error(e.getMessage());
+            logService.logError(e.getMessage());
         }
         return vacancyURLs;
     }

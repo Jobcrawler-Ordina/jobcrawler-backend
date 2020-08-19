@@ -2,26 +2,28 @@ package nl.ordina.jobcrawler.scrapers;
 
 import lombok.extern.slf4j.Slf4j;
 import nl.ordina.jobcrawler.model.Vacancy;
+import nl.ordina.jobcrawler.service.LogService;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
+import org.mockito.*;
 import org.mockito.junit.MockitoJUnitRunner;
+import org.slf4j.event.LoggingEvent;
 //import sun.security.x509.InhibitAnyPolicyExtension;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @Slf4j
 @RunWith(MockitoJUnitRunner.class)
@@ -31,12 +33,18 @@ public class JobBirdScraperTest  {
     @InjectMocks
     private JobBirdScraper jobBirdScraperTestable;
 
+
+    @Mock
+    private LogService logServiceMock;
+
     @Mock
     private Document documentMock;
 
     @Mock
     private Elements elementsMock;
 
+    @Mock
+    private DocumentService documentServiceMock;
 
     private Document getDocFromUrl(String aFilename) throws IOException {
         ClassLoader classLoader = new JobBirdScraperTest().getClass().getClassLoader();
@@ -49,7 +57,7 @@ public class JobBirdScraperTest  {
 
     @Test
     public void test_getLastPageToScrape() throws HTMLStructureException, IOException {
-        Document doc =  getDocFromUrl("testfiles/jobbird01_should_count_5_pages.htm");
+        Document doc =  getDocFromUrl("JobBird/jobbird01_should_count_5_pages.htm");
         int iLastPageToScrape = jobBirdScraperTestable.getLastPageToScrape(doc);
         assertEquals(iLastPageToScrape, 5);
     }
@@ -57,7 +65,7 @@ public class JobBirdScraperTest  {
     //happy flow results in 5 pages
     @Test
     public void getTotalnrOfPagesTestFile_HappyFlow() throws IOException, HTMLStructureException {
-        Document doc = getDocFromUrl("testfiles/jobbird01_should_count_5_pages.htm");
+        Document doc = getDocFromUrl("JobBird/jobbird01_should_count_5_pages.htm");
         int count =  jobBirdScraperTestable.getTotalNumberOfPages(doc);
         assertEquals(5, count);
     }
@@ -66,7 +74,7 @@ public class JobBirdScraperTest  {
      * should return zero */
     @Test
     public void getTotalnrOfPagesTestFile_invalidPageStructure() throws IOException, HTMLStructureException {
-        String filename = "testfiles/jobbird02_invpage.htm";  // should count 5 pages
+        String filename = "JobBird/jobbird02_invpage.htm";  // should count 5 pages
         ClassLoader classLoader = new JobBirdScraperTest().getClass().getClassLoader();
         File inputFile = new File(classLoader.getResource(filename).getFile());
         Document doc = Jsoup.parse(inputFile, "UTF-8", "");
@@ -111,7 +119,7 @@ public class JobBirdScraperTest  {
     /* set vacancy title using vacancy htm file */
     @Test
     public void setVacancyTitle_HappyFlow() throws IOException, HTMLStructureException {
-        Document doc =  getDocFromUrl("testfiles/jobbird03_vacancy.htm");
+        Document doc =  getDocFromUrl("JobBird/jobbird03_vacancy.htm");
         Vacancy vacancy = new Vacancy();
         String result = jobBirdScraperTestable.getVacancyTitle(doc);
         assertEquals("Applications Engineering - Software Engineering Internship (Fall 2020)", result);
@@ -123,7 +131,7 @@ public class JobBirdScraperTest  {
      */
     @Test
     public void setVacancyTitle_invalidPageStructure() throws IOException {
-        Document doc = getDocFromUrl("testfiles/jobbird03_vacancy_notitle.htm");
+        Document doc = getDocFromUrl("JobBird/jobbird03_vacancy_notitle.htm");
         assert (jobBirdScraperTestable.getVacancyTitle(doc).equals(""));
     }
 
@@ -132,7 +140,7 @@ public class JobBirdScraperTest  {
     */
     @Test
     public void setVacancySpecifics_happyFlow() throws IOException, HTMLStructureException {
-        Document doc = getDocFromUrl("testfiles/jobbird04_vacancyspecifics.htm");
+        Document doc = getDocFromUrl("JobBird/jobbird04_vacancyspecifics.htm");
         Vacancy vacancy = new Vacancy();
         vacancy.setHours(jobBirdScraperTestable.getHoursFromPage(doc));
         vacancy.setLocation(jobBirdScraperTestable.getLocation(doc));
@@ -147,7 +155,7 @@ public class JobBirdScraperTest  {
      */
     @Test
     public void setVacancySpecifics_Missing() throws IOException, HTMLStructureException {
-        Document doc = getDocFromUrl("testfiles/jobbird04_vacancyspecifics_missing.htm");
+        Document doc = getDocFromUrl("JobBird/jobbird04_vacancyspecifics_missing.htm");
         Vacancy vacancy = new Vacancy();
         vacancy.setHours(jobBirdScraperTestable.getHoursFromPage(doc));
         vacancy.setLocation(jobBirdScraperTestable.getLocation(doc));
@@ -159,7 +167,7 @@ public class JobBirdScraperTest  {
 
     @Test
     public void testGetUrenPerWeek() throws Exception {
-        Document doc =  getDocFromUrl("testfiles/jobbird03_vacancy.htm");
+        Document doc =  getDocFromUrl("JobBird/jobbird03_vacancy.htm");
         Vacancy vacancy = new Vacancy();
         String result = jobBirdScraperTestable.getHoursFromPage(doc);
         assertEquals("Full-time", result);
@@ -176,10 +184,56 @@ public class JobBirdScraperTest  {
 
     @Test
     public void testRetrieveVacancyURLS() throws Exception {
-        Document doc =  getDocFromUrl("testfiles/jobbirdvacatures.htm");
+        Document doc =  getDocFromUrl("JobBird/jobbirdvacatures.htm");
         ArrayList<String> vacancyURLS = jobBirdScraperTestable.retrieveVacancyURLsFromDoc(doc);
         System.out.println("nr of vacancy URLS" + vacancyURLS.size());
         assertEquals(vacancyURLS.size(), 15);
         assertEquals(vacancyURLS.get(2), "https://www.jobbird.com/nl/vacature/10424942-integratie-tester");
+    }
+
+
+    @Test
+    public void testContinueSearching() {
+        ArrayList<String> vacancyURLs = new ArrayList<>();
+        ArrayList<String> vacancyURLsOnPage = new ArrayList<>();
+
+        boolean resultWhenEmpty = jobBirdScraperTestable.continueSearching(vacancyURLs, vacancyURLsOnPage);
+        assertTrue(resultWhenEmpty);
+
+        vacancyURLs.add("the same url");
+        vacancyURLsOnPage.add("a different url");
+        boolean resultWhenDifferent = jobBirdScraperTestable.continueSearching(vacancyURLs, vacancyURLsOnPage);
+        assertTrue(resultWhenDifferent);
+
+        vacancyURLsOnPage.add("the same url");
+        boolean resultWhenContainsTheSame = jobBirdScraperTestable.continueSearching(vacancyURLs, vacancyURLsOnPage);
+        assertFalse( resultWhenContainsTheSame);
+    }
+
+
+    @Test
+    public void testGetVacancyURLs() throws Exception {
+        int i = 0;
+        Document overviewPage =  getDocFromUrl("JobBird/jobbird01_should_count_5_pages.htm");
+
+        when (documentServiceMock.getDocument(anyString())).thenReturn(overviewPage);
+        jobBirdScraperTestable.setLogService( logServiceMock);
+        jobBirdScraperTestable.setDocumentService( documentServiceMock);
+
+        List<String> resultList = jobBirdScraperTestable.getVacancyURLs();
+        assertEquals(15, resultList.size());
+        assertTrue( resultList.contains("https://www.jobbird.com/nl/vacature/10216416-senior-software-engineer-backend-energy"));
+
+        Document wrongStructurePage =  getDocFromUrl("JobBird/jobbird02_invpage.htm");
+
+        when (documentServiceMock.getDocument(anyString())).thenReturn(wrongStructurePage);
+        resultList = jobBirdScraperTestable.getVacancyURLs();
+        assertEquals(0, resultList.size());
+        verify(logServiceMock, times(1)).logError("HTML structure altered in a critical way:null");
+    }
+
+    @Test
+    public void getVacancies() {
+
     }
 }
