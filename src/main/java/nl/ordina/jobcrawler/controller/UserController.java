@@ -1,6 +1,10 @@
 package nl.ordina.jobcrawler.controller;
 
+import nl.ordina.jobcrawler.model.Role;
+import nl.ordina.jobcrawler.model.RoleName;
 import nl.ordina.jobcrawler.model.User;
+import nl.ordina.jobcrawler.model.UserDTO;
+import nl.ordina.jobcrawler.service.RoleService;
 import nl.ordina.jobcrawler.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -20,10 +24,12 @@ import java.util.List;
 public class UserController {
 
     private final UserService userService;
+    private final RoleService roleService;
 
     @Autowired
-    public UserController(UserService userService) {
+    public UserController(UserService userService, RoleService roleService) {
         this.userService = userService;
+        this.roleService = roleService;
     }
 
     @GetMapping
@@ -34,8 +40,10 @@ public class UserController {
 
     @PutMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public void updateUser(@Valid @RequestBody User user) {
-
+    public String updateUser(@Valid @RequestBody UserDTO userDTO) {
+        User user = userService.convertToUser(userDTO);
+        userService.update(user.getId(), user);
+        return "OK";
     }
 
 }

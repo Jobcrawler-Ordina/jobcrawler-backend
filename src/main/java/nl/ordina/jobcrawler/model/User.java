@@ -3,6 +3,7 @@ package nl.ordina.jobcrawler.model;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
 
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
@@ -22,6 +23,7 @@ import java.util.Set;
 @Getter
 @Setter
 @Entity
+@ToString
 @Table(name = "users", uniqueConstraints = { @UniqueConstraint(columnNames = { "username" }) })
 public class User {
     @Id

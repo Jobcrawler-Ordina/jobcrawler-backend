@@ -2,6 +2,7 @@ package nl.ordina.jobcrawler.model;
 
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
 import org.hibernate.annotations.NaturalId;
 
 import javax.persistence.Column;
@@ -15,6 +16,7 @@ import javax.persistence.Table;
 
 @Getter
 @Setter
+@ToString
 @Entity
 @Table(name = "roles")
 public class Role {
