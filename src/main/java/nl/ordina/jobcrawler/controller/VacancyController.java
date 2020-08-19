@@ -16,6 +16,7 @@ import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.IanaLinkRelations;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -103,6 +104,7 @@ public class VacancyController {
      * Code 400 Bad Request if the given body is invalid
      */
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<EntityModel<Vacancy>> createVacancy(@Valid @RequestBody Vacancy vacancy) {
         EntityModel<Vacancy> returnedVacancy = vacancyModelAssembler.toModel(vacancyService.save(vacancy));
         return ResponseEntity
@@ -148,6 +150,7 @@ public class VacancyController {
      * 404 Not Found if a vacancy with the specified ID is not found
      */
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> deleteVacancy(@PathVariable UUID id) {
         vacancyService.findById(id).orElseThrow(() -> new VacancyNotFoundException(id));
         vacancyService.delete(id);
