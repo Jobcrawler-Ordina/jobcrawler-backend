@@ -6,9 +6,9 @@ import nl.ordina.jobcrawler.message.response.JwtResponse;
 import nl.ordina.jobcrawler.model.Role;
 import nl.ordina.jobcrawler.model.RoleName;
 import nl.ordina.jobcrawler.model.User;
-import nl.ordina.jobcrawler.repo.RoleRepository;
-import nl.ordina.jobcrawler.repo.UserRepository;
 import nl.ordina.jobcrawler.security.jwt.JwtProvider;
+import nl.ordina.jobcrawler.service.RoleService;
+import nl.ordina.jobcrawler.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -32,20 +32,20 @@ import java.util.Set;
 @RequestMapping("/auth")
 public class AuthController {
 
-    @Autowired
-    AuthenticationManager authenticationManager;
+    private final AuthenticationManager authenticationManager;
+    private final UserService userService;
+    private final RoleService roleService;
+    private final PasswordEncoder passwordEncoder;
+    private final JwtProvider jwtProvider;
 
     @Autowired
-    UserRepository userRepository;
-
-    @Autowired
-    RoleRepository roleRepository;
-
-    @Autowired
-    PasswordEncoder passwordEncoder;
-
-    @Autowired
-    JwtProvider jwtProvider;
+    public AuthController(AuthenticationManager authenticationManager, UserService userService, RoleService roleService, PasswordEncoder passwordEncoder, JwtProvider jwtProvider) {
+        this.authenticationManager = authenticationManager;
+        this.userService = userService;
+        this.roleService = roleService;
+        this.passwordEncoder = passwordEncoder;
+        this.jwtProvider = jwtProvider;
+    }
 
     @PostMapping("/signin")
     public ResponseEntity<?> authenticateUser(@Valid @RequestBody LoginForm loginRequest) {
@@ -64,7 +64,7 @@ public class AuthController {
 
     @PostMapping("/signup")
     public ResponseEntity<String> registerUser(@Valid @RequestBody SignUpForm signUpRequest) {
-        if (userRepository.existsByUsername(signUpRequest.getUsername())) {
+        if (userService.existsByUsername(signUpRequest.getUsername())) {
             return new ResponseEntity<>("Fail -> Username is already taken!",
                     HttpStatus.BAD_REQUEST);
         }
@@ -72,18 +72,18 @@ public class AuthController {
         User user = new User(signUpRequest.getUsername(), passwordEncoder.encode(signUpRequest.getPassword()));
 
         Set<Role> roles = new HashSet<>();
-        if (userRepository.count() == 0) {
-            Role adminRole = roleRepository.findByName(RoleName.ROLE_ADMIN)
+        if (userService.count() == 0) {
+            Role adminRole = roleService.findByName(RoleName.ROLE_ADMIN)
                     .orElseThrow(() -> new RuntimeException("Fail! -> Could not find admin role."));
             roles.add(adminRole);
         }
 
-        Role userRole = roleRepository.findByName(RoleName.ROLE_USER)
+        Role userRole = roleService.findByName(RoleName.ROLE_USER)
                 .orElseThrow(() -> new RuntimeException("Fail! -> Could not find user role."));
         roles.add(userRole);
 
         user.setRoles(roles);
-        userRepository.save(user);
+        userService.save(user);
 
         return ResponseEntity.ok().body("User registered succesfully!");
     }
