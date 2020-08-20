@@ -1,15 +1,18 @@
 package nl.ordina.jobcrawler.message.response;
 
+import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.List;
+
 @Getter
 @Setter
+@Builder
 public class JwtResponse {
     private String token;
-    private String tokenType = "Bearer";
-
-    public JwtResponse(String accessToken) {
-        this.token = accessToken;
-    }
+    private int expiresIn;
+    private String tokenType;
+    private String username;
+    private List<String> roles;
 }
