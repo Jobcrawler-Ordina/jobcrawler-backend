@@ -1,7 +1,11 @@
 package nl.ordina.jobcrawler.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import lombok.*;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import nl.ordina.jobcrawler.controller.exception.VacancyURLMalformedException;
 import org.hibernate.annotations.GenericGenerator;
 
@@ -51,8 +55,8 @@ public class Vacancy {
             name = "vacancy_skills",
             joinColumns = @JoinColumn(name = "vacancy_id"),
             inverseJoinColumns = @JoinColumn(name = "skill_id"))
-    @JsonIgnoreProperties("vacancies") // so that when printing a vacancy, it doesn't list all the vacancies of a skill (so no looping)
-            Set<Skill> skills;  //a set is a collection that has no duplicates
+    @JsonIgnore
+    Set<Skill> skills;  //a set is a collection that has no duplicates
 
     public boolean hasValidURL() {
         if (!this.vacancyURL.startsWith("http"))

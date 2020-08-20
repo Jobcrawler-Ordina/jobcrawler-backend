@@ -1,8 +1,6 @@
 package nl.ordina.jobcrawler;
 
-import jdk.jfr.DataAmount;
 import lombok.Data;
-import lombok.Setter;
 import nl.ordina.jobcrawler.model.Vacancy;
 
 import java.util.List;
