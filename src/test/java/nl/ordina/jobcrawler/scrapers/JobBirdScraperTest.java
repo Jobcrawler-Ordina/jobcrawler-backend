@@ -7,6 +7,7 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.*;
@@ -53,7 +54,16 @@ public class JobBirdScraperTest  {
         return doc;
     }
 
-
+    @Before
+    public void init() {
+        // in several tests, the logService and the documentService of the testable is mocked.
+        // Reset to the real logService and the real documentService
+        // in case it concerns a different test case
+        LogService logService = new LogService();
+        DocumentService documentService = new DocumentService();
+        jobBirdScraperTestable.setLogService(logService);
+        jobBirdScraperTestable.setDocumentService(documentService);
+    }
 
     @Test
     public void test_getLastPageToScrape() throws HTMLStructureException, IOException {
@@ -213,7 +223,7 @@ public class JobBirdScraperTest  {
 
     @Test
     public void testGetVacancyURLs() throws Exception {
-        int i = 0;
+
         Document overviewPage =  getDocFromUrl("JobBird/jobbird01_should_count_5_pages.htm");
 
         when (documentServiceMock.getDocument(anyString())).thenReturn(overviewPage);
@@ -233,7 +243,37 @@ public class JobBirdScraperTest  {
     }
 
     @Test
-    public void getVacancies() {
+    public void testRetrieveURLs() throws Exception {
+        Document overviewPage =  getDocFromUrl("JobBird/jobbird01_should_count_5_pages.htm");
+
+        when (documentServiceMock.getDocument(anyString())).thenReturn(overviewPage);
+        jobBirdScraperTestable.setLogService( logServiceMock);
+        jobBirdScraperTestable.setDocumentService( documentServiceMock);
+
+        List<String> resultList = jobBirdScraperTestable.retrieveURLs();
+        verify(logServiceMock, times(1)).logInfo("JOBBIRD -- Start scraping");
+        assertEquals(15, resultList.size());
+        assertEquals(resultList.get(0), "https://www.jobbird.com/nl/vacature/10216416-senior-software-engineer-backend-energy");
+    }
+
+
+    @Test
+    public void testGetVacancies () throws Exception {
+        List<String> urlList = new ArrayList<>();
+        urlList.add("dummy url");
+        Document doc =  getDocFromUrl("JobBird/jobbird03_vacancy.htm");
+
+        jobBirdScraperTestable.setLogService( logServiceMock);
+        jobBirdScraperTestable.setDocumentService( documentServiceMock);
+        when (documentServiceMock.getDocument(anyString())).thenReturn(doc);
+
+        List<Vacancy> vacancies = jobBirdScraperTestable.retrieveVacancies(urlList);
+        assertEquals(1, vacancies.size());
+        Vacancy vacancy = vacancies.get(0);
+
+        assertEquals( "Applications Engineering - Software Engineering Internship (Fall 2020)",
+                vacancy.getTitle());
+
 
     }
 }

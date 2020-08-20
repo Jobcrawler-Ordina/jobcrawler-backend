@@ -68,13 +68,13 @@ public class JobBirdScraper extends VacancyScraper {
 
 
 
-    private List<String> retrieveURLs() {
-        log.info(String.format("%s -- Start scraping", getBROKER().toUpperCase()));
+    protected List<String> retrieveURLs() {
+        logService.logInfo(String.format("%s -- Start scraping", getBROKER().toUpperCase()));
         List<String> vacancyURLs = getVacancyURLs();
         return vacancyURLs;
     }
 
-    private List<Vacancy> retrieveVacancies(List<String> vacancyURLs) {
+    protected List<Vacancy> retrieveVacancies(List<String> vacancyURLs) {
         List<Vacancy> vacancies = new CopyOnWriteArrayList<>();
 
         vacancyURLs.parallelStream().forEach(vacancyURL -> {
@@ -111,36 +111,6 @@ public class JobBirdScraper extends VacancyScraper {
 
         List<String> vacancyURLs = retrieveURLs();
         return retrieveVacancies(vacancyURLs);
-
-//        log.info(String.format("%s -- Start scraping", getBROKER().toUpperCase()));
-//        /*
-//        getVacancies retrieves all vacancyURLs via the getVacancyURLs method and set the various elements of Vacancy below.
-//         */
-//        List<Vacancy> vacancies = new CopyOnWriteArrayList<>();
-//
-//        List<String> vacancyURLs = getVacancyURLs();
-//        vacancyURLs.parallelStream().forEach(vacancyURL -> {
-//            Document doc = documentService.getDocument(vacancyURL);
-//            if (doc != null) {
-//                Vacancy vacancy = Vacancy.builder()
-//                        .vacancyURL(vacancyURL)
-//                        .title(getVacancyTitle(doc))
-//                        .hours(getHoursFromPage(doc))
-//                        .broker(getBROKER())
-//                        .location(getLocation(doc))
-//                        .postingDate(getPublishDate(doc))
-//                        .about(getVacancyAbout(doc))
-//                        .build();
-//
-//                vacancies.add(vacancy);
-//
-//                log.info(String.format("%s - Vacancy found: %s", getBROKER(), vacancy.getTitle()));
-//            }
-//        });
-//        log.info(String.format("%s -- Returning scraped vacancies", getBROKER()));
-//
-//
-//        return vacancies;
     }
 
     /**

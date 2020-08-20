@@ -9,7 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class LogService {
 
-    public void logMessage(String aMessage) {
+    public void logInfo(String aMessage) {
         log.info(aMessage);
     }
 
