@@ -1,7 +1,5 @@
 package nl.ordina.jobcrawler.controller;
 
-import nl.ordina.jobcrawler.model.Role;
-import nl.ordina.jobcrawler.model.RoleName;
 import nl.ordina.jobcrawler.model.User;
 import nl.ordina.jobcrawler.model.UserDTO;
 import nl.ordina.jobcrawler.service.RoleService;
@@ -20,6 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.validation.Valid;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @CrossOrigin
@@ -37,8 +36,11 @@ public class UserController {
 
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public List<User> getUsers() {
-        return userService.findAll();
+    public List<UserDTO> getUsers() {
+        return userService.findAll()
+                .stream()
+                .map(userService::convertToUserDTO)
+                .collect(Collectors.toList());
     }
 
     @PutMapping
