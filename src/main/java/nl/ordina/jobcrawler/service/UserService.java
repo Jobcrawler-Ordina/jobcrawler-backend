@@ -49,7 +49,10 @@ public class UserService implements CRUDService<User, Long> {
 
     @Override
     public boolean delete(Long id) {
-        return false;
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new UserNotFoundException(String.format("Fail! -> Could not find user with id: %d in database.", id)));
+        userRepository.delete(user);
+        return true;
     }
 
     public Optional<User> findByIdAndUsername(long id, String username) {
