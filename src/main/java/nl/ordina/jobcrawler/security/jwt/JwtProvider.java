@@ -12,7 +12,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 @Component
 @Slf4j
@@ -24,15 +26,19 @@ public class JwtProvider {
     @Value("${jwt.expire}")
     private int jwtExpiration;
 
-    public String generateJwtToken(Authentication authentication) {
+    public List<String> generateJwtToken(Authentication authentication) {
         UserPrinciple userPrincipal = (UserPrinciple) authentication.getPrincipal();
 
-        return Jwts.builder()
+        List<String> jwtToken = new ArrayList<>();
+        jwtToken.add(Jwts.builder()
                 .setSubject((userPrincipal.getUsername()))
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + jwtExpiration * 1000))
                 .signWith(SignatureAlgorithm.HS512, jwtSecret)
-                .compact();
+                .compact());
+        jwtToken.add(String.valueOf(jwtExpiration));
+
+        return jwtToken;
     }
 
     public String getUserNameFromJwtToken(String token) {
