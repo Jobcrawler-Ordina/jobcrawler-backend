@@ -1,5 +1,6 @@
 package nl.ordina.jobcrawler.controller;
 
+import nl.ordina.jobcrawler.controller.exception.UserNotFoundException;
 import nl.ordina.jobcrawler.message.request.LoginForm;
 import nl.ordina.jobcrawler.message.request.SignUpForm;
 import nl.ordina.jobcrawler.message.response.JwtResponse;
@@ -24,7 +25,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.validation.Valid;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 @CrossOrigin
@@ -58,8 +61,23 @@ public class AuthController {
 
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
-        String jwt = jwtProvider.generateJwtToken(authentication);
-        return ResponseEntity.ok(new JwtResponse(jwt));
+        List<String> jwt = jwtProvider.generateJwtToken(authentication);
+        User user = userService.findByUsername(loginRequest.getUsername())
+                .orElseThrow(() -> new UserNotFoundException(String.format("Fail! -> User with name: %d not found.", loginRequest.getUsername())));
+        List<String> roles = new ArrayList<>();
+        user.getRoles().forEach(role -> {
+            roles.add(String.valueOf(role.getName()));
+        });
+
+        JwtResponse response = JwtResponse.builder()
+                .token(jwt.get(0))
+                .expiresIn(Integer.parseInt(jwt.get(1)))
+                .tokenType("BEARER")
+                .username(loginRequest.getUsername())
+                .roles(roles)
+                .build();
+
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/signup")
