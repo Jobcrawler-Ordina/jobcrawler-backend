@@ -1,6 +1,7 @@
-package nl.ordina.jobcrawler.scrapers;
+package nl.ordina.jobcrawler.service;
 
 import nl.ordina.jobcrawler.model.Vacancy;
+import nl.ordina.jobcrawler.scrapers.VacancyScraper;
 import org.jsoup.nodes.Document;
 
 public class DocumentService {
