@@ -59,6 +59,10 @@ public class UserService implements CRUDService<User, Long> {
         return userRepository.findByIdAndUsername(id, username);
     }
 
+    public Optional<User> findByUsername(String username) {
+        return userRepository.findByUsername(username);
+    }
+
     public long count() {
         return userRepository.count();
     }
