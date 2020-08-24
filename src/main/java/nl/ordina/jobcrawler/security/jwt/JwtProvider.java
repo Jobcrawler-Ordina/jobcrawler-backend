@@ -1,6 +1,9 @@
 package nl.ordina.jobcrawler.security.jwt;
 
+import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.Jws;
+import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.MalformedJwtException;
 import io.jsonwebtoken.SignatureAlgorithm;
@@ -9,12 +12,14 @@ import io.jsonwebtoken.UnsupportedJwtException;
 import lombok.extern.slf4j.Slf4j;
 import nl.ordina.jobcrawler.security.services.UserPrinciple;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.access.AuthorizationServiceException;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 
 @Component
 @Slf4j
@@ -65,5 +70,28 @@ public class JwtProvider {
         }
 
         return false;
+    }
+
+    public List<String> refreshToken(String authToken) {
+        validateJwtToken(authToken);
+        Optional<Jws<Claims>> claimsJws = getClaims(Optional.of(authToken));
+        if (claimsJws.isEmpty()) {
+            throw new AuthorizationServiceException("Invalid token claims");
+        }
+        Claims claims = claimsJws.get().getBody();
+        claims.setIssuedAt(new Date());
+        claims.setExpiration(new Date(System.currentTimeMillis() + jwtExpiration * 1000));
+        List<String> refreshToken = new ArrayList<>();
+        refreshToken.add(Jwts.builder().setClaims(claims).signWith(SignatureAlgorithm.HS512, jwtSecret).compact());
+        refreshToken.add(String.valueOf(jwtExpiration));
+
+        return refreshToken;
+    }
+
+    private Optional<Jws<Claims>> getClaims(Optional<String> authToken) {
+        if (authToken.isEmpty()) {
+            return Optional.empty();
+        }
+        return Optional.of(Jwts.parser().setSigningKey(jwtSecret).parseClaimsJws(authToken.get()));
     }
 }
