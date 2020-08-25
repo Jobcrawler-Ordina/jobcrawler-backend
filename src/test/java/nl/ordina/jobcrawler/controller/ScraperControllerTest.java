@@ -28,7 +28,7 @@ class ScraperControllerTest {
     void scrape() throws Exception {
         doNothing().when(scraperService).scrape();
 
-        mockMvc.perform(put("/scrape"))
+        mockMvc.perform(put("/scraper"))
                 .andExpect(status().isOk());
 
         verify(scraperService, times(1)).scrape();
