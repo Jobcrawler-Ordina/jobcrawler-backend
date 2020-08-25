@@ -22,7 +22,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -34,7 +33,6 @@ import org.springframework.web.bind.annotation.RestController;
 import javax.validation.Valid;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -62,22 +60,21 @@ public class AuthController {
     }
 
     @GetMapping("/allow")
-    public Map<String, Boolean> allowRegistration() {
-        return Collections.singletonMap("allow", this.allowRegistration);
+    public ResponseEntity<Object> allowRegistration() {
+        return ResponseEntity.status(HttpStatus.OK).body(Collections.singletonMap("allow", this.allowRegistration));
     }
 
     @PutMapping("/allow")
     @PreAuthorize("hasRole('ADMIN')")
-    public HashMap<String, Boolean> updateRegistration(@RequestParam(value = "newVal") boolean allow) {
+    public ResponseEntity<Object> updateRegistration(@RequestParam(value = "newVal") boolean allow) {
         this.allowRegistration = allow;
-        HashMap<String, Boolean> map = new HashMap<>();
-        map.put("success", true);
-        map.put("allow", this.allowRegistration);
-        return map;
+        return ResponseEntity.status(HttpStatus.OK).body(Map.of(
+                "success", true,
+                "allow", this.allowRegistration));
     }
 
     @PostMapping("/signin")
-    public ResponseEntity<?> authenticateUser(@Valid @RequestBody LoginForm loginRequest) {
+    public ResponseEntity<Object> authenticateUser(@Valid @RequestBody LoginForm loginRequest) {
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
                         loginRequest.getUsername(),
@@ -85,15 +82,27 @@ public class AuthController {
                 )
         );
 
+        User user = userService.findByUsername(loginRequest.getUsername())
+                .orElseThrow(() -> new UserNotFoundException(String.format("Fail! -> User with username %s not found!", loginRequest.getUsername())));
+        Role adminRole = roleService.findByName(RoleName.ROLE_ADMIN)
+                .orElseThrow(() -> new RuntimeException("Fail! -> Could not find admin role."));
+
+
+        if (!user.getRoles().contains(adminRole)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of(
+                    "success", false,
+                    "message", "You don't have admin access."));
+        }
+
         SecurityContextHolder.getContext().setAuthentication(authentication);
         List<String> jwt = jwtProvider.generateJwtToken(authentication);
         JwtResponse response = buildResponse(jwt, loginRequest.getUsername());
 
-        return ResponseEntity.ok(response);
+        return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
     @PostMapping("/signup")
-    public ResponseEntity<String> registerUser(@Valid @RequestBody SignUpForm signUpRequest) {
+    public ResponseEntity<Object> registerUser(@Valid @RequestBody SignUpForm signUpRequest) {
         if (this.allowRegistration) {
             if (userService.existsByUsername(signUpRequest.getUsername())) {
                 return new ResponseEntity<>("Fail -> Username is already taken!",
@@ -116,22 +125,26 @@ public class AuthController {
             user.setRoles(roles);
             userService.save(user);
 
-            return ResponseEntity.ok().body("User registered successfully!");
+            return ResponseEntity.status(HttpStatus.CREATED).body(Map.of(
+                    "success", true,
+                    "message", "User registered successfully!"));
         } else {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Registration is forbidden");
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of(
+                    "success", false,
+                    "message", "Registration is forbidden"));
         }
     }
 
     @GetMapping("/refresh")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<?> refreshToken(@RequestHeader(value = HttpHeaders.AUTHORIZATION) String bearerStr) {
+    public ResponseEntity<JwtResponse> refreshToken(@RequestHeader(value = HttpHeaders.AUTHORIZATION) String bearerStr) {
         String tokenStr = bearerStr.split("Bearer ")[1];
         List<String> jwt = jwtProvider.refreshToken(tokenStr);
         String username = jwtProvider.getUserNameFromJwtToken(tokenStr);
 
         JwtResponse response = buildResponse(jwt, username);
 
-        return ResponseEntity.ok(response);
+        return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
     private JwtResponse buildResponse(List<String> jwt, String username) {
