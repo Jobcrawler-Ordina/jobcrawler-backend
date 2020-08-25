@@ -22,16 +22,22 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.validation.Valid;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 @CrossOrigin
@@ -44,6 +50,7 @@ public class AuthController {
     private final RoleService roleService;
     private final PasswordEncoder passwordEncoder;
     private final JwtProvider jwtProvider;
+    private boolean allowRegistration = true;
 
     @Autowired
     public AuthController(AuthenticationManager authenticationManager, UserService userService, RoleService roleService, PasswordEncoder passwordEncoder, JwtProvider jwtProvider) {
@@ -52,6 +59,21 @@ public class AuthController {
         this.roleService = roleService;
         this.passwordEncoder = passwordEncoder;
         this.jwtProvider = jwtProvider;
+    }
+
+    @GetMapping("/allow")
+    public Map<String, Boolean> allowRegistration() {
+        return Collections.singletonMap("allow", this.allowRegistration);
+    }
+
+    @PutMapping("/allow")
+    @PreAuthorize("hasRole('ADMIN')")
+    public HashMap<String, Boolean> updateRegistration(@RequestParam(value = "newVal") boolean allow) {
+        this.allowRegistration = allow;
+        HashMap<String, Boolean> map = new HashMap<>();
+        map.put("success", true);
+        map.put("allow", this.allowRegistration);
+        return map;
     }
 
     @PostMapping("/signin")
@@ -72,28 +94,32 @@ public class AuthController {
 
     @PostMapping("/signup")
     public ResponseEntity<String> registerUser(@Valid @RequestBody SignUpForm signUpRequest) {
-        if (userService.existsByUsername(signUpRequest.getUsername())) {
-            return new ResponseEntity<>("Fail -> Username is already taken!",
-                    HttpStatus.BAD_REQUEST);
+        if (this.allowRegistration) {
+            if (userService.existsByUsername(signUpRequest.getUsername())) {
+                return new ResponseEntity<>("Fail -> Username is already taken!",
+                        HttpStatus.BAD_REQUEST);
+            }
+
+            User user = new User(signUpRequest.getUsername(), passwordEncoder.encode(signUpRequest.getPassword()));
+
+            Set<Role> roles = new HashSet<>();
+            if (userService.count() == 0) {
+                Role adminRole = roleService.findByName(RoleName.ROLE_ADMIN)
+                        .orElseThrow(() -> new RuntimeException("Fail! -> Could not find admin role."));
+                roles.add(adminRole);
+            }
+
+            Role userRole = roleService.findByName(RoleName.ROLE_USER)
+                    .orElseThrow(() -> new RuntimeException("Fail! -> Could not find user role."));
+            roles.add(userRole);
+
+            user.setRoles(roles);
+            userService.save(user);
+
+            return ResponseEntity.ok().body("User registered successfully!");
+        } else {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Registration is forbidden");
         }
-
-        User user = new User(signUpRequest.getUsername(), passwordEncoder.encode(signUpRequest.getPassword()));
-
-        Set<Role> roles = new HashSet<>();
-        if (userService.count() == 0) {
-            Role adminRole = roleService.findByName(RoleName.ROLE_ADMIN)
-                    .orElseThrow(() -> new RuntimeException("Fail! -> Could not find admin role."));
-            roles.add(adminRole);
-        }
-
-        Role userRole = roleService.findByName(RoleName.ROLE_USER)
-                .orElseThrow(() -> new RuntimeException("Fail! -> Could not find user role."));
-        roles.add(userRole);
-
-        user.setRoles(roles);
-        userService.save(user);
-
-        return ResponseEntity.ok().body("User registered successfully!");
     }
 
     @GetMapping("/refresh")
