@@ -32,7 +32,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.validation.Valid;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -61,7 +60,7 @@ public class AuthController {
 
     @GetMapping("/allow")
     public ResponseEntity<Object> allowRegistration() {
-        return ResponseEntity.status(HttpStatus.OK).body(Collections.singletonMap("allow", this.allowRegistration));
+        return ResponseEntity.status(HttpStatus.OK).body(Map.of("allow", this.allowRegistration));
     }
 
     @PutMapping("/allow")

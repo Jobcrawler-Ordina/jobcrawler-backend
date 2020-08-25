@@ -5,6 +5,7 @@ import nl.ordina.jobcrawler.model.UserDTO;
 import nl.ordina.jobcrawler.service.RoleService;
 import nl.ordina.jobcrawler.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -18,6 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.validation.Valid;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @RestController
@@ -45,16 +47,18 @@ public class UserController {
 
     @PutMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public String updateUser(@Valid @RequestBody UserDTO userDTO) {
+    public ResponseEntity<Object> updateUser(@Valid @RequestBody UserDTO userDTO) {
         User user = userService.convertToUser(userDTO);
         userService.update(user.getId(), user);
-        return "OK";
+        return ResponseEntity.status(HttpStatus.OK).body(Map.of("success", true));
     }
 
     @DeleteMapping(path = "/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity deleteUser(@PathVariable long id) {
+    public ResponseEntity<Object> deleteUser(@PathVariable long id) {
         userService.delete(id);
-        return ResponseEntity.ok("User removed");
+        return ResponseEntity.status(HttpStatus.OK).body(Map.of(
+                "success", true,
+                "message", "User removed"));
     }
 }
