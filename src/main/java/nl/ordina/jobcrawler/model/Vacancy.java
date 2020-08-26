@@ -9,13 +9,7 @@ import lombok.Setter;
 import nl.ordina.jobcrawler.controller.exception.VacancyURLMalformedException;
 import org.hibernate.annotations.GenericGenerator;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.JoinTable;
-import javax.persistence.ManyToMany;
+import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import java.io.IOException;
 import java.net.HttpURLConnection;
@@ -45,6 +39,8 @@ public class Vacancy {
     private String vacancyNumber;
     private String hours;
     private String location;
+    private double lon;
+    private double lat;
     private String salary;
     private String postingDate;
     @Column(columnDefinition = "TEXT")
@@ -100,6 +96,9 @@ public class Vacancy {
         returnValue.append(skills.toString() + newLine + newLine);
         returnValue.append("*****************************************");
         return returnValue.toString();
-
     }
+
+    public String getLocation() { return location; }
+    public void setLon(double lon) { this.lon = lon; }
+    public void setLat(double lat) { this.lat = lat; }
 }

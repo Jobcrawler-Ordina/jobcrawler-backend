@@ -1,8 +1,10 @@
 package nl.ordina.jobcrawler.service;
 
 import lombok.extern.slf4j.Slf4j;
+import nl.ordina.jobcrawler.model.City;
 import nl.ordina.jobcrawler.model.Skill;
 import nl.ordina.jobcrawler.model.Vacancy;
+import nl.ordina.jobcrawler.repo.CityRepository;
 import nl.ordina.jobcrawler.scrapers.HuxleyITVacancyScraper;
 import nl.ordina.jobcrawler.scrapers.JobBirdScraper;
 import nl.ordina.jobcrawler.scrapers.VacancyScraper;
@@ -12,6 +14,7 @@ import org.springframework.dao.IncorrectResultSizeDataAccessException;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.PostConstruct;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -32,11 +35,13 @@ public class ScraperService {
 
     private final SkillMatcherService skillMatcherService;
 
+    private final CityRepository cityRepository;
 
     @Autowired
-    public ScraperService(VacancyService vacancyService, SkillMatcherService skillMatcherService) {
+    public ScraperService(VacancyService vacancyService, SkillMatcherService skillMatcherService, CityRepository cityRepository) {
         this.vacancyService = vacancyService;
         this.skillMatcherService = skillMatcherService;
+        this.cityRepository = cityRepository;
     }
 
     private final List<VacancyScraper> scraperList = new ArrayList<>() {
@@ -47,7 +52,7 @@ public class ScraperService {
         }
     };
 
-    //@PostConstruct
+    @PostConstruct
     @Scheduled(cron = "0 0 12,18 * * *") // Runs two times a day. At 12pm and 6pm
     public void scrape() {
         log.info("CRON Scheduled -- Scrape vacancies");
@@ -60,6 +65,14 @@ public class ScraperService {
                 if (existCheck.isPresent()) {
                     existVacancy++;
                 } else {
+                    String vacancyLocation = vacancy.getLocation();
+                    if (vacancyLocation!=null) {
+                        Optional<City> existCheckCity = cityRepository.findByCityName(vacancyLocation);
+                        if (!existCheckCity.isPresent()) {
+                            City city = CityService.getCoordinates(vacancyLocation);
+                            cityRepository.save(city);
+                        }
+                    }
                     Set<Skill> skills = skillMatcherService.findMatchingSkills(vacancy);
                     vacancy.setSkills(skills);
                     vacancyService.save(vacancy);
