@@ -50,7 +50,7 @@ public class JobBirdScraper extends VacancyScraper {
     private LogService logService = new LogService();
     private DocumentService documentService  = new DocumentService();
 
-    public static final int MAX_NR_OF_PAGES = 25;  // 25 seems enough for demo purposes, can be up to approx 60
+    private static final int MAX_NR_OF_PAGES = 25;  // 25 seems enough for demo purposes, can be up to approx 60
     // at a certain point the vacancy date will be missing
 
 
