@@ -1,4 +1,4 @@
-package nl.ordina.jobcrawler.message.response;
+package nl.ordina.jobcrawler.model;
 
 import lombok.Builder;
 import lombok.Getter;

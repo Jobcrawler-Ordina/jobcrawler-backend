@@ -33,7 +33,7 @@ public class User {
     private String username;
 
     @NotBlank
-    @JsonIgnore
+    @JsonIgnore // We don't want to add password in any response, even though they're encrypted before storing them
     private String password;
 
     @ManyToMany(fetch = FetchType.LAZY)

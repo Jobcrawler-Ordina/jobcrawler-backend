@@ -1,12 +1,11 @@
 package nl.ordina.jobcrawler.controller;
 
 import nl.ordina.jobcrawler.controller.exception.UserNotFoundException;
-import nl.ordina.jobcrawler.message.request.LoginForm;
-import nl.ordina.jobcrawler.message.request.SignUpForm;
-import nl.ordina.jobcrawler.message.response.JwtResponse;
+import nl.ordina.jobcrawler.model.JwtResponse;
 import nl.ordina.jobcrawler.model.Role;
 import nl.ordina.jobcrawler.model.RoleName;
 import nl.ordina.jobcrawler.model.User;
+import nl.ordina.jobcrawler.model.UserForm;
 import nl.ordina.jobcrawler.security.jwt.JwtProvider;
 import nl.ordina.jobcrawler.service.RoleService;
 import nl.ordina.jobcrawler.service.UserService;
@@ -37,6 +36,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+/**
+ * This class handles the authentication for users signing in.
+ * Contains /auth/allow endpoints to open up registration
+ *          /auth/signin for users signing in
+ *          /auth/signup for users signing up
+ *          /auth/refresh for getting a new JSONWebToken
+ */
+
 @CrossOrigin
 @RestController
 @RequestMapping("/auth")
@@ -58,11 +65,20 @@ public class AuthController {
         this.jwtProvider = jwtProvider;
     }
 
+    /**
+     * Retrieves is registration is allowed
+     * @return {"allow": true/false}
+     */
     @GetMapping("/allow")
     public ResponseEntity<Object> allowRegistration() {
         return ResponseEntity.status(HttpStatus.OK).body(Map.of("allow", this.allowRegistration));
     }
 
+    /**
+     * Update registration variable
+     * @param allow boolean
+     * @return success message with new setting
+     */
     @PutMapping("/allow")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Object> updateRegistration(@RequestParam(value = "newVal") boolean allow) {
@@ -72,8 +88,13 @@ public class AuthController {
                 "allow", this.allowRegistration));
     }
 
+    /**
+     * Signs in the user. Sends back JSONWebToken with additional information such as expires in (seconds) and role(s)
+     * @param loginRequest Contains username and password
+     * @return Details for further http requests with authorization.
+     */
     @PostMapping("/signin")
-    public ResponseEntity<Object> authenticateUser(@Valid @RequestBody LoginForm loginRequest) {
+    public ResponseEntity<Object> authenticateUser(@Valid @RequestBody UserForm loginRequest) {
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
                         loginRequest.getUsername(),
@@ -100,8 +121,13 @@ public class AuthController {
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
+    /**
+     * Allows users to signup when 'allowRegistration' is set to true
+     * @param signUpRequest Contains username and password
+     * @return Success message when signup succeeded. Otherwise throws exception or false success message
+     */
     @PostMapping("/signup")
-    public ResponseEntity<Object> registerUser(@Valid @RequestBody SignUpForm signUpRequest) {
+    public ResponseEntity<Object> registerUser(@Valid @RequestBody UserForm signUpRequest) {
         if (this.allowRegistration) {
             if (userService.existsByUsername(signUpRequest.getUsername())) {
                 return new ResponseEntity<>("Fail -> Username is already taken!",
@@ -134,6 +160,11 @@ public class AuthController {
         }
     }
 
+    /**
+     * For refreshing JSONWebToken
+     * @param bearerStr Need current authorization token to be able to renew it.
+     * @return JwtResponse with new details
+     */
     @GetMapping("/refresh")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<JwtResponse> refreshToken(@RequestHeader(value = HttpHeaders.AUTHORIZATION) String bearerStr) {
@@ -146,6 +177,12 @@ public class AuthController {
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
+    /**
+     * Builds response for signing in and refreshing token
+     * @param jwt JSONWebToken details, index 0 = actual token, index 1 = expiry time
+     * @param username Needed username to retrieve user details
+     * @return Response with the needed details
+     */
     private JwtResponse buildResponse(List<String> jwt, String username) {
         User user = userService.findByUsername(username)
                 .orElseThrow(() -> new UserNotFoundException(String.format("Fail! -> User with name: %s not found.", username)));

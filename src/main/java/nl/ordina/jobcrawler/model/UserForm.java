@@ -1,4 +1,4 @@
-package nl.ordina.jobcrawler.message.request;
+package nl.ordina.jobcrawler.model;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -8,7 +8,7 @@ import javax.validation.constraints.Size;
 
 @Getter
 @Setter
-public class SignUpForm {
+public class UserForm {
     @NotBlank
     @Size(min = 3, max = 60)
     private String username;

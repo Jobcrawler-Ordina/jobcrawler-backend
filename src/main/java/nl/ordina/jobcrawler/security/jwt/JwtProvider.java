@@ -25,12 +25,17 @@ import java.util.Optional;
 @Slf4j
 public class JwtProvider {
 
-    @Value("${jwt.token}")
+    @Value("${jwt.token}") //jwt.token in application.properties
     private String jwtSecret;
 
-    @Value("${jwt.expire}")
+    @Value("${jwt.expire}") // jwt.expire in application.properties
     private int jwtExpiration;
 
+    /**
+     * Generates JWT Token based on user credentials
+     * @param authentication authentication based on user credentials
+     * @return List including jwt Token and jwt expiration information
+     */
     public List<String> generateJwtToken(Authentication authentication) {
         UserPrinciple userPrincipal = (UserPrinciple) authentication.getPrincipal();
 
@@ -46,6 +51,11 @@ public class JwtProvider {
         return jwtToken;
     }
 
+    /**
+     * Retrieve username based on jwt token
+     * @param token token username is needed for
+     * @return username
+     */
     public String getUserNameFromJwtToken(String token) {
         return Jwts.parser()
                 .setSigningKey(jwtSecret)
@@ -53,6 +63,11 @@ public class JwtProvider {
                 .getBody().getSubject();
     }
 
+    /**
+     * Validates validity of token
+     * @param authToken token
+     * @return if token is valid
+     */
     public boolean validateJwtToken(String authToken) {
         try {
             Jwts.parser().setSigningKey(jwtSecret).parseClaimsJws(authToken);
@@ -72,6 +87,11 @@ public class JwtProvider {
         return false;
     }
 
+    /**
+     * Refresh jwt token based on current (valid) token
+     * @param authToken current working token
+     * @return new token
+     */
     public List<String> refreshToken(String authToken) {
         validateJwtToken(authToken);
         Optional<Jws<Claims>> claimsJws = getClaims(Optional.of(authToken));
