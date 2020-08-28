@@ -24,9 +24,9 @@ jobs:
       run: mvn clean install
 
     - name: Deploy to Azure Web App
-      uses: azure/webapps-deploy@v1
+      uses: azure/webapps-deploy@v2
       with:
         app-name: 'api-jobcrawler'
         slot-name: 'production'
-        publish-profile: ${{ secrets.AzureAppService_PublishProfile_0e3f5cfb584549e49832497a016c7b61 }}
+        publish-profile: ${{ secrets.AzureAppService_PublishProfile_b93db14d591d44e1b8743f2811054ee5 }}
         package: '${{ github.workspace }}/target/*.jar'
