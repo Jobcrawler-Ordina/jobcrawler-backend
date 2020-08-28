@@ -38,9 +38,8 @@ public class Vacancy {
     private String broker;
     private String vacancyNumber;
     private String hours;
-    private String location;
-    private double lon;
-    private double lat;
+    private UUID city_id;
+    private VacancyLocation vacancyLocation;
     private String salary;
     private String postingDate;
     @Column(columnDefinition = "TEXT")
@@ -53,6 +52,10 @@ public class Vacancy {
             inverseJoinColumns = @JoinColumn(name = "skill_id"))
     @JsonIgnore
     Set<Skill> skills;  //a set is a collection that has no duplicates
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "city_id",nullable = false)
+    City city;
 
     public boolean hasValidURL() {
         if (!this.vacancyURL.startsWith("http"))
@@ -90,7 +93,7 @@ public class Vacancy {
         returnValue.append(broker + newLine);
         returnValue.append(vacancyNumber + newLine);
         returnValue.append(hours + newLine);
-        returnValue.append(location + newLine);
+        returnValue.append(city_id + newLine);
         returnValue.append(postingDate + newLine);
         returnValue.append(about + newLine);
         returnValue.append(skills.toString() + newLine + newLine);
@@ -98,7 +101,6 @@ public class Vacancy {
         return returnValue.toString();
     }
 
-    public String getLocation() { return location; }
-    public void setLon(double lon) { this.lon = lon; }
-    public void setLat(double lat) { this.lat = lat; }
+
+
 }

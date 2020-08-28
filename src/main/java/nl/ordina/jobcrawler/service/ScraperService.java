@@ -66,7 +66,7 @@ public class ScraperService {
                     existVacancy++;
                 } else {
                     String vacancyLocation = vacancy.getLocation();
-                    if (vacancyLocation!=null) {
+                    if (vacancyLocation!="") {
                         Optional<City> existCheckCity = cityRepository.findByCityName(vacancyLocation);
                         if (!existCheckCity.isPresent()) {
                             City city = CityService.getCoordinates(vacancyLocation);
