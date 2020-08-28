@@ -28,5 +28,5 @@ jobs:
       with:
         app-name: 'api-jobcrawler'
         slot-name: 'production'
-        publish-profile: ${{ secrets.AzureAppService_PublishProfile_b93db14d591d44e1b8743f2811054ee5 }}
+        publish-profile: ${{ secrets.AzureAppService_PublishProfile_d5b0db59d70e4fb19a169c42ff7ade09 }}
         package: '${{ github.workspace }}/target/*.jar'
