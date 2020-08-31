@@ -1,4 +1,4 @@
-![Java CI with Maven](https://github.com/mostafa-221/jobcrawler-backend/workflows/Java%20CI%20with%20Maven/badge.svg)
+![Java CI with Maven](https://github.com/jobcrawler-ordina/jobcrawler-backend/workflows/Java%20CI%20with%20Maven/badge.svg)
 
 # Jobcrawler Backend
 Backend for the job crawler to find IT vacancies
