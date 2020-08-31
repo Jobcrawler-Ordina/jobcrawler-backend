@@ -1,29 +1,45 @@
 package nl.ordina.jobcrawler.service;
 
-import nl.ordina.jobcrawler.model.City;
+import nl.ordina.jobcrawler.model.Location;
 
+import nl.ordina.jobcrawler.model.Vacancy;
+import nl.ordina.jobcrawler.repo.LocationRepository;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
+import javax.persistence.EntityManager;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 
-public class CityService {
+@Service
+public class LocationService implements CRUDService<Location, UUID> {
 
-/*  public static void main(String[] args) throws IOException, JSONException {
-        final City c1 = getCoordinates("Amsterdam");
-        final City c2 = getCoordinates("Woerden");
+    private final LocationRepository locationRepository;
 
-        double distance = distance(c1.getLon(), c1.getLat(), c2.getLon(), c2.getLat());
-        System.out.println("\nDistance between " + c1.getCity() + " and " + c2.getCity() + " is: " + String.format("%.3f", distance) + "km.");
-    }   */
+    @Autowired
+    public LocationService(LocationRepository locationRepository) {
+        this.locationRepository = locationRepository;
+    }
 
-    public static City getCoordinates(final String city) throws IOException, JSONException {
+    @Autowired
+    private EntityManager entityManager;
+
+    @Override
+    public Optional<Location> findById(UUID id) {
+        return locationRepository.findById(id);
+    }
+
+    public static Location getCoordinates(final String location) throws IOException, JSONException {
         final String apiKey = "Xd5hXSuQvqUJJbJh3iacOXZAcskvP7gI";
-        final String url = "http://open.mapquestapi.com/nominatim/v1/search.php?key=" + apiKey + "&format=json&q=" + city + "&addressdetails=1&limit=1";
+        final String url = "http://open.mapquestapi.com/nominatim/v1/search.php?key=" + apiKey + "&format=json&q=" + location + "&addressdetails=1&limit=1";
 
         URL obj = new URL(url);
         HttpURLConnection connection = (HttpURLConnection) obj.openConnection();
@@ -44,10 +60,10 @@ public class CityService {
             //Read JSON response and return
             JSONObject jsonResponse = new JSONObject(response);
 
-            return new City(city, jsonResponse.getDouble("lon"), jsonResponse.getDouble("lat"));
+            return new Location(location, jsonResponse.getDouble("lon"), jsonResponse.getDouble("lat"));
 
         }
-        return new City(city, 0, 0);
+        return new Location(location, 0, 0);
     }
 
     private static double distance(double lon1,
@@ -85,4 +101,27 @@ public class CityService {
 
     }
 
+    public Optional<Location> findByLocationName(String locationName) {
+        return locationRepository.findByLocationName(locationName);
+    }
+
+    @Override
+    public List<Location> findAll() {
+        return locationRepository.findAll();
+    }
+
+    @Override
+    public Location update(UUID uuid, Location location) {
+        return null;
+    }
+
+    @Override
+    public Location save(Location location) {
+        return null;
+    }
+
+    @Override
+    public boolean delete(UUID id) {
+        return false;
+    }
 }

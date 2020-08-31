@@ -1,34 +1,43 @@
 package nl.ordina.jobcrawler.model;
 
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.*;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
+@Getter
+@Setter
 @Entity
 @NoArgsConstructor
-public class City {
+public class Location {
 
     @Id
     @GeneratedValue(generator = "UUID")
     @GenericGenerator(name = "UUID", strategy = "org.hibernate.id.UUIDGenerator")
     private UUID id;
-    private String cityName;
+    private String locationName;
     private double lon;
     private double lat;
 
-    @ManyToOne(fetch=FetchType.LAZY)
-    @JoinColumn(name="city_id",nullable=false)
-    private Vacancy vacancy;
-/*    @JoinTable(
+    @OneToMany(mappedBy = "location",cascade = CascadeType.ALL)
+    private List<Vacancy> vacancies;
+
+    /*    @JoinTable(
             name = "city_vacancy",
             joinColumns = @JoinColumn(name = "vacancy_id"),
             inverseJoinColumns = @JoinColumn(name = "city_id"))*/
 
-    public City(String cityName, double lon, double lat) {
-        this.cityName = cityName;
+    public Location(String locationName) {
+        this.locationName = locationName;
+    }
+
+    public Location(String locationName, double lon, double lat) {
+        this.locationName = locationName;
         this.lon = lon;
         this.lat = lat;
     }

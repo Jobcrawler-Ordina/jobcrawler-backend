@@ -1,10 +1,11 @@
 package nl.ordina.jobcrawler.service;
 
 import lombok.extern.slf4j.Slf4j;
-import nl.ordina.jobcrawler.model.City;
+import nl.ordina.jobcrawler.model.Location;
+import nl.ordina.jobcrawler.model.Location;
 import nl.ordina.jobcrawler.model.Skill;
 import nl.ordina.jobcrawler.model.Vacancy;
-import nl.ordina.jobcrawler.repo.CityRepository;
+import nl.ordina.jobcrawler.repo.LocationRepository;
 import nl.ordina.jobcrawler.scrapers.HuxleyITVacancyScraper;
 import nl.ordina.jobcrawler.scrapers.JobBirdScraper;
 import nl.ordina.jobcrawler.scrapers.VacancyScraper;
@@ -35,20 +36,20 @@ public class ScraperService {
 
     private final SkillMatcherService skillMatcherService;
 
-    private final CityRepository cityRepository;
+    private LocationRepository locationRepository;
 
     @Autowired
-    public ScraperService(VacancyService vacancyService, SkillMatcherService skillMatcherService, CityRepository cityRepository) {
+    public ScraperService(VacancyService vacancyService, SkillMatcherService skillMatcherService, LocationRepository locationRepository) {
         this.vacancyService = vacancyService;
         this.skillMatcherService = skillMatcherService;
-        this.cityRepository = cityRepository;
+        this.locationRepository = locationRepository;
     }
 
     private final List<VacancyScraper> scraperList = new ArrayList<>() {
         {
-            add(new YachtVacancyScraper());
-            add(new HuxleyITVacancyScraper());
-            add(new JobBirdScraper());
+            add(new YachtVacancyScraper(locationRepository));
+            add(new HuxleyITVacancyScraper(locationRepository));
+            add(new JobBirdScraper(locationRepository));
         }
     };
 
@@ -65,14 +66,14 @@ public class ScraperService {
                 if (existCheck.isPresent()) {
                     existVacancy++;
                 } else {
-                    String vacancyLocation = vacancy.getLocation();
+/*                    String vacancyLocation = vacancy.getLocation().getLocationName();
                     if (vacancyLocation!="") {
-                        Optional<City> existCheckCity = cityRepository.findByCityName(vacancyLocation);
-                        if (!existCheckCity.isPresent()) {
-                            City city = CityService.getCoordinates(vacancyLocation);
-                            cityRepository.save(city);
+                        Optional<Location> existCheckLocation = locationRepository.findByLocationName(vacancyLocation);
+                        if (!existCheckLocation.isPresent()) {
+                            Location location = LocationService.getCoordinates(vacancyLocation);
+                            locationRepository.save(location);
                         }
-                    }
+                    }*/
                     Set<Skill> skills = skillMatcherService.findMatchingSkills(vacancy);
                     vacancy.setSkills(skills);
                     vacancyService.save(vacancy);

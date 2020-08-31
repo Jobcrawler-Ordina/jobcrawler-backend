@@ -1,5 +1,6 @@
 package nl.ordina.jobcrawler.repo;
 
+import nl.ordina.jobcrawler.model.Location;
 import nl.ordina.jobcrawler.model.Vacancy;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -44,6 +45,10 @@ public interface VacancyRepository extends JpaRepository<Vacancy, UUID> {
             "OR lower(v.title) LIKE lower(concat('%', :value, '%'))", nativeQuery = true)
     Page<Vacancy> findByAnyValue(@Param("value") String value, Pageable pageable);
 
+    @Transactional
+    Optional<Location> findByLocation_LocationName(String locationName);
 
+    @Transactional
+    Optional<Location> findByLocation_Id(UUID id);
 
 }

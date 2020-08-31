@@ -1,7 +1,9 @@
 package nl.ordina.jobcrawler.scrapers;
 
 import lombok.extern.slf4j.Slf4j;
+import nl.ordina.jobcrawler.model.Location;
 import nl.ordina.jobcrawler.model.Vacancy;
+import nl.ordina.jobcrawler.repo.LocationRepository;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
@@ -9,6 +11,8 @@ import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 /*  Search is limited to URLs for ICT jobs with search term "java"
@@ -37,6 +41,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 @Component
 public class JobBirdScraper extends VacancyScraper {
 
+    LocationRepository locationRepository;
 
     private static final int MAX_NR_OF_PAGES = 25;  // 25 seems enough for demo purposes, can be up to approx 60
     // at a certain point the vacancy date will be missing
@@ -44,10 +49,11 @@ public class JobBirdScraper extends VacancyScraper {
     /**
      * Default constructor that calls the constructor from the abstract class.
      */
-    public JobBirdScraper() {
+    public JobBirdScraper(LocationRepository locationRepository) {
         super(
                 "https://www.jobbird.com/nl/vacature?s=java&rad=30&page=", // Required search URL. Can be retrieved using getSEARCH_URL()
-                "Jobbird" // Required broker. Can be retrieved using getBROKER()
+                "Jobbird", // Required broker. Can be retrieved using getBROKER()
+                    locationRepository
         );
     }
 
@@ -67,12 +73,27 @@ public class JobBirdScraper extends VacancyScraper {
         vacancyURLs.parallelStream().forEach(vacancyURL -> {
             Document doc = getDocument(vacancyURL);
             if (doc != null) {
+
+                Location location;
+                System.out.println(locationRepository==null);
+                if((locationRepository==null)) {
+                    Optional<Location> existCheckLocation = locationRepository.findByLocationName((String) getLocation(doc));
+                    if (!existCheckLocation.isPresent()) {
+                        location = new Location((String) getLocation(doc));
+                    } else {
+                        UUID id = existCheckLocation.get().getId();
+                        location = locationRepository.findById(id).get();
+                    }
+                } else {
+                    location = new Location((String) getLocation(doc));
+                }
+
                 Vacancy vacancy = Vacancy.builder()
                         .vacancyURL(vacancyURL)
                         .title(getVacancyTitle(doc))
                         .hours(getHoursFromPage(doc))
                         .broker(getBROKER())
-                        .location(getLocation(doc))
+                        .location(location)
                         .postingDate(getPublishDate(doc))
                         .about(getVacancyAbout(doc))
                         .build();

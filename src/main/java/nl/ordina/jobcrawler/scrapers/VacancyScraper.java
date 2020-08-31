@@ -1,8 +1,10 @@
 package nl.ordina.jobcrawler.scrapers;
 
 import nl.ordina.jobcrawler.model.Vacancy;
+import nl.ordina.jobcrawler.repo.LocationRepository;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.io.IOException;
 import java.util.List;
@@ -11,6 +13,8 @@ abstract public class VacancyScraper {
 
     private final String SEARCH_URL;
     private final String BROKER;
+    @Autowired
+    private LocationRepository locationRepository;
 
     /**
      * Constructor for abstract class VacancyScraper
@@ -18,9 +22,11 @@ abstract public class VacancyScraper {
      * @param url Default seach url for scraper
      * @param broker Used broker for scraper
      */
-    public VacancyScraper(String url, String broker) {
+
+    public VacancyScraper(String url, String broker, LocationRepository locationRepository) {
         this.SEARCH_URL = url;
         this.BROKER = broker;
+        this.locationRepository = locationRepository;
     }
 
     /**

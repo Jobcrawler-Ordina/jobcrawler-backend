@@ -1,6 +1,7 @@
 package nl.ordina.jobcrawler.service;
 
 import nl.ordina.jobcrawler.controller.exception.VacancyURLMalformedException;
+import nl.ordina.jobcrawler.model.Location;
 import nl.ordina.jobcrawler.model.Vacancy;
 import nl.ordina.jobcrawler.repo.VacancyRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -51,6 +52,12 @@ public class VacancyService implements CRUDService<Vacancy, UUID> {
         return vacancyRepository.findAll();
     }
 
+    public Optional<Location> findLocationByLocationName(String locationName) {
+        return vacancyRepository.findByLocation_LocationName(locationName);
+    }
+    public Optional<Location> findLocationByLocationId(UUID id) {
+        return vacancyRepository.findByLocation_Id(id);
+    }
 
     /**
      * Returns all vacancies in the database using pagination.

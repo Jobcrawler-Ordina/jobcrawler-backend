@@ -2,6 +2,9 @@ package nl.ordina.jobcrawler.scrapers;
 
 import lombok.extern.slf4j.Slf4j;
 import nl.ordina.jobcrawler.model.Vacancy;
+import nl.ordina.jobcrawler.model.Location;
+import nl.ordina.jobcrawler.repo.LocationRepository;
+import nl.ordina.jobcrawler.repo.VacancyRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -10,11 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /*
  * Instead of scraping the page HTML for urls, this scraper gets the vacancy data directly from the HuxleyIT API.
@@ -32,14 +31,17 @@ public class HuxleyITVacancyScraper extends VacancyScraper {
 
     RestTemplate restTemplate = new RestTemplate();
 
+    LocationRepository locationRepository;
+
     /**
      * Default constructor that calls the constructor from the abstract class.
      */
     @Autowired
-    public HuxleyITVacancyScraper() {
+    public HuxleyITVacancyScraper(LocationRepository locationRepository) {
         super(
                 "https://api.websites.sthree.com/api/services/app/Search/Search", // Required search URL. Can be retrieved using getSEARCH_URL()
-                "HuxleyIT" // Required broker. Can be retrieved using getBROKER()
+                "HuxleyIT", // Required broker. Can be retrieved using getBROKER()
+                locationRepository
         );
     }
 
@@ -63,12 +65,27 @@ public class HuxleyITVacancyScraper extends VacancyScraper {
 
         List<Vacancy> vacancies = new ArrayList<>();
         for (Map<String, Object> vacancyData : vacanciesData) {
+
+            Location location;
+            System.out.println(locationRepository==null);
+            if((locationRepository==null)) {
+                Optional<Location> existCheckLocation = locationRepository.findByLocationName((String) vacancyData.get("city"));
+                if (!existCheckLocation.isPresent()) {
+                    location = new Location((String) vacancyData.get("city"));
+                } else {
+                    UUID id = existCheckLocation.get().getId();
+                    location = locationRepository.findById(id).get();
+                }
+            } else {
+                location = new Location((String) vacancyData.get("city"));
+            }
+
             Vacancy vacancy = Vacancy.builder()
                     .vacancyURL(VACANCY_URL_PREFIX + vacancyData.get("jobReference"))
                     .title((String) vacancyData.get("title"))
                     .broker(getBROKER())
                     .vacancyNumber((String) vacancyData.get("jobReference"))
-                    .location((String) vacancyData.get("city"))
+                    .location(location)
                     .salary((String) vacancyData.get("salaryText"))
                     .postingDate((String) vacancyData.get("postDate"))
                     .about((String) vacancyData.get("description"))

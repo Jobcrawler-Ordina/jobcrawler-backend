@@ -1,5 +1,6 @@
 package nl.ordina.jobcrawler.utils;
 
+import nl.ordina.jobcrawler.model.Location;
 import nl.ordina.jobcrawler.model.Skill;
 import nl.ordina.jobcrawler.model.Vacancy;
 
@@ -15,7 +16,7 @@ public class VacancyFactory {
                 .broker("broker")
                 .vacancyNumber("1")
                 .hours("30")
-                .location("location example")
+                .location(new Location((String) "location example"))
                 .postingDate("14 April 2020")
                 .about("this is a description of the example job")
                 .skills(new HashSet<Skill>())

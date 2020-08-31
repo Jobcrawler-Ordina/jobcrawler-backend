@@ -2,8 +2,10 @@ package nl.ordina.jobcrawler.controller;
 
 import nl.ordina.jobcrawler.SearchResult;
 import nl.ordina.jobcrawler.controller.exception.VacancyNotFoundException;
+import nl.ordina.jobcrawler.model.Location;
 import nl.ordina.jobcrawler.model.Skill;
 import nl.ordina.jobcrawler.model.Vacancy;
+import nl.ordina.jobcrawler.model.assembler.LocationModelAssembler;
 import nl.ordina.jobcrawler.model.assembler.SkillModelAssembler;
 import nl.ordina.jobcrawler.model.assembler.VacancyModelAssembler;
 import nl.ordina.jobcrawler.service.VacancyService;
@@ -137,6 +139,13 @@ public class VacancyController {
         Vacancy vacancy = vacancyService.findById(id)
                 .orElseThrow(() -> new VacancyNotFoundException(id));
         return new SkillModelAssembler().toCollectionModel(vacancy.getSkills());
+    }
+
+    @GetMapping("/{id}/location")
+    public EntityModel<Location> getLocation(@PathVariable UUID id) {
+        Location location = vacancyService.findById(id)
+                .orElseThrow(() -> new VacancyNotFoundException(id)).getLocation();
+        return new LocationModelAssembler().toModel(location);
     }
 
     /**
