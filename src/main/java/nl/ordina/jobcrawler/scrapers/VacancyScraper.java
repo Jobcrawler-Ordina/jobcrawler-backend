@@ -17,7 +17,6 @@ abstract public class VacancyScraper {
 
     private final String SEARCH_URL;
     private final String BROKER;
-
     private final LocationService locationService;
 
     /**
@@ -26,7 +25,7 @@ abstract public class VacancyScraper {
      * @param url Default seach url for scraper
      * @param broker Used broker for scraper
      */
-    public VacancyScraper(String url, String broker, LocationService locationService) {
+    public VacancyScraper(String url, String broker, @Autowired LocationService locationService) {
         this.SEARCH_URL = url;
         this.BROKER = broker;
         this.locationService = locationService;

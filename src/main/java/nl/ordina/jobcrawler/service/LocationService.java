@@ -33,9 +33,10 @@ public class LocationService implements CRUDService<Location, UUID> {
     @Autowired
     private EntityManager entityManager;
 
-    public static Location getCoordinates(final String location) throws IOException, JSONException {
+    public static Double[] getCoordinates(final String location) throws IOException, JSONException {
         final String apiKey = "Xd5hXSuQvqUJJbJh3iacOXZAcskvP7gI";
         final String url = "http://open.mapquestapi.com/nominatim/v1/search.php?key=" + apiKey + "&format=json&q=" + location + "&addressdetails=1&limit=1";
+        Double[] coord = {};
 
         URL obj = new URL(url);
         HttpURLConnection connection = (HttpURLConnection) obj.openConnection();
@@ -56,10 +57,13 @@ public class LocationService implements CRUDService<Location, UUID> {
             //Read JSON response and return
             JSONObject jsonResponse = new JSONObject(response);
 
-            return new Location(location, jsonResponse.getDouble("lon"), jsonResponse.getDouble("lat"));
-
+            coord[0] = jsonResponse.getDouble("lon");
+            coord[1] = jsonResponse.getDouble("lat");
+            return coord;
         }
-        return new Location(location, 0, 0);
+        coord[0] = Double.valueOf(0);
+        coord[1] = Double.valueOf(0);
+        return coord;
     }
 
     private static double distance(double lon1,
@@ -123,4 +127,19 @@ public class LocationService implements CRUDService<Location, UUID> {
         return locationRepository.findById(id);
     }
 
+    public void addCoordinates() {
+        List<Location> allLocations = locationRepository.findAll();
+        Double[] coord = {};
+        try {
+            for (Location location : allLocations) {
+                coord = getCoordinates(location.getLocationName());
+                location.setLon(coord[0]);
+                location.setLat(coord[1]);
+            }
+        } catch (IOException e) {
+            System.out.println(e.getMessage());
+        } catch (JSONException j) {
+            System.out.println(j.getMessage());
+        }
+    }
 }
