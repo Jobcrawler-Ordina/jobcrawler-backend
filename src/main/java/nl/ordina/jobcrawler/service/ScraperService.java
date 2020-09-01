@@ -31,27 +31,26 @@ Upon fetching the vacancies it runs a check to verify if the vacancy is already 
 @Service
 public class ScraperService {
 
-
     private final VacancyService vacancyService;
-
     private final SkillMatcherService skillMatcherService;
-
-    private LocationRepository locationRepository;
+    @Autowired
+    private LocationService locationService;
+    private List<VacancyScraper> scraperList;
 
     @Autowired
-    public ScraperService(VacancyService vacancyService, SkillMatcherService skillMatcherService, LocationRepository locationRepository) {
+    public ScraperService(VacancyService vacancyService, SkillMatcherService skillMatcherService, LocationService locationService) {
         this.vacancyService = vacancyService;
         this.skillMatcherService = skillMatcherService;
-        this.locationRepository = locationRepository;
-    }
+        this.locationService = locationService;
 
-    private final List<VacancyScraper> scraperList = new ArrayList<>() {
-        {
-            add(new YachtVacancyScraper(locationRepository));
-            add(new HuxleyITVacancyScraper(locationRepository));
-            add(new JobBirdScraper(locationRepository));
-        }
+        this.scraperList = new ArrayList<>() {
+            {
+                add(new YachtVacancyScraper(locationService));
+                add(new HuxleyITVacancyScraper(locationService));
+                add(new JobBirdScraper(locationService));
+            }
     };
+    }
 
     @PostConstruct
     @Scheduled(cron = "0 0 12,18 * * *") // Runs two times a day. At 12pm and 6pm

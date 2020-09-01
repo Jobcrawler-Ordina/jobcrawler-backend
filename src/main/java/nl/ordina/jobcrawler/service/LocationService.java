@@ -1,5 +1,6 @@
 package nl.ordina.jobcrawler.service;
 
+import nl.ordina.jobcrawler.controller.exception.VacancyURLMalformedException;
 import nl.ordina.jobcrawler.model.Location;
 
 import nl.ordina.jobcrawler.model.Vacancy;
@@ -31,11 +32,6 @@ public class LocationService implements CRUDService<Location, UUID> {
 
     @Autowired
     private EntityManager entityManager;
-
-    @Override
-    public Optional<Location> findById(UUID id) {
-        return locationRepository.findById(id);
-    }
 
     public static Location getCoordinates(final String location) throws IOException, JSONException {
         final String apiKey = "Xd5hXSuQvqUJJbJh3iacOXZAcskvP7gI";
@@ -101,10 +97,6 @@ public class LocationService implements CRUDService<Location, UUID> {
 
     }
 
-    public Optional<Location> findByLocationName(String locationName) {
-        return locationRepository.findByLocationName(locationName);
-    }
-
     @Override
     public List<Location> findAll() {
         return locationRepository.findAll();
@@ -117,11 +109,18 @@ public class LocationService implements CRUDService<Location, UUID> {
 
     @Override
     public Location save(Location location) {
-        return null;
+            return locationRepository.save(location);
     }
 
     @Override
     public boolean delete(UUID id) {
         return false;
     }
+
+    public Optional<Location> findByLocationName(String locationName) {return locationRepository.findByLocationName(locationName);}
+
+    public Optional<Location> findById(UUID id) {
+        return locationRepository.findById(id);
+    }
+
 }

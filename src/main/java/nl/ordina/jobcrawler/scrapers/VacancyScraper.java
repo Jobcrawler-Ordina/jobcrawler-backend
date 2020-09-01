@@ -1,20 +1,24 @@
 package nl.ordina.jobcrawler.scrapers;
 
+import nl.ordina.jobcrawler.model.Location;
 import nl.ordina.jobcrawler.model.Vacancy;
 import nl.ordina.jobcrawler.repo.LocationRepository;
+import nl.ordina.jobcrawler.service.LocationService;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 
 abstract public class VacancyScraper {
 
     private final String SEARCH_URL;
     private final String BROKER;
-    @Autowired
-    private LocationRepository locationRepository;
+
+    private final LocationService locationService;
 
     /**
      * Constructor for abstract class VacancyScraper
@@ -22,11 +26,10 @@ abstract public class VacancyScraper {
      * @param url Default seach url for scraper
      * @param broker Used broker for scraper
      */
-
-    public VacancyScraper(String url, String broker, LocationRepository locationRepository) {
+    public VacancyScraper(String url, String broker, LocationService locationService) {
         this.SEARCH_URL = url;
         this.BROKER = broker;
-        this.locationRepository = locationRepository;
+        this.locationService = locationService;
     }
 
     /**
@@ -65,5 +68,24 @@ abstract public class VacancyScraper {
      * @return List of vacancies
      */
     abstract public List<Vacancy> getVacancies();
+
+    public Location saveLocation(String locationName) {
+        Location location;
+//        System.out.println(locationRepository==null);
+//        if(!(locationService==null)) {
+            Optional<Location> existCheckLocation = locationService.findByLocationName((String) locationName);
+            if (!existCheckLocation.isPresent()) {
+                location = new Location((String) locationName);
+                locationService.save(location);
+            } else {
+                UUID id = existCheckLocation.get().getId();
+                location = locationService.findById(id).get();
+            }
+//        } else {
+//            location = new Location((String) locationName);
+//            locationService.save(location);
+//        }
+        return location;
+    }
 
 }
