@@ -130,8 +130,9 @@ public class AuthController {
     public ResponseEntity<Object> registerUser(@Valid @RequestBody UserForm signUpRequest) {
         if (this.allowRegistration) {
             if (userService.existsByUsername(signUpRequest.getUsername())) {
-                return new ResponseEntity<>("Fail -> Username is already taken!",
-                        HttpStatus.BAD_REQUEST);
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
+                        "success", false,
+                        "message", "Fail -> Username is already taken!"));
             }
 
             User user = new User(signUpRequest.getUsername(), passwordEncoder.encode(signUpRequest.getPassword()));
