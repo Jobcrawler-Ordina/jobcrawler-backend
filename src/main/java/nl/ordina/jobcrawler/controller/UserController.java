@@ -34,12 +34,10 @@ import java.util.stream.Collectors;
 public class UserController {
 
     private final UserService userService;
-    private final RoleService roleService;
 
     @Autowired
-    public UserController(UserService userService, RoleService roleService) {
+    public UserController(UserService userService) {
         this.userService = userService;
-        this.roleService = roleService;
     }
 
     /**
