@@ -13,9 +13,4 @@ public class TestSecurityConfiguration extends WebSecurityConfigurerAdapter {
     protected void configure(HttpSecurity http) throws Exception {
         http.csrf().disable().authorizeRequests().anyRequest().permitAll();
     }
-
-    @Override
-    public void configure(WebSecurity web) {
-        web.debug(true);
-    }
 }
