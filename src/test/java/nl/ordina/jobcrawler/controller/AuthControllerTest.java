@@ -23,10 +23,10 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
@@ -37,18 +37,20 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@AutoConfigureMockMvc
-@ContextConfiguration(classes = { AuthController.class, TestSecurityConfiguration.class })
+@AutoConfigureMockMvc(addFilters = false)
+@ContextConfiguration(classes = { AuthController.class })
 @WebMvcTest
+@WithMockUser
 public class AuthControllerTest {
 
     @Autowired
@@ -81,54 +83,147 @@ public class AuthControllerTest {
     @Value("${jwt.expire}") // jwt.expire in application.properties
     private int jwtExpiration;
 
+    private Role userRole;
+
+    private Role adminRole;
+
+    private UserForm userForm;
+
+    private User user;
+
     @BeforeEach
     public void init() {
         mockMvc = MockMvcBuilders
                 .webAppContextSetup(context)
                 .apply(SecurityMockMvcConfigurers.springSecurity())
                 .build();
-    }
 
-    @Test
-    public void POST_signin_with_valid_credentials() throws Exception {
-        final String username = "admin";
-        final String password = "password";
+        userRole = new Role();
+        userRole.setName(RoleName.ROLE_USER);
 
-        UserForm userForm = new UserForm();
-        userForm.setUsername(username);
-        userForm.setPassword(password);
+        adminRole = new Role();
+        adminRole.setName(RoleName.ROLE_ADMIN);
 
-        User user = new User(username, password);
-        Set<Role> roles = new HashSet<>();
-        Role role = new Role();
-        role.setName(RoleName.ROLE_ADMIN);
-        roles.add(role);
-        user.setRoles(roles);
+        userForm = new UserForm();
+        userForm.setUsername("admin");
+        userForm.setPassword("password");
 
+        user = new User(userForm.getUsername(), userForm.getPassword());
 
-        when(userService.findByUsername(anyString())).thenReturn(Optional.of(user));
-        when(roleService.findByName(any())).thenReturn(Optional.of(role));
+        when(roleService.findByName(RoleName.ROLE_ADMIN)).thenReturn(Optional.of(adminRole));
         List<GrantedAuthority> authorityList = new ArrayList<>();
         authorityList.add(new SimpleGrantedAuthority("ROLE_ADMIN"));
         when(authenticationManager.authenticate(any())).thenReturn(new UsernamePasswordAuthenticationToken(userForm.getUsername(), null, authorityList));
         when(jwtProvider.generateJwtToken(any())).thenReturn(generateJwtToken(userForm.getUsername()));
-
-        MvcResult result = mockMvc.perform(post("/auth/signin")
-                .content(mapper.writeValueAsString(userForm))
-                .contentType(MediaType.APPLICATION_JSON))
-                .andReturn();
-        System.out.println(result.getResponse().getStatus());
-        System.out.println(result.getResponse().getErrorMessage());
-        System.out.println(result.getResponse().getContentAsString());
-
-        assertEquals(result.getResponse().getStatus(), 200);
+        when(userService.save(any())).thenReturn(null);
     }
 
     @Test
-    public void GET_signup_allowance() throws Exception {
+    public void POST_signin_with_valid_credentials() throws Exception {
+        Set<Role> roles = new HashSet<>();
+        roles.add(adminRole);
+        user.setRoles(roles);
+
+        when(userService.findByUsername(anyString())).thenReturn(Optional.of(user));
+
+        mockMvc.perform(post("/auth/signin")
+                .with(csrf())
+                .content(mapper.writeValueAsString(userForm))
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.token").isNotEmpty())
+                .andExpect(jsonPath("$.username").value(userForm.getUsername()));
+    }
+
+    @Test
+    public void POST_signin_no_admin_role() throws Exception {
+        Set<Role> roles = new HashSet<>();
+        roles.add(userRole);
+        user.setRoles(roles);
+
+        when(userService.findByUsername(anyString())).thenReturn(Optional.of(user));
+
+        mockMvc.perform(post("/auth/signin")
+                .with(csrf())
+                .content(mapper.writeValueAsString(userForm))
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message").value("You don't have admin access."));
+    }
+
+    @Test
+    public void GET_allowance() throws Exception {
+        setAllowance(true);
+
+        mockMvc.perform(get("/auth/allow")
+                .with(csrf()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.allow").value(true));
+    }
+
+    @Test
+    public void PUT_change_allowance() throws Exception {
         mockMvc.perform(get("/auth/allow"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.allow").value(true));
+
+        mockMvc.perform(put("/auth/allow?newVal=false")
+                .with(csrf()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.allow").value(false))
+                .andExpect(jsonPath("$.success").value(true));
+    }
+
+    @Test
+    public void POST_signup_success() throws Exception {
+        setAllowance(true);
+        when(userService.existsByUsername(anyString())).thenReturn(false);
+        when(userService.count()).thenReturn(0L);
+        when(roleService.findByName(RoleName.ROLE_USER)).thenReturn(Optional.of(userRole));
+
+        mockMvc.perform(post("/auth/signup")
+                .with(csrf())
+                .content(mapper.writeValueAsString(userForm))
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.message").value("User registered successfully!"));
+    }
+
+    @Test
+    public void POST_signup_username_taken() throws Exception {
+        setAllowance(true);
+        when(userService.existsByUsername(anyString())).thenReturn(true);
+
+        mockMvc.perform(post("/auth/signup")
+                .with(csrf())
+                .content(mapper.writeValueAsString(userForm))
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Fail -> Username is already taken!"));
+    }
+
+    @Test
+    public void POST_signup_registration_closed() throws Exception {
+        setAllowance(false);
+
+        mockMvc.perform(post("/auth/signup")
+                .with(csrf())
+                .content(mapper.writeValueAsString(userForm))
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.message").value("Registration is forbidden"));
+    }
+
+    @Test
+    public void GET_refresh_token() throws Exception {
+        when(jwtProvider.refreshToken(anyString())).thenReturn(generateJwtToken(userForm.getUsername()));
+        when(jwtProvider.getUserNameFromJwtToken(anyString())).thenReturn(userForm.getUsername());
+        when(userService.findByUsername(anyString())).thenReturn(Optional.of(user));
+
+        mockMvc.perform(get("/auth/refresh")
+                .header("Authorization", "Bearer token"))
+                .andExpect(status().isOk());
     }
 
     private List<String> generateJwtToken(String username) {
@@ -142,6 +237,11 @@ public class AuthControllerTest {
         jwtToken.add(String.valueOf(jwtExpiration));
 
         return jwtToken;
+    }
+
+    private void setAllowance(boolean val) throws Exception {
+        mockMvc.perform(put("/auth/allow?newVal=" + val)
+                .with(csrf()));
     }
 
 }
