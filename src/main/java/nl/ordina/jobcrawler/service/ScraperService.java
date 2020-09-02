@@ -10,18 +10,13 @@ import nl.ordina.jobcrawler.scrapers.HuxleyITVacancyScraper;
 import nl.ordina.jobcrawler.scrapers.JobBirdScraper;
 import nl.ordina.jobcrawler.scrapers.VacancyScraper;
 import nl.ordina.jobcrawler.scrapers.YachtVacancyScraper;
-import org.json.JSONException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.IncorrectResultSizeDataAccessException;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 /*
@@ -33,33 +28,33 @@ Upon fetching the vacancies it runs a check to verify if the vacancy is already 
 @Service
 public class ScraperService {
 
+
     private final VacancyService vacancyService;
+
     private final SkillMatcherService skillMatcherService;
-    @Autowired
-    private LocationService locationService;
-    private List<VacancyScraper> scraperList;
+
+    private LocationRepository locationRepository;
 
     @Autowired
-    public ScraperService(VacancyService vacancyService, SkillMatcherService skillMatcherService, LocationService locationService) {
+    public ScraperService(VacancyService vacancyService, SkillMatcherService skillMatcherService, LocationRepository locationRepository) {
         this.vacancyService = vacancyService;
         this.skillMatcherService = skillMatcherService;
-        this.locationService = locationService;
-
-        this.scraperList = new ArrayList<>() {
-            {
-                add(new YachtVacancyScraper(locationService));
-                add(new HuxleyITVacancyScraper(locationService));
-                add(new JobBirdScraper(locationService));
-            }
-    };
+        this.locationRepository = locationRepository;
     }
+
+    private final List<VacancyScraper> scraperList = new ArrayList<>() {
+        {
+            add(new YachtVacancyScraper());
+            add(new HuxleyITVacancyScraper());
+            add(new JobBirdScraper());
+        }
+    };
 
     @PostConstruct
     @Scheduled(cron = "0 0 12,18 * * *") // Runs two times a day. At 12pm and 6pm
     public void scrape() {
         log.info("CRON Scheduled -- Scrape vacancies");
         List<Vacancy> allVacancies = startScraping();
-        locationService.addCoordinates();
         int existVacancy = 0;
         int newVacancy = 0;
         for (Vacancy vacancy : allVacancies) {
@@ -68,16 +63,33 @@ public class ScraperService {
                 if (existCheck.isPresent()) {
                     existVacancy++;
                 } else {
-/*                    String vacancyLocation = vacancy.getLocation().getLocationName();
+
+                    String vacancyLocation = vacancy.getLocationString();
+                    if(vacancyLocation.matches("Den Haag")) {vacancyLocation = "'s-Gravenhage";}
+                    if(vacancyLocation.endsWith(", Nederland")) {vacancyLocation = vacancyLocation.substring(0,vacancyLocation.length()-11);}
                     if (vacancyLocation!="") {
                         Optional<Location> existCheckLocation = locationRepository.findByLocationName(vacancyLocation);
                         if (!existCheckLocation.isPresent()) {
                             Location location = LocationService.getCoordinates(vacancyLocation);
-                            locationRepository.save(location);
+//                            locationRepository.save(location);
+                            vacancy.setLocation(location);
+                        } else {
+                            Location location = existCheckLocation.get();
+/*                            List<Vacancy> retrievedVacancies = location.getVacancies();
+                            for (Vacancy retrievedVacancy : retrievedVacancies) {
+                                Set<Skill> retrievedSkills = retrievedVacancy.getSkills();
+                                retrievedVacancy.setSkills(retrievedSkills);
+                            }*/
+                            //System.out.println(existCheckLocation.get());
+                            vacancy.setLocation(location);
+//                            System.out.println(vacancy.getLocation().getVacancies().toString());
                         }
-                    }*/
+                    }
+
                     Set<Skill> skills = skillMatcherService.findMatchingSkills(vacancy);
                     vacancy.setSkills(skills);
+                    System.out.println(vacancy.toString());
+                    System.out.println(vacancy.getLocation().toString());
                     vacancyService.save(vacancy);
                     newVacancy++;
                 }

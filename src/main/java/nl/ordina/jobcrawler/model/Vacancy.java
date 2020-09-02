@@ -37,13 +37,14 @@ public class Vacancy {
     private String title;
     private String broker;
     private String vacancyNumber;
+    private String locationString;
     private String hours;
     private String salary;
     private String postingDate;
     @Column(columnDefinition = "TEXT")
     private String about;
 
-    @ManyToMany
+    @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "vacancy_skills",
             joinColumns = @JoinColumn(name = "vacancy_id"),
@@ -90,15 +91,35 @@ public class Vacancy {
         returnValue.append(title + newLine);
         returnValue.append(broker + newLine);
         returnValue.append(vacancyNumber + newLine);
+        returnValue.append(locationString + newLine);
         returnValue.append(hours + newLine);
-        returnValue.append(location.toString() + newLine);
+        returnValue.append(salary + newLine);
         returnValue.append(postingDate + newLine);
         returnValue.append(about + newLine);
         returnValue.append(skills.toString() + newLine + newLine);
+        returnValue.append(location.getLocationName() + newLine);
+        returnValue.append(location.getLocation_id() + newLine);
+        returnValue.append(location.getLat() + newLine);
+        returnValue.append(location.getLon() + newLine);
         returnValue.append("*****************************************");
         return returnValue.toString();
     }
 
-
-
+/*    @Override
+    public String toString() {
+        return "Vacancy{" +
+                "id=" + id +
+                ", vacancyURL='" + vacancyURL + '\'' +
+                ", title='" + title + '\'' +
+                ", broker='" + broker + '\'' +
+                ", vacancyNumber='" + vacancyNumber + '\'' +
+                ", locationString='" + locationString + '\'' +
+                ", hours='" + hours + '\'' +
+                ", salary='" + salary + '\'' +
+                ", postingDate='" + postingDate + '\'' +
+                ", about='" + about + '\'' +
+                ", skills=" + skills +
+                ", location=" + location +
+                '}';
+    }*/
 }

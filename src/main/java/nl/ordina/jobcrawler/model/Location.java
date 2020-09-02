@@ -19,15 +19,15 @@ public class Location {
     @Id
     @GeneratedValue(generator = "UUID")
     @GenericGenerator(name = "UUID", strategy = "org.hibernate.id.UUIDGenerator")
-    private UUID id;
+    private UUID location_id;
     private String locationName;
     private double lon;
     private double lat;
 
-    @OneToMany(mappedBy = "location",cascade = CascadeType.ALL)
+    @OneToMany(fetch = FetchType.EAGER, mappedBy = "location",cascade = CascadeType.ALL)
     private List<Vacancy> vacancies;
 
-    /*    @JoinTable(
+/*        @JoinTable(
             name = "city_vacancy",
             joinColumns = @JoinColumn(name = "vacancy_id"),
             inverseJoinColumns = @JoinColumn(name = "city_id"))*/
@@ -44,4 +44,15 @@ public class Location {
 
     public double getLon() { return lon; }
     public double getLat() { return lat; }
+
+    @Override
+    public String toString() {
+        return "Location{" +
+                "location_id=" + location_id +
+                ", locationName='" + locationName + '\'' +
+                ", lon=" + lon +
+                ", lat=" + lat +
+                ", vacancies=" + vacancies +
+                '}';
+    }
 }

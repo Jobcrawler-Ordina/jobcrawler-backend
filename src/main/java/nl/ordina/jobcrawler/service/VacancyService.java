@@ -52,6 +52,13 @@ public class VacancyService implements CRUDService<Vacancy, UUID> {
         return vacancyRepository.findAll();
     }
 
+/*    public Optional<Location> findLocationByLocationName(String locationName) {
+        return vacancyRepository.findByLocation_LocationName(locationName);
+    }
+    public Optional<Location> findLocationByLocationId(UUID id) {
+        return vacancyRepository.findByLocation_Id(id);
+    }*/
+
     /**
      * Returns all vacancies in the database using pagination.
      *
@@ -139,7 +146,10 @@ public class VacancyService implements CRUDService<Vacancy, UUID> {
      */
     @Override
     public Vacancy save(Vacancy vacancy) {
-
+        System.out.println("Location name: " + vacancy.getLocation().getLocationName());
+        System.out.println("Location id: " + vacancy.getLocation().getLocation_id());
+        System.out.println("Latitude: " + vacancy.getLocation().getLat());
+        System.out.println("Longitude: " + vacancy.getLocation().getLon());
         if (vacancy.hasValidURL()) {    //checking the url, if it is malformed it will throw a VacancyURLMalformedException
             return vacancyRepository.save(vacancy);
         } else {

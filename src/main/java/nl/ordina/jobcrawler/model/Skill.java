@@ -36,7 +36,7 @@ public class Skill {
     @Column(nullable = false, unique = true, columnDefinition = "TEXT")
     private String name;
 
-    @ManyToMany(mappedBy = "skills", fetch = FetchType.EAGER, cascade = CascadeType.REMOVE)
+    @ManyToMany(mappedBy = "skills", fetch = FetchType.LAZY, cascade = CascadeType.PERSIST)
     @JsonIgnore
     Set<Vacancy> vacancies = new HashSet<>();
 

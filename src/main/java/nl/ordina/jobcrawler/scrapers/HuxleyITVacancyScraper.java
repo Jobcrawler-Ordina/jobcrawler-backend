@@ -5,7 +5,6 @@ import nl.ordina.jobcrawler.model.Vacancy;
 import nl.ordina.jobcrawler.model.Location;
 import nl.ordina.jobcrawler.repo.LocationRepository;
 import nl.ordina.jobcrawler.repo.VacancyRepository;
-import nl.ordina.jobcrawler.service.LocationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -32,18 +31,16 @@ public class HuxleyITVacancyScraper extends VacancyScraper {
 
     RestTemplate restTemplate = new RestTemplate();
 
-    @Autowired
     LocationRepository locationRepository;
 
     /**
      * Default constructor that calls the constructor from the abstract class.
      */
     @Autowired
-    public HuxleyITVacancyScraper(LocationService locationService) {
+    public HuxleyITVacancyScraper() {
         super(
                 "https://api.websites.sthree.com/api/services/app/Search/Search", // Required search URL. Can be retrieved using getSEARCH_URL()
-                "HuxleyIT", // Required broker. Can be retrieved using getBROKER()
-                    locationService
+                "HuxleyIT" // Required broker. Can be retrieved using getBROKER()
         );
     }
 
@@ -68,15 +65,26 @@ public class HuxleyITVacancyScraper extends VacancyScraper {
         List<Vacancy> vacancies = new ArrayList<>();
         for (Map<String, Object> vacancyData : vacanciesData) {
 
-            String locationName = (String) vacancyData.get("city");
-            Location location = super.saveLocation(locationName);
+/*            Location location;
+            System.out.println(locationRepository==null);
+            if((locationRepository==null)) {
+                Optional<Location> existCheckLocation = locationRepository.findByLocationName((String) vacancyData.get("city"));
+                if (!existCheckLocation.isPresent()) {
+                    location = new Location((String) vacancyData.get("city"));
+                } else {
+                    UUID id = existCheckLocation.get().getId();
+                    location = locationRepository.findById(id).get();
+                }
+            } else {
+                location = new Location((String) vacancyData.get("city"));
+            }*/
 
             Vacancy vacancy = Vacancy.builder()
                     .vacancyURL(VACANCY_URL_PREFIX + vacancyData.get("jobReference"))
                     .title((String) vacancyData.get("title"))
                     .broker(getBROKER())
                     .vacancyNumber((String) vacancyData.get("jobReference"))
-                    .location(location)
+                    .locationString((String) vacancyData.get("city"))
                     .salary((String) vacancyData.get("salaryText"))
                     .postingDate((String) vacancyData.get("postDate"))
                     .about((String) vacancyData.get("description"))

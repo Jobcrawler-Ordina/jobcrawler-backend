@@ -141,12 +141,12 @@ public class VacancyController {
         return new SkillModelAssembler().toCollectionModel(vacancy.getSkills());
     }
 
-    @GetMapping("/{id}/location")
+/*    @GetMapping("/{id}/location")
     public EntityModel<Location> getLocation(@PathVariable UUID id) {
         Location location = vacancyService.findById(id)
                 .orElseThrow(() -> new VacancyNotFoundException(id)).getLocation();
         return new LocationModelAssembler().toModel(location);
-    }
+    }*/
 
     /**
      * Deletes the vacancy with the specified ID.

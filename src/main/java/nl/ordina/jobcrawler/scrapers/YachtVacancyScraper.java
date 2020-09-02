@@ -4,7 +4,6 @@ import lombok.extern.slf4j.Slf4j;
 import nl.ordina.jobcrawler.model.Location;
 import nl.ordina.jobcrawler.model.Vacancy;
 import nl.ordina.jobcrawler.repo.LocationRepository;
-import nl.ordina.jobcrawler.service.LocationService;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,11 +26,10 @@ public class YachtVacancyScraper extends VacancyScraper {
     RestTemplate restTemplate = new RestTemplate();
 
     @Autowired
-    public YachtVacancyScraper(LocationService locationService) {
+    public YachtVacancyScraper() {
         super(
-                    "https://www.yacht.nl/vacatures?_hn:type=resource&_hn:ref=r2_r1_r1&&vakgebiedProf=IT", // Required search URL. Can be retrieved using getSEARCH_URL()
-                    "Yacht", // Required broker. Can be retrieved using getBROKER()
-                    locationService
+                "https://www.yacht.nl/vacatures?_hn:type=resource&_hn:ref=r2_r1_r1&&vakgebiedProf=IT", // Required search URL. Can be retrieved using getSEARCH_URL()
+                "Yacht" // Required broker. Can be retrieved using getBROKER()
         );
     }
 
@@ -64,8 +62,19 @@ public class YachtVacancyScraper extends VacancyScraper {
                 vacancyURL = vacancyURL.contains("http") ? vacancyURL : VACANCY_URL_PREFIX + vacancyURL;
                 Document vacancyDoc = getDocument(vacancyURL);
 
-                String locationName = (String) vacancyMetaData.get("location");
-                Location location = super.saveLocation(locationName);
+/*                Location location;
+                System.out.println(locationRepository==null);
+                if((locationRepository==null)) {
+                    Optional<Location> existCheckLocation = locationRepository.findByLocationName((String) vacancyMetaData.get("location"));
+                    if (!existCheckLocation.isPresent()) {
+                        location = new Location((String) vacancyMetaData.get("location"));
+                    } else {
+                        UUID id = existCheckLocation.get().getId();
+                        location = locationRepository.findById(id).get();
+                    }
+                } else {
+                    location = new Location((String) vacancyMetaData.get("location"));
+                }*/
 
                 Vacancy vacancy = Vacancy.builder()
                         .vacancyURL(vacancyURL)
@@ -73,7 +82,7 @@ public class YachtVacancyScraper extends VacancyScraper {
                         .hours((String) vacancyMetaData.get("hours"))
                         .broker(getBROKER())
                         .vacancyNumber((String) vacancyData.get("vacancyNumber"))
-                        .location(location)
+                        .locationString((String) vacancyMetaData.get("location"))
                         .postingDate((String) vacancyData.get("date"))
                         .about(getVacancyAbout(vacancyDoc))
                         .salary((String) vacancyMetaData.get("salary"))
