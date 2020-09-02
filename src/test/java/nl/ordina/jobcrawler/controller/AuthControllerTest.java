@@ -1,6 +1,8 @@
 package nl.ordina.jobcrawler.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import nl.ordina.jobcrawler.controller.exception.RoleNotFoundException;
+import nl.ordina.jobcrawler.controller.exception.UserNotFoundException;
 import nl.ordina.jobcrawler.model.Role;
 import nl.ordina.jobcrawler.model.RoleName;
 import nl.ordina.jobcrawler.model.User;
@@ -35,6 +37,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
@@ -42,7 +45,6 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -151,6 +153,31 @@ public class AuthControllerTest {
     }
 
     @Test
+    public void POST_signin_throws_UserNotFoundException() throws Exception {
+            when(userService.findByUsername(anyString())).thenReturn(Optional.empty());
+
+            mockMvc.perform(post("/auth/signin")
+                    .with(csrf())
+                    .content(mapper.writeValueAsString(userForm))
+                    .contentType(MediaType.APPLICATION_JSON))
+                    .andExpect(status().is4xxClientError())
+                    .andExpect(result -> assertTrue(result.getResolvedException() instanceof UserNotFoundException));
+    }
+
+    @Test
+    public void POST_signin_throws_RoleNotFoundException() throws Exception {
+        when(userService.findByUsername(anyString())).thenReturn(Optional.of(user));
+        when(roleService.findByName(any())).thenReturn(Optional.empty());
+
+        mockMvc.perform(post("/auth/signin")
+                .with(csrf())
+                .content(mapper.writeValueAsString(userForm))
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().is4xxClientError())
+                .andExpect(result -> assertTrue(result.getResolvedException() instanceof RoleNotFoundException));
+    }
+
+    @Test
     public void GET_allowance() throws Exception {
         setAllowance(true);
 
@@ -227,8 +254,7 @@ public class AuthControllerTest {
         mockMvc.perform(get("/auth/refresh")
                 .header("Authorization", "Bearer " + jwtToken))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.username").value(userForm.getUsername()))
-                .andDo(print());
+                .andExpect(jsonPath("$.username").value(userForm.getUsername()));
     }
 
     private void setAllowance(boolean val) throws Exception {

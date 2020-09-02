@@ -1,5 +1,6 @@
 package nl.ordina.jobcrawler.controller;
 
+import nl.ordina.jobcrawler.controller.exception.RoleNotFoundException;
 import nl.ordina.jobcrawler.controller.exception.UserNotFoundException;
 import nl.ordina.jobcrawler.model.JwtResponse;
 import nl.ordina.jobcrawler.model.Role;
@@ -105,7 +106,7 @@ public class AuthController {
         User user = userService.findByUsername(loginRequest.getUsername())
                 .orElseThrow(() -> new UserNotFoundException(String.format("Fail! -> User with username %s not found!", loginRequest.getUsername())));
         Role adminRole = roleService.findByName(RoleName.ROLE_ADMIN)
-                .orElseThrow(() -> new RuntimeException("Fail! -> Could not find admin role."));
+                .orElseThrow(() -> new RoleNotFoundException("Fail! -> Could not find admin role."));
 
 
         if (!user.getRoles().contains(adminRole)) {
@@ -140,12 +141,12 @@ public class AuthController {
             Set<Role> roles = new HashSet<>();
             if (userService.count() == 0) {
                 Role adminRole = roleService.findByName(RoleName.ROLE_ADMIN)
-                        .orElseThrow(() -> new RuntimeException("Fail! -> Could not find admin role."));
+                        .orElseThrow(() -> new RoleNotFoundException("Fail! -> Could not find admin role."));
                 roles.add(adminRole);
             }
 
             Role userRole = roleService.findByName(RoleName.ROLE_USER)
-                    .orElseThrow(() -> new RuntimeException("Fail! -> Could not find user role."));
+                    .orElseThrow(() -> new RoleNotFoundException("Fail! -> Could not find user role."));
             roles.add(userRole);
 
             user.setRoles(roles);
