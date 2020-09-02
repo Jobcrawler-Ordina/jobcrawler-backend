@@ -1,25 +1,24 @@
 package nl.ordina.jobcrawler.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
 import nl.ordina.jobcrawler.model.Role;
 import nl.ordina.jobcrawler.model.RoleName;
 import nl.ordina.jobcrawler.model.User;
 import nl.ordina.jobcrawler.model.UserForm;
 import nl.ordina.jobcrawler.security.jwt.JwtProvider;
+import nl.ordina.jobcrawler.security.services.UserPrinciple;
 import nl.ordina.jobcrawler.service.RoleService;
 import nl.ordina.jobcrawler.service.UserService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -31,7 +30,6 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -44,6 +42,7 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -77,12 +76,6 @@ public class AuthControllerTest {
     @MockBean
     private JwtProvider jwtProvider;
 
-    @Value("${jwt.token}") //jwt.token in application.properties
-    private String jwtSecret;
-
-    @Value("${jwt.expire}") // jwt.expire in application.properties
-    private int jwtExpiration;
-
     private Role userRole;
 
     private Role adminRole;
@@ -90,6 +83,10 @@ public class AuthControllerTest {
     private UserForm userForm;
 
     private User user;
+
+    private UserPrinciple userPrinciple;
+
+    private List<GrantedAuthority> authorityList;
 
     @BeforeEach
     public void init() {
@@ -111,10 +108,11 @@ public class AuthControllerTest {
         user = new User(userForm.getUsername(), userForm.getPassword());
 
         when(roleService.findByName(RoleName.ROLE_ADMIN)).thenReturn(Optional.of(adminRole));
-        List<GrantedAuthority> authorityList = new ArrayList<>();
+        authorityList = new ArrayList<>();
         authorityList.add(new SimpleGrantedAuthority("ROLE_ADMIN"));
-        when(authenticationManager.authenticate(any())).thenReturn(new UsernamePasswordAuthenticationToken(userForm.getUsername(), null, authorityList));
-        when(jwtProvider.generateJwtToken(any())).thenReturn(generateJwtToken(userForm.getUsername()));
+        userPrinciple = new UserPrinciple(1L, userForm.getUsername(), userForm.getPassword(), authorityList);
+        when(authenticationManager.authenticate(any())).thenReturn(new UsernamePasswordAuthenticationToken(userPrinciple, null, authorityList));
+        when(jwtProvider.generateJwtToken(any())).thenCallRealMethod();
         when(userService.save(any())).thenReturn(null);
     }
 
@@ -217,26 +215,20 @@ public class AuthControllerTest {
 
     @Test
     public void GET_refresh_token() throws Exception {
-        when(jwtProvider.refreshToken(anyString())).thenReturn(generateJwtToken(userForm.getUsername()));
-        when(jwtProvider.getUserNameFromJwtToken(anyString())).thenReturn(userForm.getUsername());
+        // First generate valid token that needs to be refreshed. Can't refresh an invalid token.
+        Authentication authentication = new UsernamePasswordAuthenticationToken(userPrinciple, null, authorityList);
+        String jwtToken = jwtProvider.generateJwtToken(authentication).get(0);
+
+        // Use real methods for refreshing token
+        when(jwtProvider.refreshToken(anyString())).thenCallRealMethod();
+        when(jwtProvider.getUserNameFromJwtToken(anyString())).thenCallRealMethod();
         when(userService.findByUsername(anyString())).thenReturn(Optional.of(user));
 
         mockMvc.perform(get("/auth/refresh")
-                .header("Authorization", "Bearer token"))
-                .andExpect(status().isOk());
-    }
-
-    private List<String> generateJwtToken(String username) {
-        List<String> jwtToken = new ArrayList<>();
-        jwtToken.add(Jwts.builder()
-                .setSubject(username)
-                .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + jwtExpiration * 1000))
-                .signWith(SignatureAlgorithm.HS512, jwtSecret)
-                .compact());
-        jwtToken.add(String.valueOf(jwtExpiration));
-
-        return jwtToken;
+                .header("Authorization", "Bearer " + jwtToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.username").value(userForm.getUsername()))
+                .andDo(print());
     }
 
     private void setAllowance(boolean val) throws Exception {
