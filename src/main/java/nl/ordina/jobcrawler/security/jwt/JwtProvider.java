@@ -3,6 +3,7 @@ package nl.ordina.jobcrawler.security.jwt;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jws;
+import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.MalformedJwtException;
 import io.jsonwebtoken.SignatureAlgorithm;
@@ -68,19 +69,12 @@ public class JwtProvider {
         try {
             Jwts.parser().setSigningKey(jwtSecret).parseClaimsJws(authToken);
             return true;
-        } catch (SignatureException e) {
-            log.error("Invalid JWT signature -> Message: {} ", e.getMessage());
-        } catch (MalformedJwtException e) {
-            log.error("Invalid JWT token -> Message: {}", e.getMessage());
-        } catch (ExpiredJwtException e) {
-            log.error("Expired JWT token -> Message: {}", e.getMessage());
-        } catch (UnsupportedJwtException e) {
-            log.error("Unsupported JWT token -> Message: {}", e.getMessage());
-        } catch (IllegalArgumentException e) {
-            log.error("JWT claims string is empty -> Message: {}", e.getMessage());
+        } catch (SignatureException | MalformedJwtException | ExpiredJwtException | UnsupportedJwtException | IllegalArgumentException e) {
+            final String errorMessage = "Unable to validate the access token.";
+            log.error(errorMessage + " -> Message: {} ", e.getMessage());
+            throw new JwtException(errorMessage, e);
         }
 
-        return false;
     }
 
     /**
