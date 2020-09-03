@@ -1,5 +1,6 @@
 package nl.ordina.jobcrawler.service;
 
+import nl.ordina.jobcrawler.controller.exception.RoleNotFoundException;
 import nl.ordina.jobcrawler.model.Role;
 import nl.ordina.jobcrawler.model.RoleName;
 import nl.ordina.jobcrawler.repo.RoleRepository;
@@ -21,27 +22,30 @@ public class RoleService implements CRUDService<Role, Long> {
 
     @Override
     public Optional<Role> findById(Long id) {
-        return Optional.empty();
+        return roleRepository.findById(id);
     }
 
     @Override
     public List<Role> findAll() {
-        return null;
+        return roleRepository.findAll();
     }
 
     @Override
     public Role update(Long aLong, Role role) {
-        return null;
+        return roleRepository.save(role);
     }
 
     @Override
     public Role save(Role role) {
-        return null;
+        return roleRepository.save(role);
     }
 
     @Override
     public boolean delete(Long id) {
-        return false;
+        Role role = roleRepository.findById(id)
+                .orElseThrow(() -> new RoleNotFoundException(String.format("Fail! -> Could not find role with id: %d in database.", id)));
+        roleRepository.delete(role);
+        return true;
     }
 
     public Optional<Role> findByName(RoleName roleName) {
