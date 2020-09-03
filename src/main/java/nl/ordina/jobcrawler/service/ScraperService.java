@@ -10,12 +10,28 @@ import nl.ordina.jobcrawler.scrapers.HuxleyITVacancyScraper;
 import nl.ordina.jobcrawler.scrapers.JobBirdScraper;
 import nl.ordina.jobcrawler.scrapers.VacancyScraper;
 import nl.ordina.jobcrawler.scrapers.YachtVacancyScraper;
+import org.hibernate.*;
+import org.hibernate.boot.spi.SessionFactoryOptions;
+import org.hibernate.engine.spi.FilterDefinition;
+import org.hibernate.metadata.ClassMetadata;
+import org.hibernate.metadata.CollectionMetadata;
+import org.hibernate.stat.Statistics;
+import org.json.JSONException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.IncorrectResultSizeDataAccessException;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
+import javax.naming.NamingException;
+import javax.naming.Reference;
+import javax.persistence.EntityGraph;
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceUnitUtil;
+import javax.persistence.SynchronizationType;
+import javax.persistence.criteria.CriteriaBuilder;
+import java.io.IOException;
+import java.sql.Connection;
 import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -34,6 +50,8 @@ public class ScraperService {
     private final SkillMatcherService skillMatcherService;
 
     private LocationRepository locationRepository;
+
+//    private SessionFactory sessionFactory;
 
     @Autowired
     public ScraperService(VacancyService vacancyService, SkillMatcherService skillMatcherService, LocationRepository locationRepository) {
@@ -69,12 +87,29 @@ public class ScraperService {
                     if(vacancyLocation.endsWith(", Nederland")) {vacancyLocation = vacancyLocation.substring(0,vacancyLocation.length()-11);}
                     if (vacancyLocation!="") {
                         Optional<Location> existCheckLocation = locationRepository.findByLocationName(vacancyLocation);
+
+/*                        String finalVacancyLocation = vacancyLocation;
+                        existCheckLocation.ifPresentOrElse(l -> {
+                            vacancy.setLocation(l);
+
+                        },() -> {
+                            try {
+                                vacancy.setLocation(LocationService.getCoordinates(finalVacancyLocation));
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            } catch (JSONException e) {
+                                e.printStackTrace();
+                            }
+                        });*/
+
                         if (!existCheckLocation.isPresent()) {
                             Location location = LocationService.getCoordinates(vacancyLocation);
 //                            locationRepository.save(location);
                             vacancy.setLocation(location);
                         } else {
-                            Location location = existCheckLocation.get();
+                            UUID id = existCheckLocation.get().getLocation_id();
+//                            Location location = existCheckLocation.get();
+                            Location location = locationRepository.getOne(id);
 /*                            List<Vacancy> retrievedVacancies = location.getVacancies();
                             for (Vacancy retrievedVacancy : retrievedVacancies) {
                                 Set<Skill> retrievedSkills = retrievedVacancy.getSkills();
@@ -86,10 +121,22 @@ public class ScraperService {
                         }
                     }
 
+/*                    Session session = sessionFactory.openSession();
+                    session.beginTransaction();
+                    session.save(vacancy.getLocation());
+                    session.save(vacancy);
+                    session.getTransaction().commit();
+                    session.close();*/
+
+/*                    user.getRoles().forEach(role -> session.save(role));
+                    session.save(user);
+                    session.getTransaction().commit();
+                    session.close();*/
+
                     Set<Skill> skills = skillMatcherService.findMatchingSkills(vacancy);
                     vacancy.setSkills(skills);
-                    System.out.println(vacancy.toString());
-                    System.out.println(vacancy.getLocation().toString());
+//                    System.out.println(vacancy.toString());
+//                    System.out.println(vacancy.getLocation().toString());
                     vacancyService.save(vacancy);
                     newVacancy++;
                 }

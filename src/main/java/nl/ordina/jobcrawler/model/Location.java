@@ -24,7 +24,7 @@ public class Location {
     private double lon;
     private double lat;
 
-    @OneToMany(fetch = FetchType.EAGER, mappedBy = "location",cascade = CascadeType.ALL)
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "location",cascade = CascadeType.ALL)
     private List<Vacancy> vacancies;
 
 /*        @JoinTable(
