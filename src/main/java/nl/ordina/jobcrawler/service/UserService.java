@@ -78,13 +78,9 @@ public class UserService implements CRUDService<User, Long> {
         Set<Role> newRoles = new HashSet<>();
 
         userDTO.getRoles().forEach(role -> {
-            try {
-                Role addRole = roleService.findByName(RoleName.valueOf(role))
-                        .orElseThrow(() -> new RoleNotFoundException("Fail! -> Could not find: " + role + " in database."));
-                newRoles.add(addRole);
-            } catch (IllegalArgumentException e) {
-                throw new RoleNotFoundException("Fail -> Could not find: " + role);
-            }
+        Role addRole = roleService.findByName(RoleName.valueOf(role))
+              .orElseThrow(() -> new RoleNotFoundException("Fail! -> Could not find: " + role + " in database."));
+        newRoles.add(addRole);
         });
 
         user.setRoles(newRoles);
