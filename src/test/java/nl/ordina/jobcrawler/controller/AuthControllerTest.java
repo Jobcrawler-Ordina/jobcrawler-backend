@@ -40,6 +40,8 @@ import java.util.Set;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -133,6 +135,11 @@ public class AuthControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.token").isNotEmpty())
                 .andExpect(jsonPath("$.username").value(userForm.getUsername()));
+
+        verify(authenticationManager, times(1)).authenticate(any());
+        verify(userService, times(2)).findByUsername(anyString());
+        verify(roleService, times(1)).findByName(RoleName.ROLE_ADMIN);
+        verify(jwtProvider, times(1)).generateJwtToken(any());
     }
 
     @Test
@@ -150,6 +157,10 @@ public class AuthControllerTest {
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.message").value("You don't have admin access."));
+
+        verify(authenticationManager, times(1)).authenticate(any());
+        verify(userService, times(1)).findByUsername(anyString());
+        verify(roleService, times(1)).findByName(RoleName.ROLE_ADMIN);
     }
 
     @Test
@@ -162,6 +173,9 @@ public class AuthControllerTest {
                     .contentType(MediaType.APPLICATION_JSON))
                     .andExpect(status().is4xxClientError())
                     .andExpect(result -> assertTrue(result.getResolvedException() instanceof UserNotFoundException));
+
+        verify(authenticationManager, times(1)).authenticate(any());
+        verify(userService, times(1)).findByUsername(anyString());
     }
 
     @Test
@@ -175,6 +189,10 @@ public class AuthControllerTest {
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().is4xxClientError())
                 .andExpect(result -> assertTrue(result.getResolvedException() instanceof RoleNotFoundException));
+
+        verify(authenticationManager, times(1)).authenticate(any());
+        verify(userService, times(1)).findByUsername(anyString());
+        verify(roleService, times(1)).findByName(RoleName.ROLE_ADMIN);
     }
 
     @Test
@@ -213,6 +231,11 @@ public class AuthControllerTest {
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.message").value("User registered successfully!"));
+
+        verify(userService, times(1)).existsByUsername(anyString());
+        verify(userService, times(1)).count();
+        verify(roleService, times(2)).findByName(any());
+        verify(userService, times(1)).save(any());
     }
 
     @Test
@@ -226,6 +249,8 @@ public class AuthControllerTest {
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.message").value("Fail -> Username is already taken!"));
+
+        verify(userService, times(1)).existsByUsername(anyString());
     }
 
     @Test
@@ -255,6 +280,10 @@ public class AuthControllerTest {
                 .header("Authorization", "Bearer " + jwtToken))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.username").value(userForm.getUsername()));
+
+        verify(jwtProvider, times(1)).refreshToken(anyString());
+        verify(jwtProvider, times(1)).getUserNameFromJwtToken(anyString());
+        verify(userService, times(1)).findByUsername(anyString());
     }
 
     private void setAllowance(boolean val) throws Exception {

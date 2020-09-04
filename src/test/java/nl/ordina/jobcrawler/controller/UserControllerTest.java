@@ -26,6 +26,8 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -82,6 +84,9 @@ public class UserControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].id", notNullValue()))
                 .andExpect(jsonPath("$", hasSize(2)));
+
+        verify(userService, times(1)).findAll();
+        verify(userService, times(2)).convertToUserDTO(any());
     }
 
     @Test
@@ -108,6 +113,9 @@ public class UserControllerTest {
                 .content(mapper.writeValueAsString(userDTO)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success", is(true)));
+
+        verify(userService, times(1)).convertToUser(any());
+        verify(userService, times(1)).update(anyLong(), any());
     }
 
     @Test
@@ -116,6 +124,8 @@ public class UserControllerTest {
         mockMvc.perform(delete("/user/1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success", is(true)));
+
+        verify(userService, times(1)).delete(anyLong());
     }
 
 
