@@ -1,5 +1,6 @@
 package nl.ordina.jobcrawler.service;
 
+import lombok.extern.slf4j.Slf4j;
 import nl.ordina.jobcrawler.model.Location;
 
 import nl.ordina.jobcrawler.model.Vacancy;
@@ -7,6 +8,8 @@ import nl.ordina.jobcrawler.repo.LocationRepository;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import javax.persistence.EntityManager;
@@ -19,6 +22,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+@Slf4j
 @Service
 public class LocationService implements CRUDService<Location, UUID> {
 
@@ -29,13 +33,12 @@ public class LocationService implements CRUDService<Location, UUID> {
         this.locationRepository = locationRepository;
     }
 
-    @Autowired
-    private EntityManager entityManager;
-
     @Override
     public Optional<Location> findById(UUID id) {
         return locationRepository.findById(id);
     }
+
+    public Optional<Location> findByLocationName(String locationName) {return locationRepository.findByLocationName(locationName); }
 
     public static Location getCoordinates(String location) throws IOException, JSONException {
         final String apiKey = "Xd5hXSuQvqUJJbJh3iacOXZAcskvP7gI";
@@ -101,10 +104,6 @@ public class LocationService implements CRUDService<Location, UUID> {
 
     }
 
-    public Optional<Location> findByLocationName(String locationName) {
-        return locationRepository.findByLocationName(locationName);
-    }
-
     @Override
     public List<Location> findAll() {
         return locationRepository.findAll();
@@ -117,7 +116,7 @@ public class LocationService implements CRUDService<Location, UUID> {
 
     @Override
     public Location save(Location location) {
-        return null;
+        return locationRepository.save(location);
     }
 
     @Override

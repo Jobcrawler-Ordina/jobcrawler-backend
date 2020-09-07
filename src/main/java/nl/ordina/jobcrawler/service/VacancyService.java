@@ -1,15 +1,19 @@
 package nl.ordina.jobcrawler.service;
 
+import lombok.extern.slf4j.Slf4j;
 import nl.ordina.jobcrawler.controller.exception.VacancyURLMalformedException;
 import nl.ordina.jobcrawler.model.Location;
 import nl.ordina.jobcrawler.model.Vacancy;
 import nl.ordina.jobcrawler.repo.VacancyRepository;
+import org.hibernate.Session;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.EntityManager;
 import javax.persistence.criteria.CriteriaBuilder;
@@ -22,6 +26,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
+@Slf4j
 @Service
 public class VacancyService implements CRUDService<Vacancy, UUID> {
 
@@ -43,14 +48,12 @@ public class VacancyService implements CRUDService<Vacancy, UUID> {
      * @return An optional of the requested vacancy if found, and an empty optional otherwise.
      */
     @Override
-    public Optional<Vacancy> findById(UUID id) {
-        return vacancyRepository.findById(id);
-    }
+    public Optional<Vacancy> findById(UUID id) { return vacancyRepository.findById(id); }
 
     @Override
-    public List<Vacancy> findAll() {
-        return vacancyRepository.findAll();
-    }
+    public List<Vacancy> findAll() { return vacancyRepository.findAll(); }
+
+    public List<Vacancy> findByLocationid(UUID id) {return vacancyRepository.findByLocation_Id(id); }
 
 /*    public Optional<Location> findLocationByLocationName(String locationName) {
         return vacancyRepository.findByLocation_LocationName(locationName);
@@ -144,13 +147,18 @@ public class VacancyService implements CRUDService<Vacancy, UUID> {
      * @return The saved vacancy.
      * @throws VacancyURLMalformedException if the URL could not be reached.
      */
+//    @Transactional(propagation = Propagation.REQUIRED)
     @Override
     public Vacancy save(Vacancy vacancy) {
         System.out.println("Location name: " + vacancy.getLocation().getLocationName());
-        System.out.println("Location id: " + vacancy.getLocation().getLocation_id());
+        System.out.println("Location id: " + vacancy.getLocation().getId());
         System.out.println("Latitude: " + vacancy.getLocation().getLat());
         System.out.println("Longitude: " + vacancy.getLocation().getLon());
         if (vacancy.hasValidURL()) {    //checking the url, if it is malformed it will throw a VacancyURLMalformedException
+//            Session session = entityManager.unwrap(Session.class);
+/*            Session session = entityManager.unwrap(Session.class);
+            session.saveOrUpdate(vacancy);*/
+            log.info("Test: " + vacancy.toString());
             return vacancyRepository.save(vacancy);
         } else {
             throw new VacancyURLMalformedException(vacancy.getVacancyURL());

@@ -21,6 +21,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.IncorrectResultSizeDataAccessException;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.PostConstruct;
 import javax.naming.NamingException;
@@ -47,6 +48,8 @@ public class ScraperService {
 
     private final VacancyService vacancyService;
 
+    private final LocationService locationService;
+
     private final SkillMatcherService skillMatcherService;
 
     private LocationRepository locationRepository;
@@ -54,8 +57,9 @@ public class ScraperService {
 //    private SessionFactory sessionFactory;
 
     @Autowired
-    public ScraperService(VacancyService vacancyService, SkillMatcherService skillMatcherService, LocationRepository locationRepository) {
+    public ScraperService(VacancyService vacancyService, LocationService locationService, SkillMatcherService skillMatcherService, LocationRepository locationRepository) {
         this.vacancyService = vacancyService;
+        this.locationService = locationService;
         this.skillMatcherService = skillMatcherService;
         this.locationRepository = locationRepository;
     }
@@ -69,6 +73,7 @@ public class ScraperService {
     };
 
     @PostConstruct
+    @Transactional
     @Scheduled(cron = "0 0 12,18 * * *") // Runs two times a day. At 12pm and 6pm
     public void scrape() {
         log.info("CRON Scheduled -- Scrape vacancies");
@@ -81,12 +86,19 @@ public class ScraperService {
                 if (existCheck.isPresent()) {
                     existVacancy++;
                 } else {
-
                     String vacancyLocation = vacancy.getLocationString();
                     if(vacancyLocation.matches("Den Haag")) {vacancyLocation = "'s-Gravenhage";}
                     if(vacancyLocation.endsWith(", Nederland")) {vacancyLocation = vacancyLocation.substring(0,vacancyLocation.length()-11);}
+
+                    vacancy.setLocationString(vacancyLocation);
+
+                    Set<Skill> skills = skillMatcherService.findMatchingSkills(vacancy);
+                    vacancy.setSkills(skills);
+                    vacancyService.save(vacancy);
+                    newVacancy++;
+
                     if (vacancyLocation!="") {
-                        Optional<Location> existCheckLocation = locationRepository.findByLocationName(vacancyLocation);
+                        Optional<Location> existCheckLocation = locationService.findByLocationName(vacancyLocation);
 
 /*                        String finalVacancyLocation = vacancyLocation;
                         existCheckLocation.ifPresentOrElse(l -> {
@@ -105,40 +117,18 @@ public class ScraperService {
                         if (!existCheckLocation.isPresent()) {
                             Location location = LocationService.getCoordinates(vacancyLocation);
 //                            locationRepository.save(location);
+                            locationService.save(location);
                             vacancy.setLocation(location);
                         } else {
-                            UUID id = existCheckLocation.get().getLocation_id();
-//                            Location location = existCheckLocation.get();
-                            Location location = locationRepository.getOne(id);
-/*                            List<Vacancy> retrievedVacancies = location.getVacancies();
-                            for (Vacancy retrievedVacancy : retrievedVacancies) {
-                                Set<Skill> retrievedSkills = retrievedVacancy.getSkills();
-                                retrievedVacancy.setSkills(retrievedSkills);
-                            }*/
-                            //System.out.println(existCheckLocation.get());
+                            UUID id = existCheckLocation.get().getId();
+                            Location location = locationService.findById(id).get();
                             vacancy.setLocation(location);
-//                            System.out.println(vacancy.getLocation().getVacancies().toString());
+/*                            List<Vacancy> vacanciesAtLocation;
+                            vacanciesAtLocation = vacancyService.findByLocationid(id);
+                            vacanciesAtLocation.add(vacancy);
+                            location.setVacancies(vacanciesAtLocation);*/
                         }
                     }
-
-/*                    Session session = sessionFactory.openSession();
-                    session.beginTransaction();
-                    session.save(vacancy.getLocation());
-                    session.save(vacancy);
-                    session.getTransaction().commit();
-                    session.close();*/
-
-/*                    user.getRoles().forEach(role -> session.save(role));
-                    session.save(user);
-                    session.getTransaction().commit();
-                    session.close();*/
-
-                    Set<Skill> skills = skillMatcherService.findMatchingSkills(vacancy);
-                    vacancy.setSkills(skills);
-//                    System.out.println(vacancy.toString());
-//                    System.out.println(vacancy.getLocation().toString());
-                    vacancyService.save(vacancy);
-                    newVacancy++;
                 }
             } catch (IncorrectResultSizeDataAccessException ie) {
                 log.error("Record exists multiple times in database already!");

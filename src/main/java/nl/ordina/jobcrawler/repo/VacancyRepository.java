@@ -10,6 +10,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import javax.transaction.Transactional;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -45,10 +46,11 @@ public interface VacancyRepository extends JpaRepository<Vacancy, UUID> {
             "OR lower(v.title) LIKE lower(concat('%', :value, '%'))", nativeQuery = true)
     Page<Vacancy> findByAnyValue(@Param("value") String value, Pageable pageable);
 
-/*    @Transactional
+/*
+    @Transactional
     Optional<Location> findByLocation_LocationName(String locationName);
+*/
 
     @Transactional
-    Optional<Location> findByLocation_Id(UUID id);*/
-
+    List<Vacancy> findByLocation_Id(UUID id);
 }

@@ -1,11 +1,7 @@
 package nl.ordina.jobcrawler.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 import nl.ordina.jobcrawler.controller.exception.VacancyURLMalformedException;
 import org.hibernate.annotations.GenericGenerator;
 
@@ -19,6 +15,7 @@ import java.util.UUID;
 
 @Getter
 @Setter
+@ToString
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
@@ -52,8 +49,15 @@ public class Vacancy {
     @JsonIgnore
     Set<Skill> skills;  //a set is a collection that has no duplicates
 
-    @ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+/*    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JoinColumn(name = "location_id")
+    Location location;*/
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinTable(
+            name = "vacancy_location",
+            joinColumns = @JoinColumn(name = "vacancy_id"),
+            inverseJoinColumns = @JoinColumn(name = "location_id"))
     Location location;
 
     public boolean hasValidURL() {
@@ -83,7 +87,7 @@ public class Vacancy {
         }
     }
 
-    @Override
+/*    @Override
     public String toString() {
         String newLine = "\n";
         StringBuilder returnValue = new StringBuilder();
@@ -103,7 +107,7 @@ public class Vacancy {
         returnValue.append(location.getLon() + newLine);
         returnValue.append("*****************************************");
         return returnValue.toString();
-    }
+    }*/
 
 /*    @Override
     public String toString() {

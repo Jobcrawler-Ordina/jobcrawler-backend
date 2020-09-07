@@ -3,6 +3,7 @@ package nl.ordina.jobcrawler.model;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.ToString;
 import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.*;
@@ -12,6 +13,7 @@ import java.util.UUID;
 
 @Getter
 @Setter
+@ToString
 @Entity
 @NoArgsConstructor
 public class Location {
@@ -19,18 +21,20 @@ public class Location {
     @Id
     @GeneratedValue(generator = "UUID")
     @GenericGenerator(name = "UUID", strategy = "org.hibernate.id.UUIDGenerator")
-    private UUID location_id;
+    private UUID id;
     private String locationName;
     private double lon;
     private double lat;
 
-    @OneToMany(fetch = FetchType.LAZY, mappedBy = "location",cascade = CascadeType.ALL)
-    private List<Vacancy> vacancies;
+/*    @OneToMany(fetch = FetchType.LAZY, mappedBy = "location")
+    List<Vacancy> vacancies;*/
 
-/*        @JoinTable(
-            name = "city_vacancy",
-            joinColumns = @JoinColumn(name = "vacancy_id"),
-            inverseJoinColumns = @JoinColumn(name = "city_id"))*/
+    @OneToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+            name = "vacancy_location",
+            joinColumns = @JoinColumn(name = "location_id"),
+            inverseJoinColumns = @JoinColumn(name = "vacancy_id"))
+    List<Vacancy> vacancies;
 
     public Location(String locationName) {
         this.locationName = locationName;
@@ -45,7 +49,7 @@ public class Location {
     public double getLon() { return lon; }
     public double getLat() { return lat; }
 
-    @Override
+/*    @Override
     public String toString() {
         return "Location{" +
                 "location_id=" + location_id +
@@ -54,5 +58,5 @@ public class Location {
                 ", lat=" + lat +
                 ", vacancies=" + vacancies +
                 '}';
-    }
+    }*/
 }
