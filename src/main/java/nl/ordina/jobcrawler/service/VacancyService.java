@@ -150,20 +150,12 @@ public class VacancyService implements CRUDService<Vacancy, UUID> {
 //    @Transactional(propagation = Propagation.REQUIRED)
     @Override
     public Vacancy save(Vacancy vacancy) {
-        System.out.println("Location name: " + vacancy.getLocation().getLocationName());
-        System.out.println("Location id: " + vacancy.getLocation().getId());
-        System.out.println("Latitude: " + vacancy.getLocation().getLat());
-        System.out.println("Longitude: " + vacancy.getLocation().getLon());
         if (vacancy.hasValidURL()) {    //checking the url, if it is malformed it will throw a VacancyURLMalformedException
-//            Session session = entityManager.unwrap(Session.class);
-/*            Session session = entityManager.unwrap(Session.class);
-            session.saveOrUpdate(vacancy);*/
             log.info("Test: " + vacancy.toString());
             return vacancyRepository.save(vacancy);
         } else {
             throw new VacancyURLMalformedException(vacancy.getVacancyURL());
         }
-
     }
 
 

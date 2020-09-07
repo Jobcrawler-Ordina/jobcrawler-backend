@@ -15,7 +15,6 @@ import java.util.UUID;
 
 @Getter
 @Setter
-@ToString
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
@@ -49,16 +48,16 @@ public class Vacancy {
     @JsonIgnore
     Set<Skill> skills;  //a set is a collection that has no duplicates
 
-/*    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JoinColumn(name = "location_id")
-    Location location;*/
+    Location location;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+/*    @ManyToOne(fetch = FetchType.LAZY)
     @JoinTable(
             name = "vacancy_location",
             joinColumns = @JoinColumn(name = "vacancy_id"),
             inverseJoinColumns = @JoinColumn(name = "location_id"))
-    Location location;
+    Location location;*/
 
     public boolean hasValidURL() {
         if (!this.vacancyURL.startsWith("http"))
@@ -109,9 +108,10 @@ public class Vacancy {
         return returnValue.toString();
     }*/
 
-/*    @Override
+    @Override
     public String toString() {
-        return "Vacancy{" +
+        String message;
+        message = "Vacancy{" +
                 "id=" + id +
                 ", vacancyURL='" + vacancyURL + '\'' +
                 ", title='" + title + '\'' +
@@ -123,7 +123,11 @@ public class Vacancy {
                 ", postingDate='" + postingDate + '\'' +
                 ", about='" + about + '\'' +
                 ", skills=" + skills +
-                ", location=" + location +
-                '}';
-    }*/
+                ", location_filled=" + !(location==null);
+            if(!(location==null)) {
+                message = message + ", location_name=" + location.getLocationName();
+            }
+            message = message + '}';
+            return message;
+    }
 }
