@@ -81,10 +81,11 @@ public class ScraperService {
     @Scheduled(cron = "0 30 11,17 * * *") // Runs two times a day. At 11.30am and 5.30pm.
     public void deleteNonExistingVacancies() {
         log.info("CRON Scheduled -- Started deleting non-existing jobs");
+        // Change this to find all with invalid url eg non-existing job
         List<Vacancy> vacanciesToDelete = vacancyService.findAll();
         vacanciesToDelete.removeIf(Vacancy::hasValidURL);
 
-        log.info(vacanciesToDelete.size() + " vacancy to delete.");
+        log.info(vacanciesToDelete.size() + " vacancies to delete.");
 
         for (Vacancy vacancyToDelete : vacanciesToDelete) {
             vacancyService.delete(vacancyToDelete.getId());
