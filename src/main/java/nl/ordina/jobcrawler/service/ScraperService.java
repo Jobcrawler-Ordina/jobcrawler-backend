@@ -50,7 +50,7 @@ public class ScraperService {
     private final VacancyService vacancyService;
     private final LocationService locationService;
     private final SkillMatcherService skillMatcherService;
-    private Set<Vacancy> tempListVacancies;
+    private List<Vacancy> tempListVacancies;
 
     @Autowired
     public ScraperService(VacancyService vacancyService, LocationService locationService, SkillMatcherService skillMatcherService, LocationRepository locationRepository) {
@@ -73,51 +73,62 @@ public class ScraperService {
     public void scrape() {
         log.info("CRON Scheduled -- Scrape vacancies");
         List<Vacancy> allVacancies = startScraping();
-//        allVacancies = allVacancies.subList(1,15);
         int existVacancy = 0;
         int newVacancy = 0;
         for (Vacancy vacancy : allVacancies) {
-            try {
+//            try {
                 Optional<Vacancy> existCheck = vacancyService.findByURL(vacancy.getVacancyURL());
                 if (existCheck.isPresent()) {
                     existVacancy++;
                     allVacancies.remove(vacancy);
                 } else {
                     String vacancyLocation = vacancy.getLocationString();
-                    if(vacancyLocation.matches("Den Haag")) {vacancyLocation = "'s-Gravenhage";}
+//                    if(vacancyLocation.matches("Den Haag")) {vacancyLocation = "'s-Gravenhage";}
                     if(vacancyLocation.endsWith(", Nederland")) {vacancyLocation = vacancyLocation.substring(0,vacancyLocation.length()-11);}
                     if (vacancyLocation!="") {
-//                        Optional<Location> existCheckLocation = locationService.findByLocationName(vacancyLocation);
-                        Optional<Location> existCheckLocation = locationService.findByLocationNameInVacancyList(vacancyLocation,allVacancies);
+                        Optional<Location> existCheckLocation = locationService.findByLocationName(vacancyLocation);
+//                        Optional<Location> existCheckLocation = locationService.findByLocationNameInVacancyList(vacancyLocation,allVacancies);
                         if (!existCheckLocation.isPresent()) {
-                            Location location = LocationService.getCoordinates(vacancyLocation);
+                            try {
+                                Location location = LocationService.getCoordinates(vacancyLocation);
 //                            tempListVacancies = location.getVacancies();
 //                            tempListVacancies.add(vacancy);
-                            tempListVacancies = new HashSet<>();
-                            tempListVacancies.add(vacancy);
-                            location.setVacancies(tempListVacancies);
-                            vacancy.setLocation(location);
+                                tempListVacancies = new CopyOnWriteArrayList<>();
+                                tempListVacancies.add(vacancy);
+                                location.setVacancies(tempListVacancies);
+                                vacancy.setLocation(location);
+                                Set<Skill> skills = skillMatcherService.findMatchingSkills(vacancy);
+                                vacancy.setSkills(skills);
+                                vacancyService.save(vacancy);
+                            } catch (Exception e) {
+                                log.error(e.getMessage());
+                            }
                         } else {
                             Location location = existCheckLocation.get();
-                            location.getVacancies().add(vacancy);
                             vacancy.setLocation(location);
+                            tempListVacancies = location.getVacanciesAsCOWA();
+                            vacancyService.deleteAll(tempListVacancies);
+                            for(Vacancy tempvacancy : tempListVacancies) {
+                                tempvacancy.setId(null);
+                            }
+                            location.setId(null);
+//                            locationService.save(location);
+                            Set<Skill> skills = skillMatcherService.findMatchingSkills(vacancy);
+                            vacancy.setSkills(skills);
+                            tempListVacancies.add(vacancy);
+                            vacancyService.saveAll(tempListVacancies);
                         }
                     }
-                    Set<Skill> skills = skillMatcherService.findMatchingSkills(vacancy);
-                    vacancy.setSkills(skills);
-//                    vacancyService.save(vacancy);
+
+//                    vacancyService.saveAll(allVacancies);
                     newVacancy++;
                 }
-            } catch (IncorrectResultSizeDataAccessException ie) {
+/*            } catch (IncorrectResultSizeDataAccessException ie) {
                 log.error("Record exists multiple times in database already!");
             } catch (Exception e) {
                 log.error(e.getMessage());
-            }
+            }*/
         }
-        vacancyService.saveAll(allVacancies);
-        Optional<Location> existCheckLocation = locationService.findByLocationName("Amsterdam");
-        System.out.println("Location Amsterdam: " + existCheckLocation.get().toString());
-        System.out.println("Vacancies of location Amsterdam: " + existCheckLocation.get().getVacancies().size());
 
         log.info(newVacancy + " new vacancies added.");
         log.info(existVacancy + " existing vacancies found.");

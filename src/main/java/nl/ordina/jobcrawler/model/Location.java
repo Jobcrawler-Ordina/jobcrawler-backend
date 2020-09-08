@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 @Getter
 @Setter
@@ -27,15 +28,16 @@ public class Location {
     private double lon;
     private double lat;
 
-    @OneToMany(fetch = FetchType.EAGER, mappedBy = "location", cascade = CascadeType.ALL)
-    Set<Vacancy> vacancies;
+/*    @OneToMany(fetch = FetchType.EAGER, mappedBy = "location", cascade = CascadeType.ALL)
+    Set<Vacancy> vacancies;*/
 
-/*    @OneToMany(fetch = FetchType.LAZY)
+/*    @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JoinTable(
             name = "vacancy_location",
             joinColumns = @JoinColumn(name = "location_id"),
-            inverseJoinColumns = @JoinColumn(name = "vacancy_id"))
-    List<Vacancy> vacancies;*/
+            inverseJoinColumns = @JoinColumn(name = "vacancy_id"))*/
+    @OneToMany(mappedBy = "location", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    List<Vacancy> vacancies;
 
     public Location(String locationName) {
         this.locationName = locationName;
@@ -50,22 +52,22 @@ public class Location {
     public double getLon() { return lon; }
     public double getLat() { return lat; }
 
-/*    public PersistentBag getVacancies() {
+    public PersistentBag getVacancies() {
         return (PersistentBag) vacancies;
     }
 
-    public ArrayList<Vacancy> getVacanciesAsArrayList() {
+    public CopyOnWriteArrayList<Vacancy> getVacanciesAsCOWA() {
         PersistentBag vacanciesPB = getVacancies();
-        ArrayList<Vacancy> vacanciesAL = new ArrayList<>();
+        CopyOnWriteArrayList<Vacancy> vacanciesAL = new CopyOnWriteArrayList<>();
         for (Vacancy vacancy : vacancies) {
             vacanciesAL.add(vacancy);
         }
         return vacanciesAL;
     }
 
-    public void setVacancies(ArrayList<Vacancy> vacancies) {
+    public void setVacancies(List<Vacancy> vacancies) {
         this.vacancies = vacancies;
-    }*/
+    }
 
     @Override
     public String toString() {

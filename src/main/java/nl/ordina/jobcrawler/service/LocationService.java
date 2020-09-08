@@ -63,8 +63,8 @@ public class LocationService implements CRUDService<Location, UUID> {
         //add request header
         connection.setRequestProperty("User-Agent", "Mozilla/5.0");
         if (connection.getResponseCode() == 200) {
-            System.out.println("\nSending 'GET' request to URL : " + url);
-            System.out.println("Response Code : " + connection.getResponseCode());
+/*            System.out.println("\nSending 'GET' request to URL : " + url);
+            System.out.println("Response Code : " + connection.getResponseCode());*/
             BufferedReader in = new BufferedReader(
                     new InputStreamReader(connection.getInputStream()));
             String inputLine;

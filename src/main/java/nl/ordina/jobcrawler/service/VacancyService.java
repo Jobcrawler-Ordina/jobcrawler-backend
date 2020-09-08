@@ -2,30 +2,21 @@ package nl.ordina.jobcrawler.service;
 
 import lombok.extern.slf4j.Slf4j;
 import nl.ordina.jobcrawler.controller.exception.VacancyURLMalformedException;
-import nl.ordina.jobcrawler.model.Location;
 import nl.ordina.jobcrawler.model.Vacancy;
 import nl.ordina.jobcrawler.repo.VacancyRepository;
-import org.hibernate.Session;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Propagation;
-import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.EntityManager;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
-import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.*;
 
 @Slf4j
 @Service
@@ -152,7 +143,6 @@ public class VacancyService implements CRUDService<Vacancy, UUID> {
     @Override
     public Vacancy save(Vacancy vacancy) {
         if (vacancy.hasValidURL()) {    //checking the url, if it is malformed it will throw a VacancyURLMalformedException
-            log.info("Test: " + vacancy.toString());
             return vacancyRepository.save(vacancy);
         } else {
             throw new VacancyURLMalformedException(vacancy.getVacancyURL());
@@ -171,23 +161,27 @@ public class VacancyService implements CRUDService<Vacancy, UUID> {
      */
     @Override
     public boolean delete(UUID id) {
-
         try {
             vacancyRepository.deleteById(id);
             return true;
         } catch (DataAccessException e) {
             return false;
         }
-
+    }
+    public void deleteAll(List<Vacancy> vacancies) {
+        UUID id;
+        for(Vacancy vacancy : vacancies) {
+            id = vacancy.getId();
+            delete(id);
+        }
     }
 
-
-    /**
-     * Returns the vacancy with the specified url.
-     *
-     * @param url url of the vacancy to retrieve.
-     * @return An optional of the requested vacancy if found, and an empty optional otherwise.
-     */
+        /**
+         * Returns the vacancy with the specified url.
+         *
+         * @param url url of the vacancy to retrieve.
+         * @return An optional of the requested vacancy if found, and an empty optional otherwise.
+         */
     public Optional<Vacancy> findByURL(String url) {
         return vacancyRepository.findByVacancyURLEquals(url);
     }

@@ -52,7 +52,7 @@ public class Vacancy {
     @JoinColumn(name = "location_id")
     Location location;
 
-/*    @ManyToOne(fetch = FetchType.LAZY)
+/*    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JoinTable(
             name = "vacancy_location",
             joinColumns = @JoinColumn(name = "vacancy_id"),
