@@ -5,11 +5,9 @@ import nl.ordina.jobcrawler.model.Vacancy;
 import nl.ordina.jobcrawler.repo.VacancyRepository;
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import javax.persistence.criteria.Predicate;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -73,10 +71,6 @@ public class VacancyService implements CRUDService<Vacancy, UUID> {
      * @param paging - used for pagination
      * @return All vacancies in the database filter by any value.
      */
-    public Page<Vacancy> findSomeByAnyValue(String value, Pageable paging) {
-        return vacancyRepository.findByAnyValue(value, paging);
-    }
-
     public Page<Vacancy> findByAnyValue(String value, Pageable paging) {
         return vacancyRepository.findAll(findByValue(value), paging);
     }
