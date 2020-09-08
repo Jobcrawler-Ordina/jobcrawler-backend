@@ -4,6 +4,7 @@ import nl.ordina.jobcrawler.service.ScraperService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -29,15 +30,10 @@ public class ScraperController {
      */
     @PutMapping
     @PreAuthorize("hasRole('ADMIN')")
+    @Async
     public ResponseEntity<Object> scrape() {
-        /* made in a new thread so that the sender of the request does not have to wait for a response until the
-         * scraping is finished.
-         */
-
-        Thread newThread = new Thread(scraperService::scrape);
-        newThread.start();
+        scraperService.scrape();
 
         return ResponseEntity.status(HttpStatus.OK).body(Map.of("success", true));
-
     }
 }
