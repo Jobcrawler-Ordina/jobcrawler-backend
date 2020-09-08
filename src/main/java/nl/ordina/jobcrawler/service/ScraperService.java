@@ -50,15 +50,13 @@ public class ScraperService {
     private final VacancyService vacancyService;
     private final LocationService locationService;
     private final SkillMatcherService skillMatcherService;
-    private LocationRepository locationRepository;
-    private ArrayList<Vacancy> tempListVacancies;
+    private Set<Vacancy> tempListVacancies;
 
     @Autowired
     public ScraperService(VacancyService vacancyService, LocationService locationService, SkillMatcherService skillMatcherService, LocationRepository locationRepository) {
         this.vacancyService = vacancyService;
         this.locationService = locationService;
         this.skillMatcherService = skillMatcherService;
-        this.locationRepository = locationRepository;
     }
 
     private final List<VacancyScraper> scraperList = new ArrayList<>() {
@@ -75,6 +73,7 @@ public class ScraperService {
     public void scrape() {
         log.info("CRON Scheduled -- Scrape vacancies");
         List<Vacancy> allVacancies = startScraping();
+//        allVacancies = allVacancies.subList(1,15);
         int existVacancy = 0;
         int newVacancy = 0;
         for (Vacancy vacancy : allVacancies) {
@@ -82,33 +81,31 @@ public class ScraperService {
                 Optional<Vacancy> existCheck = vacancyService.findByURL(vacancy.getVacancyURL());
                 if (existCheck.isPresent()) {
                     existVacancy++;
+                    allVacancies.remove(vacancy);
                 } else {
                     String vacancyLocation = vacancy.getLocationString();
                     if(vacancyLocation.matches("Den Haag")) {vacancyLocation = "'s-Gravenhage";}
                     if(vacancyLocation.endsWith(", Nederland")) {vacancyLocation = vacancyLocation.substring(0,vacancyLocation.length()-11);}
                     if (vacancyLocation!="") {
-                        Optional<Location> existCheckLocation = locationService.findByLocationName(vacancyLocation);
+//                        Optional<Location> existCheckLocation = locationService.findByLocationName(vacancyLocation);
+                        Optional<Location> existCheckLocation = locationService.findByLocationNameInVacancyList(vacancyLocation,allVacancies);
                         if (!existCheckLocation.isPresent()) {
                             Location location = LocationService.getCoordinates(vacancyLocation);
 //                            tempListVacancies = location.getVacancies();
 //                            tempListVacancies.add(vacancy);
-                            tempListVacancies = new ArrayList<Vacancy>();
+                            tempListVacancies = new HashSet<>();
                             tempListVacancies.add(vacancy);
                             location.setVacancies(tempListVacancies);
                             vacancy.setLocation(location);
                         } else {
-//                            UUID id = existCheckLocation.get().getId();
                             Location location = existCheckLocation.get();
-                            tempListVacancies = location.getVacanciesAsArrayList();
-                            tempListVacancies.add(vacancy);
-                            location.setVacancies(tempListVacancies);
-//                            Location location = locationService.findById(id).get();
+                            location.getVacancies().add(vacancy);
                             vacancy.setLocation(location);
                         }
                     }
                     Set<Skill> skills = skillMatcherService.findMatchingSkills(vacancy);
                     vacancy.setSkills(skills);
-                    vacancyService.save(vacancy);
+//                    vacancyService.save(vacancy);
                     newVacancy++;
                 }
             } catch (IncorrectResultSizeDataAccessException ie) {
@@ -117,6 +114,11 @@ public class ScraperService {
                 log.error(e.getMessage());
             }
         }
+        vacancyService.saveAll(allVacancies);
+        Optional<Location> existCheckLocation = locationService.findByLocationName("Amsterdam");
+        System.out.println("Location Amsterdam: " + existCheckLocation.get().toString());
+        System.out.println("Vacancies of location Amsterdam: " + existCheckLocation.get().getVacancies().size());
+
         log.info(newVacancy + " new vacancies added.");
         log.info(existVacancy + " existing vacancies found.");
         log.info("Finished scraping");

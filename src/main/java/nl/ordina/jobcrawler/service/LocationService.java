@@ -40,6 +40,17 @@ public class LocationService implements CRUDService<Location, UUID> {
 
     public Optional<Location> findByLocationName(String locationName) {return locationRepository.findByLocationName(locationName); }
 
+    public Optional<Location> findByLocationNameInVacancyList(String locationName, List<Vacancy> allVacancies) {
+        for(Vacancy vacancy : allVacancies) {
+            if(!(vacancy.getLocation()==null)) {
+                if (vacancy.getLocation().getLocationName().equals(locationName)) {
+                    return Optional.of(vacancy.getLocation());
+                }
+            }
+        }
+        return Optional.empty();
+    }
+
     public static Location getCoordinates(String location) throws IOException, JSONException {
         final String apiKey = "Xd5hXSuQvqUJJbJh3iacOXZAcskvP7gI";
         String location2 = location.replace(" ","%20");

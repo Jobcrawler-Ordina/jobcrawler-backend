@@ -28,7 +28,7 @@ public class Location {
     private double lat;
 
     @OneToMany(fetch = FetchType.EAGER, mappedBy = "location", cascade = CascadeType.ALL)
-    List<Vacancy> vacancies;
+    Set<Vacancy> vacancies;
 
 /*    @OneToMany(fetch = FetchType.LAZY)
     @JoinTable(
@@ -50,7 +50,7 @@ public class Location {
     public double getLon() { return lon; }
     public double getLat() { return lat; }
 
-    public PersistentBag getVacancies() {
+/*    public PersistentBag getVacancies() {
         return (PersistentBag) vacancies;
     }
 
@@ -65,7 +65,7 @@ public class Location {
 
     public void setVacancies(ArrayList<Vacancy> vacancies) {
         this.vacancies = vacancies;
-    }
+    }*/
 
     @Override
     public String toString() {

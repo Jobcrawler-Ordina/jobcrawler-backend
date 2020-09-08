@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 @Slf4j
 @Service
@@ -156,6 +157,9 @@ public class VacancyService implements CRUDService<Vacancy, UUID> {
         } else {
             throw new VacancyURLMalformedException(vacancy.getVacancyURL());
         }
+    }
+    public void saveAll(List<Vacancy> vacancies) {
+        vacancyRepository.saveAll(vacancies);
     }
 
 
