@@ -7,10 +7,10 @@ import org.jsoup.nodes.Document;
 import java.io.IOException;
 import java.util.List;
 
-abstract public class VacancyScraper {
+public abstract class VacancyScraper {
 
-    private final String SEARCH_URL;
-    private final String BROKER;
+    private final String searchUrl;
+    private final String broker;
 
     /**
      * Constructor for abstract class VacancyScraper
@@ -19,8 +19,8 @@ abstract public class VacancyScraper {
      * @param broker Used broker for scraper
      */
     public VacancyScraper(String url, String broker) {
-        this.SEARCH_URL = url;
-        this.BROKER = broker;
+        this.searchUrl = url;
+        this.broker = broker;
     }
 
     /**
@@ -42,15 +42,15 @@ abstract public class VacancyScraper {
     /**
      * @return Returns SEARCH_URL
      */
-    public String getSEARCH_URL() {
-        return SEARCH_URL;
+    public String getSearchUrl() {
+        return searchUrl;
     }
 
     /**
      * @return Returns BROKER
      */
-    public String getBROKER() {
-        return BROKER;
+    public String getBroker() {
+        return broker;
     }
 
     /**
