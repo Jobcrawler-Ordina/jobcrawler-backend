@@ -7,7 +7,6 @@ import nl.ordina.jobcrawler.model.Vacancy;
 import nl.ordina.jobcrawler.model.assembler.SkillModelAssembler;
 import nl.ordina.jobcrawler.model.assembler.VacancyModelAssembler;
 import nl.ordina.jobcrawler.service.VacancyService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -19,7 +18,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
-import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -32,7 +30,6 @@ public class VacancyController {
     private final VacancyService vacancyService;
     private final VacancyModelAssembler vacancyModelAssembler;
 
-    @Autowired
     public VacancyController(VacancyService vacancyService, VacancyModelAssembler vacancyModelAssembler) {
         this.vacancyService = vacancyService;
         this.vacancyModelAssembler = vacancyModelAssembler;
@@ -134,7 +131,7 @@ public class VacancyController {
      * 404 Not Found if a vacancy with the specified ID is not found
      */
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> deleteVacancy(@PathVariable UUID id) {
+    public ResponseEntity<Object> deleteVacancy(@PathVariable UUID id) {
         vacancyService.findById(id).orElseThrow(() -> new VacancyNotFoundException(id));
         vacancyService.delete(id);
         return ResponseEntity.noContent().build();

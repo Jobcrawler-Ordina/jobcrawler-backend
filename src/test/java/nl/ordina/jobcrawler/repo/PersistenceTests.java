@@ -2,6 +2,7 @@ package nl.ordina.jobcrawler.repo;
 
 import nl.ordina.jobcrawler.model.Skill;
 import nl.ordina.jobcrawler.model.Vacancy;
+import nl.ordina.jobcrawler.utils.VacancyFactory;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.internal.util.collections.Sets;
@@ -17,6 +18,7 @@ import java.util.UUID;
 import static nl.ordina.jobcrawler.repo.VacancySpecifications.findBySkill;
 import static nl.ordina.jobcrawler.repo.VacancySpecifications.findByValue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 /**
  *
@@ -39,17 +41,17 @@ class PersistenceTests {
 
     @Test
     void testRepoFindById() {
-        String sUuid = "963efd22-5a22-4950-9771-a6611c73a402";
+        String sUuid = "891d77f4-c0f6-431a-a118-62e3e698d8fc";
         assertEquals(sUuid, vacancyRepository.findById(UUID.fromString(sUuid)).orElse(new Vacancy()).getId().toString());
     }
 
     @Test
     void findBySkills() {
         Pageable paging = PageRequest.of(1, 10);
-        assertEquals(5, vacancyRepository.findAll(findBySkill(Sets.newSet("JAVA")), paging).getTotalElements());
-        assertEquals(28, vacancyRepository.findAll(findBySkill(Sets.newSet("Maven")), paging).getTotalElements());
-        assertEquals(22, vacancyRepository.findAll(findBySkill(Sets.newSet("Angular")), paging).getTotalElements());
-        assertEquals(5, vacancyRepository.findAll(findBySkill(Sets.newSet("Maven", "Angular")), paging)
+        assertEquals(7, vacancyRepository.findAll(findBySkill(Sets.newSet("JAVA")), paging).getTotalElements());
+        assertEquals(20, vacancyRepository.findAll(findBySkill(Sets.newSet("Maven")), paging).getTotalElements());
+        assertEquals(42, vacancyRepository.findAll(findBySkill(Sets.newSet("Angular")), paging).getTotalElements());
+        assertEquals(7, vacancyRepository.findAll(findBySkill(Sets.newSet("Maven", "Angular")), paging)
                 .getTotalElements());
 
     }
@@ -63,7 +65,7 @@ class PersistenceTests {
     @Test
     void testFindByValue() {
         Pageable paging = PageRequest.of(1, 10);
-        assertEquals(130, vacancyRepository.findAll(findByValue("test"), paging).getTotalElements());
+        assertEquals(106, vacancyRepository.findAll(findByValue("test"), paging).getTotalElements());
     }
 
 }
