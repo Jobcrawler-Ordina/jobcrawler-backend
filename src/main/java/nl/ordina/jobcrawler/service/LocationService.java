@@ -81,13 +81,12 @@ public class LocationService implements CRUDService<Location, UUID> {
         return new Location(location, 0, 0);
     }
 
-    private static double distance(double lon1,
-                                   double lat1,
-                                   double lon2,
-                                   double lat2) {
-
+    public static double getDistance(Location homeLocation, Location vacancyLocation) {
+        double lon1 = homeLocation.getLon();
+        double lat1 = homeLocation.getLat();
+        double lon2 = vacancyLocation.getLon();
+        double lat2 = vacancyLocation.getLat();
         System.out.println(Math.sqrt(Math.pow((lon2 - lon1), 2) + Math.pow((lat2 - lat1), 2)) * 100);
-
         // The math module contains a function
         // named toRadians which converts from
         // degrees to radians.
@@ -95,25 +94,17 @@ public class LocationService implements CRUDService<Location, UUID> {
         lon2 = Math.toRadians(lon2);
         lat1 = Math.toRadians(lat1);
         lat2 = Math.toRadians(lat2);
-
         // Haversine formula
         double dlon = lon2 - lon1;
         double dlat = lat2 - lat1;
         double a = Math.pow(Math.sin(dlat / 2), 2)
                 + Math.cos(lat1) * Math.cos(lat2)
                 * Math.pow(Math.sin(dlon / 2), 2);
-
         double c = 2 * Math.asin(Math.sqrt(a));
-
-        // Radius of earth in kilometers. Use 3956
-        // for miles
+        // Radius of earth in kilometers. Use 3956 for miles
         double r = 6371;
-
-
         // calculate the result
         return (c * r);
-
-
     }
 
     @Override

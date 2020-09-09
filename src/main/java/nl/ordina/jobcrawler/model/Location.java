@@ -27,6 +27,7 @@ public class Location {
     private String locationName;
     private double lon;
     private double lat;
+    private double distance;
 
 /*    @OneToMany(fetch = FetchType.EAGER, mappedBy = "location", cascade = CascadeType.ALL)
     Set<Vacancy> vacancies;*/

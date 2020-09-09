@@ -305,7 +305,7 @@ public class JobBirdScraper extends VacancyScraper {
                         String[] urenArr = uren.split(":");
                         if (urenArr.length > 1) {
                             uren = urenArr[1];
-                            return uren.trim();
+                            return uren.trim().length() > 255 ? uren.substring(0, 254) : uren.trim();
                         }
                     } else if (child.toString().contains(minString)) {
                         String sElement = child.toString();
@@ -314,7 +314,7 @@ public class JobBirdScraper extends VacancyScraper {
                         String sRest = sElement.substring(index);
                         index = sRest.indexOf("<");
                         String sUren = sRest.substring(0, index);
-                        return sUren;
+                        return sUren.trim().length() > 255 ? sUren.substring(0, 254) : sUren.trim();
                     }
                 }
             }

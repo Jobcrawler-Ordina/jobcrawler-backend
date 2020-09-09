@@ -67,11 +67,22 @@ public class ScraperService {
         }
     };
 
-    @PostConstruct
+//    @PostConstruct
     @Transactional
     @Scheduled(cron = "0 0 12,18 * * *") // Runs two times a day. At 12pm and 6pm
     public void scrape() {
         log.info("CRON Scheduled -- Scrape vacancies");
+
+        Location homeLocation = null;   //Temp lines for testing
+        try {
+            homeLocation = LocationService.getCoordinates("Diemen");
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        homeLocation.setDistance(0);   //Temp lines for testing
+
         List<Vacancy> allVacancies = startScraping();
         int existVacancy = 0;
         int newVacancy = 0;
@@ -88,6 +99,7 @@ public class ScraperService {
                         Optional<Location> existCheckLocation = locationService.findByLocationName(vacancyLocation);
                         if (!existCheckLocation.isPresent()) {
                             Location location = LocationService.getCoordinates(vacancyLocation);
+                            location.setDistance(LocationService.getDistance(homeLocation,location));
                             tempListVacancies = new CopyOnWriteArrayList<>();
                             tempListVacancies.add(vacancy);
                             location.setVacancies(tempListVacancies);
