@@ -1,5 +1,6 @@
 package nl.ordina.jobcrawler.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -15,6 +16,7 @@ import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 @Getter
+@ToString
 @Setter
 @Entity
 @NoArgsConstructor
@@ -29,16 +31,9 @@ public class Location {
     private double lat;
     private double distance;
 
-/*    @OneToMany(fetch = FetchType.EAGER, mappedBy = "location", cascade = CascadeType.ALL)
-    Set<Vacancy> vacancies;*/
-
-/*    @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    @JoinTable(
-            name = "vacancy_location",
-            joinColumns = @JoinColumn(name = "location_id"),
-            inverseJoinColumns = @JoinColumn(name = "vacancy_id"))*/
-    @OneToMany(mappedBy = "location", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
-    List<Vacancy> vacancies;
+/*    @OneToMany(mappedBy = "location", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @JsonIgnore
+    List<Vacancy> vacancies;*/
 
     public Location(String locationName) {
         this.locationName = locationName;
@@ -53,24 +48,17 @@ public class Location {
     public double getLon() { return lon; }
     public double getLat() { return lat; }
 
-    public PersistentBag getVacancies() {
-        return (PersistentBag) vacancies;
-    }
-
-    public CopyOnWriteArrayList<Vacancy> getVacanciesAsCOWA() {
+//    public PersistentBag getVacancies() { return (PersistentBag) vacancies; }
+/*    public CopyOnWriteArrayList<Vacancy> getVacanciesAsCOWA() {
         PersistentBag vacanciesPB = getVacancies();
         CopyOnWriteArrayList<Vacancy> vacanciesAL = new CopyOnWriteArrayList<>();
         for (Vacancy vacancy : vacancies) {
             vacanciesAL.add(vacancy);
         }
         return vacanciesAL;
-    }
-
-    public void setVacancies(List<Vacancy> vacancies) {
-        this.vacancies = vacancies;
-    }
-
-    @Override
+    }*/
+//    public void setVacancies(List<Vacancy> vacancies) { this.vacancies = vacancies; }
+/*    @Override
     public String toString() {
         String message;
         message = "Location{" +
@@ -84,5 +72,5 @@ public class Location {
         }
         message = message + '}';
         return message;
-    }
+    }*/
 }

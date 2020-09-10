@@ -35,12 +35,12 @@ public class LocationController {
         return locationModelAssembler.toModel(location);
     }
 
-    @GetMapping("/{locationName}")
+/*    @GetMapping("/{locationName}")
     public EntityModel<Location> getLocation(@PathVariable String locationName) {
         Location location = locationService.findByLocationName(locationName)
                 .orElseThrow(() -> new LocationNotFoundException(locationName));
         return locationModelAssembler.toModel(location);
-    }
+    }*/
 
     public CollectionModel<EntityModel<Location>> getLocations() {
 

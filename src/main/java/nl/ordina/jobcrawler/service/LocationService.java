@@ -7,12 +7,8 @@ import nl.ordina.jobcrawler.model.Vacancy;
 import nl.ordina.jobcrawler.repo.LocationRepository;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import javax.persistence.EntityManager;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -28,7 +24,7 @@ public class LocationService implements CRUDService<Location, UUID> {
 
     private final LocationRepository locationRepository;
 
-    @Autowired
+//    @Autowired
     public LocationService(LocationRepository locationRepository) {
         this.locationRepository = locationRepository;
     }
@@ -81,7 +77,7 @@ public class LocationService implements CRUDService<Location, UUID> {
         return new Location(location, 0, 0);
     }
 
-    public static double getDistance(Location homeLocation, Location vacancyLocation) {
+    public static double getDistanceFromHome(Location homeLocation, Location vacancyLocation) {
         double lon1 = homeLocation.getLon();
         double lat1 = homeLocation.getLat();
         double lon2 = vacancyLocation.getLon();
@@ -124,6 +120,7 @@ public class LocationService implements CRUDService<Location, UUID> {
 
     @Override
     public boolean delete(UUID id) {
+        locationRepository.deleteById(id);
         return false;
     }
 }

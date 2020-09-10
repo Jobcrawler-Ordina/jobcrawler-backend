@@ -4,10 +4,8 @@ import lombok.extern.slf4j.Slf4j;
 import nl.ordina.jobcrawler.controller.exception.VacancyURLMalformedException;
 import nl.ordina.jobcrawler.model.Vacancy;
 import nl.ordina.jobcrawler.repo.VacancyRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
@@ -17,6 +15,10 @@ import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 import java.util.*;
+import java.util.concurrent.CopyOnWriteArrayList;
+
+import static nl.ordina.jobcrawler.repo.VacancySpecifications.findBySkill;
+import static nl.ordina.jobcrawler.repo.VacancySpecifications.findByValue;
 
 @Slf4j
 @Service
@@ -24,14 +26,9 @@ public class VacancyService implements CRUDService<Vacancy, UUID> {
 
     private final VacancyRepository vacancyRepository;
 
-    @Autowired
     public VacancyService(VacancyRepository vacancyRepository) {
         this.vacancyRepository = vacancyRepository;
     }
-
-    @Autowired
-    private EntityManager entityManager;
-
 
     /**
      * Returns the vacancy with the specified id.
@@ -40,19 +37,23 @@ public class VacancyService implements CRUDService<Vacancy, UUID> {
      * @return An optional of the requested vacancy if found, and an empty optional otherwise.
      */
     @Override
-    public Optional<Vacancy> findById(UUID id) { return vacancyRepository.findById(id); }
+    public Optional<Vacancy> findById(UUID id) {
+        return vacancyRepository.findById(id);
+    }
 
     @Override
-    public List<Vacancy> findAll() { return vacancyRepository.findAll(); }
-
-    public List<Vacancy> findByLocationid(UUID id) {return vacancyRepository.findByLocation_Id(id); }
-
-/*    public Optional<Location> findLocationByLocationName(String locationName) {
-        return vacancyRepository.findByLocation_LocationName(locationName);
+    public List<Vacancy> findAll() {
+        return vacancyRepository.findAll();
     }
-    public Optional<Location> findLocationByLocationId(UUID id) {
-        return vacancyRepository.findByLocation_Id(id);
-    }*/
+    public CopyOnWriteArrayList<Vacancy> findByLocationid(UUID id) {
+        List<Vacancy> vacanciesList = vacancyRepository.findByLocation_Id(id);
+        CopyOnWriteArrayList<Vacancy> vacanciesList2 = new CopyOnWriteArrayList<>();
+        for(Vacancy vacancy: vacanciesList) {
+            vacanciesList2.add(vacancy);
+        }
+        return vacanciesList2;
+    }
+
 
     /**
      * Returns all vacancies in the database using pagination.
@@ -69,45 +70,11 @@ public class VacancyService implements CRUDService<Vacancy, UUID> {
      *
      * @param skills - skills that needs to be filtered
      * @param paging - used for pagination
-     * @return All vacancies in the database filter by skills.
+     * @return All vacancies in the database filtered by skills.
      */
     public Page<Vacancy> findBySkills(Set<String> skills, Pageable paging) {
-
-        CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
-        CriteriaQuery<Vacancy> criteriaQuery = criteriaBuilder.createQuery(Vacancy.class);
-        Root<Vacancy> vacancyRoot = criteriaQuery.from(Vacancy.class);
-        List<Predicate> predicatelist = new ArrayList<>();
-        for (String s : skills) {
-            predicatelist.add(criteriaBuilder.like(vacancyRoot.get("about"), "% " + s + " %"));
-        }
-
-        switch (predicatelist.size()) {
-            case 2:
-                criteriaQuery.where(criteriaBuilder.and(predicatelist.get(0), predicatelist.get(1)));
-                break;
-
-            case 3:
-                criteriaQuery.where(criteriaBuilder.and(predicatelist.get(0), predicatelist.get(1), predicatelist.get(2)));
-                break;
-
-            case 4:
-                criteriaQuery.where(criteriaBuilder.and(predicatelist.get(0), predicatelist.get(1), predicatelist.get(2), predicatelist.get(3)));
-                break;
-
-            case 5:
-                criteriaQuery.where(criteriaBuilder.and(predicatelist.get(0), predicatelist.get(1), predicatelist.get(2), predicatelist.get(3), predicatelist.get(4)));
-                break;
-            default:
-                criteriaQuery.where(criteriaBuilder.and(predicatelist.get(0)));
-
-        }
-
-        return new PageImpl<>(entityManager.createQuery(criteriaQuery).getResultList());
-
-
-        //return vacancyRepository.findBySkills(skills,paging);
+        return vacancyRepository.findAll(findBySkill(skills), paging);
     }
-
 
     /**
      * Returns all vacancies in the database filter by any values that user enters in the search field.
@@ -117,7 +84,7 @@ public class VacancyService implements CRUDService<Vacancy, UUID> {
      * @return All vacancies in the database filter by any value.
      */
     public Page<Vacancy> findByAnyValue(String value, Pageable paging) {
-        return vacancyRepository.findByAnyValue(value, paging);
+        return vacancyRepository.findAll(findByValue(value), paging);
     }
 
     /**
@@ -139,10 +106,11 @@ public class VacancyService implements CRUDService<Vacancy, UUID> {
      * @return The saved vacancy.
      * @throws VacancyURLMalformedException if the URL could not be reached.
      */
-//    @Transactional(propagation = Propagation.REQUIRED)
     @Override
     public Vacancy save(Vacancy vacancy) {
-        if (vacancy.hasValidURL()) {    //checking the url, if it is malformed it will throw a VacancyURLMalformedException
+
+        if (vacancy
+                .hasValidURL()) {    //checking the url, if it is malformed it will throw a VacancyURLMalformedException
             return vacancyRepository.save(vacancy);
         } else {
             throw new VacancyURLMalformedException(vacancy.getVacancyURL());
@@ -161,12 +129,14 @@ public class VacancyService implements CRUDService<Vacancy, UUID> {
      */
     @Override
     public boolean delete(UUID id) {
+
         try {
             vacancyRepository.deleteById(id);
             return true;
         } catch (DataAccessException e) {
             return false;
         }
+
     }
     public void deleteAll(List<Vacancy> vacancies) {
         UUID id;
@@ -176,12 +146,12 @@ public class VacancyService implements CRUDService<Vacancy, UUID> {
         }
     }
 
-        /**
-         * Returns the vacancy with the specified url.
-         *
-         * @param url url of the vacancy to retrieve.
-         * @return An optional of the requested vacancy if found, and an empty optional otherwise.
-         */
+    /**
+     * Returns the vacancy with the specified url.
+     *
+     * @param url url of the vacancy to retrieve.
+     * @return An optional of the requested vacancy if found, and an empty optional otherwise.
+     */
     public Optional<Vacancy> findByURL(String url) {
         return vacancyRepository.findByVacancyURLEquals(url);
     }

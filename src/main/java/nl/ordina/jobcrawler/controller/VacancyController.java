@@ -18,25 +18,13 @@ import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.IanaLinkRelations;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
-import java.util.stream.Collectors;
-
-import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
-import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 
 @CrossOrigin
 @RestController
@@ -53,35 +41,33 @@ public class VacancyController {
     }
 
     /**
-     * Returns all vacancies in the database.
      *
-     * @return All vacancies in the database.
+     * @param value when entered vacancy results are filtered by this value and the skills are ignored
+     * @param skills when entered vacancy results are filtered by the skills
+     * @param page the current page number
+     * @param size the size of te page
+     *
+     * @return vacancies from the database.
      */
     @GetMapping
-    public ResponseEntity<SearchResult> getVacancies(
-            @RequestParam(required = false) String value,
-            @RequestParam(required = false) Set<String> skills,
-            @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "10") int size) {
+    public ResponseEntity<SearchResult> getVacancies(@RequestParam(required = false) Optional<String> value,
+                                                     @RequestParam(required = false) Optional<Set<String>> skills,
+                                                     @RequestParam(defaultValue = "1") int page,
+                                                     @RequestParam(defaultValue = "10") int size) {
         try {
-            List<Vacancy> vacancyList = new ArrayList<>();
+
             Pageable paging = PageRequest.of(page, size);
 
-            Page<Vacancy> vacancies;
+            Page<Vacancy> vacancies = value.filter(v -> !v.isBlank()).map(v -> vacancyService.findByAnyValue(v, paging))
+                    .orElse(skills.filter(s -> !s.isEmpty()).map(s -> vacancyService.findBySkills(s, paging))
+                            .orElse(vacancyService.findAll(paging)));
 
-            if (value != null && !value.isBlank())
-                vacancies = vacancyService.findByAnyValue(value, paging);
-            else if(skills != null && !skills.isEmpty())
-                vacancies = vacancyService.findBySkills(skills, paging);
-            else
-                vacancies = vacancyService.findAll(paging);
-            vacancyList = vacancies.getContent();
-
-            if (vacancyList.isEmpty()) {
+            if (vacancies.getContent().isEmpty()) {
                 return new ResponseEntity<>(HttpStatus.NO_CONTENT);
             }
+
             SearchResult searchResult = new SearchResult();
-            searchResult.setVacancies(vacancyList);
+            searchResult.setVacancies(vacancies.getContent());
             searchResult.setCurrentPage(vacancies.getNumber());
             searchResult.setTotalItems(vacancies.getTotalElements());
             searchResult.setTotalPages(vacancies.getTotalPages());
