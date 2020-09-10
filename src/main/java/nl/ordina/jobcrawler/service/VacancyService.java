@@ -54,7 +54,6 @@ public class VacancyService implements CRUDService<Vacancy, UUID> {
         return vacanciesList2;
     }
 
-
     /**
      * Returns all vacancies in the database using pagination.
      *

@@ -49,7 +49,8 @@ public class LocationService implements CRUDService<Location, UUID> {
 
     public static Location getCoordinates(String location) throws IOException, JSONException {
         final String apiKey = "Xd5hXSuQvqUJJbJh3iacOXZAcskvP7gI";
-        String location2 = location.replace(" ","%20");
+        String location2 = location.concat(", Nederland");
+        location2 = location2.replace(" ","%20");
         final String url = "http://open.mapquestapi.com/nominatim/v1/search.php?key=" + apiKey + "&format=json&q=" + location2 + "&addressdetails=1&limit=1";
 
         URL obj = new URL(url);

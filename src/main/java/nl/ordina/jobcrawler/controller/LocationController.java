@@ -27,20 +27,23 @@ public class LocationController {
         this.locationModelAssembler = locationModelAssembler;
     }
 
+    @GetMapping("/{IdOrName}")
+    public EntityModel<Location> getLocationByIdOrName(@PathVariable String locationName) {
+        if(locationName.matches(".*\\d.*")) {
+            UUID id = UUID.fromString(locationName);
+            return getLocationById(id);
+        } else {
+            Location location = locationService.findByLocationName(locationName)
+                    .orElseThrow(() -> new LocationNotFoundException(locationName));
+            return locationModelAssembler.toModel(location);
+        }
+    }
 
-    @GetMapping("/{id}")
-    public EntityModel<Location> getLocation(@PathVariable UUID id) {
+    private EntityModel<Location> getLocationById(UUID id) {
         Location location = locationService.findById(id)
                 .orElseThrow(() -> new LocationNotFoundException(id));
         return locationModelAssembler.toModel(location);
     }
-
-/*    @GetMapping("/{locationName}")
-    public EntityModel<Location> getLocation(@PathVariable String locationName) {
-        Location location = locationService.findByLocationName(locationName)
-                .orElseThrow(() -> new LocationNotFoundException(locationName));
-        return locationModelAssembler.toModel(location);
-    }*/
 
     public CollectionModel<EntityModel<Location>> getLocations() {
 

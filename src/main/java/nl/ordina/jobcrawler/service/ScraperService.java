@@ -68,7 +68,7 @@ public class ScraperService {
         this.jobBirdScraper = jobBirdScraper;
     }
 
-    @PostConstruct
+    //@PostConstruct
     @Scheduled(cron = "0 0 12,18 * * *")
     // Runs two times a day. At 12pm and 6pm
     public void scrape() {
@@ -96,6 +96,9 @@ public class ScraperService {
                 } else {
                     String vacancyLocation = vacancy.getLocationString();
                     if(vacancyLocation.endsWith(", Nederland")) {vacancyLocation = vacancyLocation.substring(0,vacancyLocation.length()-11);}
+                    if(vacancyLocation.endsWith(", Netherlands")) {vacancyLocation = vacancyLocation.substring(0,vacancyLocation.length()-13);}
+                    if(vacancyLocation.endsWith(", the Netherlands")) {vacancyLocation = vacancyLocation.substring(0,vacancyLocation.length()-16);}
+                    if(vacancyLocation.equals("'s-Hertogenbosch")) {vacancyLocation = "Den Bosch";}
                     if (vacancyLocation!="") {
                         Optional<Location> existCheckLocation = locationService.findByLocationName(vacancyLocation);
                         if (!existCheckLocation.isPresent()) {
