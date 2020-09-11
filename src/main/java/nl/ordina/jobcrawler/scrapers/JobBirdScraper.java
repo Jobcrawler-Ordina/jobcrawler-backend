@@ -10,9 +10,13 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.regex.Pattern;
 
 /*  Search is limited to URLs for ICT jobs with search term "java"
  *       Search URL will be completed later:a page number is added to the url
@@ -39,6 +43,10 @@ import java.util.concurrent.CopyOnWriteArrayList;
 @Slf4j
 @Component
 public class JobBirdScraper extends VacancyScraper {
+
+    private final Pattern ymdPattern = Pattern.compile("^[0-9]{4}-(1[0-2]|0[1-9])-(3[01]|[12][0-9]|0[1-9])$");
+    private final DateTimeFormatter ymdFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+
     public void setLogService(LogService logService) {
         this.logService = logService;
     }
@@ -68,9 +76,8 @@ public class JobBirdScraper extends VacancyScraper {
 
 
     protected List<String> retrieveURLs() {
-        logService.logInfo(String.format("%s -- Start scraping", getBROKER().toUpperCase()));
-        List<String> vacancyURLs = getVacancyURLs();
-        return vacancyURLs;
+        logService.logInfo(String.format("%s -- Start scraping", getBroker().toUpperCase()));
+        return getVacancyURLs();
     }
 
     protected List<Vacancy> retrieveVacancies(List<String> vacancyURLs) {
@@ -83,7 +90,7 @@ public class JobBirdScraper extends VacancyScraper {
                         .vacancyURL(vacancyURL)
                         .title(getVacancyTitle(doc))
                         .hours(getHoursFromPage(doc))
-                        .broker(getBROKER())
+                        .broker(getBroker())
                         .location(getLocation(doc))
                         .postingDate(getPublishDate(doc))
                         .about(getVacancyAbout(doc))
@@ -91,10 +98,10 @@ public class JobBirdScraper extends VacancyScraper {
 
                 vacancies.add(vacancy);
 
-                log.info(String.format("%s - Vacancy found: %s", getBROKER(), vacancy.getTitle()));
+                log.info(String.format("%s - Vacancy found: %s", getBroker(), vacancy.getTitle()));
             }
         });
-        log.info(String.format("%s -- Returning scraped vacancies", getBROKER()));
+        log.info(String.format("%s -- Returning scraped vacancies", getBroker()));
 
 
         return vacancies;
@@ -123,7 +130,7 @@ public class JobBirdScraper extends VacancyScraper {
         if (pageNumber < 1) {
             throw new Exception("JobBirdScraper:createSearchURL: pagenr must be 1 or greater");
         }
-        return String.format("%s%d&ot=date&c[]=ict", getSEARCH_URL(), pageNumber);
+        return String.format("%s%d&ot=date&c[]=ict", getSearchUrl(), pageNumber);
     }
 
 
@@ -212,7 +219,7 @@ public class JobBirdScraper extends VacancyScraper {
                 if (!text.equalsIgnoreCase("volgende"))
                     count++;
             }
-            log.info(String.format("%s -- Total number of pages: %d", getBROKER(), count));
+            log.info(String.format("%s -- Total number of pages: %d", getBroker(), count));
             return count;
         } catch (Exception e) {
             throw new HTMLStructureException(e.getLocalizedMessage());
@@ -280,8 +287,8 @@ public class JobBirdScraper extends VacancyScraper {
      * @param doc Document which is needed to retrieve publishing date
      * @return String publish date
      */
-    protected String getPublishDate(Document doc) {
-        String result = "";
+    protected LocalDateTime getPublishDate(Document doc) {
+        LocalDateTime result = null;
         Elements elements = doc.select("span.job-result__place");
         if (!elements.isEmpty()) {
             Element parent = elements.get(0).parent().parent();
@@ -291,14 +298,19 @@ public class JobBirdScraper extends VacancyScraper {
 
             if (!timeElements.isEmpty()) {
                 Element timeElement = timeElements.get(0);
-                result = timeElement.attr("datetime");
+                String date = timeElement.attr("datetime");
+                result = checkDatePattern(date) ? LocalDate.parse(date, ymdFormatter).atStartOfDay() : null;
             }
         }
         return result;
     }
 
+    private boolean checkDatePattern(String s) {
+        return s != null && ymdPattern.matcher(s).matches();
+    }
+
     /**
-     * Retrieve the hours respectively the minimum allowed hours frm the relevant part of the page.
+     * Retrieve the hours respectively the minimum allowed hours from the relevant part of the page.
      *
      * @param doc Document which is needed to retrieve hours
      * @return String hours
@@ -306,6 +318,7 @@ public class JobBirdScraper extends VacancyScraper {
     protected String getHoursFromPage(Document doc) {
         try {
             Elements elements = doc.select("div.card-body");
+            // TODO when the tag Uren per week does not contain character ':' very long strings are happening
             // Search the childnodes for the tag "<strong>Uren per week:</strong>
             // in principle, the text is free format with a few common headings
             for (Element e : elements) {
@@ -316,7 +329,7 @@ public class JobBirdScraper extends VacancyScraper {
                         String[] urenArr = uren.split(":");
                         if (urenArr.length > 1) {
                             uren = urenArr[1];
-                            return uren.trim();
+                            return uren.trim().length() > 255 ? uren.substring(0, 254) : uren.trim();
                         }
                     } else if (child.toString().contains(minString)) {
                         String sElement = child.toString();
@@ -325,7 +338,7 @@ public class JobBirdScraper extends VacancyScraper {
                         String sRest = sElement.substring(index);
                         index = sRest.indexOf("<");
                         String sUren = sRest.substring(0, index);
-                        return sUren.trim();
+                        return sUren.trim().length() > 255 ? sUren.substring(0, 254) : sUren.trim();
                     }
                 }
             }

@@ -13,18 +13,17 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
 
 import java.io.File;
-import java.net.URISyntaxException;
-import java.net.URL;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
 
 @ExtendWith(MockitoExtension.class)
-public class HuxleyITVacancyScraperTest {
+public class HuxleyITVacancyScraperTest extends UseLocalSavedFiles {
 
     @InjectMocks
     private HuxleyITVacancyScraper huxleyITVacancyScraper;
@@ -55,16 +54,7 @@ public class HuxleyITVacancyScraperTest {
         List<Vacancy> vacancyList = huxleyITVacancyScraper.getVacancies();
         assertEquals(4, vacancyList.size());
         assertEquals("Security Architect", vacancyList.get(0).getTitle());
+        vacancyList.forEach(v -> assertNotNull(v.getPostingDate()));
     }
 
-
-    // This method is used to retrieve the file content for local saved html files.
-    private static File getFile(String fileName) {
-        try {
-            URL fileContent = HuxleyITVacancyScraperTest.class.getResource(fileName);
-            return fileContent != null ? new File(fileContent.toURI()) : new File("/404");
-        } catch (URISyntaxException e) {
-            throw new IllegalStateException(e);
-        }
-    }
 }

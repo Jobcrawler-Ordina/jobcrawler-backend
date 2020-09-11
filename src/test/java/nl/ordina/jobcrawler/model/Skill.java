@@ -2,11 +2,18 @@ package nl.ordina.jobcrawler.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.*;
+import org.hibernate.annotations.Type;
 
 import javax.persistence.*;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
+
+/**
+ * TODO
+ * Need to figure out the H2Dialect config for the UUID column.
+ * Until now still need type = "uuid-char" in this class.
+ */
 
 @Entity
 @Getter
@@ -19,6 +26,7 @@ public class Skill {
     @GeneratedValue
     @Id
     @JsonIgnore
+    @Type(type = "uuid-char")
     private UUID id;
 
     @Column(nullable = false, unique = true)
