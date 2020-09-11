@@ -96,6 +96,12 @@ public class UserServiceTest {
     }
 
     @Test
+    void updateDitIsAlGenoeg() {
+        userService.update(1L, new User());
+        verify(userRepository, times(1)).save(any());
+    }
+
+    @Test
     public void saveUser() {
         User newUser = new User("newUser", "newPassword");
         newUser.setId(11L);
