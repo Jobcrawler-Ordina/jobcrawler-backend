@@ -18,14 +18,14 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-public class RoleServiceTest {
+class RoleServiceTest {
 
     @Mock
     private RoleRepository roleRepository;
@@ -53,7 +53,7 @@ public class RoleServiceTest {
     }
 
     @Test
-    public void findAll() {
+    void findAll() {
         when(roleRepository.findAll()).thenReturn(roleList);
         List<Role> findAllRoles = roleService.findAll();
 
@@ -63,7 +63,7 @@ public class RoleServiceTest {
     }
 
     @Test
-    public void save() {
+    void save() {
         when(roleRepository.save(userRole)).thenReturn(userRole);
         Role savedRole = roleService.save(userRole);
 
@@ -73,18 +73,16 @@ public class RoleServiceTest {
     }
 
     @Test
-    public void delete() {
-        when(roleRepository.findById(adminRole.getId())).thenReturn(Optional.of(adminRole));
-        doNothing().when(roleRepository).delete(any());
+    void delete() {
+        doNothing().when(roleRepository).deleteById(anyLong());
 
         boolean result = roleService.delete(adminRole.getId());
         assertTrue(result);
-        verify(roleRepository, times(1)).findById(adminRole.getId());
-        verify(roleRepository, times(1)).delete(any());
+        verify(roleRepository, times(1)).deleteById(anyLong());
     }
 
     @Test
-    public void findByName() {
+    void findByName() {
         when(roleRepository.findByName(RoleName.ROLE_ADMIN)).thenReturn(Optional.of(adminRole));
         Role role = roleService.findByName(RoleName.ROLE_ADMIN)
                 .orElseThrow(() -> new RoleNotFoundException("Role not found"));
