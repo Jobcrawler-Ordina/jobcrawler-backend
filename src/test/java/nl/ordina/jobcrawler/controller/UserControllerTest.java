@@ -2,9 +2,9 @@ package nl.ordina.jobcrawler.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import nl.ordina.jobcrawler.model.Role;
-import nl.ordina.jobcrawler.model.RoleName;
+import nl.ordina.jobcrawler.util.RoleName;
 import nl.ordina.jobcrawler.model.User;
-import nl.ordina.jobcrawler.model.UserDTO;
+import nl.ordina.jobcrawler.util.UserDTO;
 import nl.ordina.jobcrawler.service.UserService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -106,7 +106,7 @@ public class UserControllerTest {
         user.setRoles(newRoles);
 
         when(userService.convertToUser(any())).thenReturn(user);
-        when(userService.update(anyLong(), any())).thenReturn(null);
+        when(userService.update(any())).thenReturn(null);
 
         mockMvc.perform(put("/user")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -115,7 +115,7 @@ public class UserControllerTest {
                 .andExpect(jsonPath("$.success", is(true)));
 
         verify(userService, times(1)).convertToUser(any());
-        verify(userService, times(1)).update(anyLong(), any());
+        verify(userService, times(1)).update(any());
     }
 
     @Test

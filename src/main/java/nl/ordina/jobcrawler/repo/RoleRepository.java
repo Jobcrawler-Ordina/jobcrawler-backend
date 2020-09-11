@@ -1,7 +1,7 @@
 package nl.ordina.jobcrawler.repo;
 
 import nl.ordina.jobcrawler.model.Role;
-import nl.ordina.jobcrawler.model.RoleName;
+import nl.ordina.jobcrawler.util.RoleName;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

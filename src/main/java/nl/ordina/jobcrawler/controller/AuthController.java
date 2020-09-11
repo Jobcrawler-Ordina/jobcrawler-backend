@@ -1,12 +1,12 @@
 package nl.ordina.jobcrawler.controller;
 
-import nl.ordina.jobcrawler.controller.exception.RoleNotFoundException;
-import nl.ordina.jobcrawler.controller.exception.UserNotFoundException;
-import nl.ordina.jobcrawler.model.JwtResponse;
+import nl.ordina.jobcrawler.exception.RoleNotFoundException;
+import nl.ordina.jobcrawler.exception.UserNotFoundException;
+import nl.ordina.jobcrawler.payload.JwtResponse;
 import nl.ordina.jobcrawler.model.Role;
-import nl.ordina.jobcrawler.model.RoleName;
+import nl.ordina.jobcrawler.util.RoleName;
 import nl.ordina.jobcrawler.model.User;
-import nl.ordina.jobcrawler.model.UserForm;
+import nl.ordina.jobcrawler.payload.UserRequest;
 import nl.ordina.jobcrawler.security.jwt.JwtProvider;
 import nl.ordina.jobcrawler.service.RoleService;
 import nl.ordina.jobcrawler.service.UserService;
@@ -95,7 +95,7 @@ public class AuthController {
      * @return Details for further http requests with authorization.
      */
     @PostMapping("/signin")
-    public ResponseEntity<Object> authenticateUser(@Valid @RequestBody UserForm loginRequest) {
+    public ResponseEntity<Object> authenticateUser(@Valid @RequestBody UserRequest loginRequest) {
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
                         loginRequest.getUsername(),
@@ -128,7 +128,7 @@ public class AuthController {
      * @return Success message when signup succeeded. Otherwise throws exception or false success message
      */
     @PostMapping("/signup")
-    public ResponseEntity<Object> registerUser(@Valid @RequestBody UserForm signUpRequest) {
+    public ResponseEntity<Object> registerUser(@Valid @RequestBody UserRequest signUpRequest) {
         if (this.allowRegistration) {
             if (userService.existsByUsername(signUpRequest.getUsername())) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
@@ -191,9 +191,7 @@ public class AuthController {
 
 
         List<String> roles = new ArrayList<>();
-        user.getRoles().forEach(role -> {
-            roles.add(String.valueOf(role.getName()));
-        });
+        user.getRoles().forEach(role -> roles.add(String.valueOf(role.getName())));
 
         return JwtResponse.builder()
                 .token(jwt.get(0))

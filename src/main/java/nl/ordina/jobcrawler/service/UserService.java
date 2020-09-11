@@ -1,11 +1,11 @@
 package nl.ordina.jobcrawler.service;
 
-import nl.ordina.jobcrawler.controller.exception.RoleNotFoundException;
-import nl.ordina.jobcrawler.controller.exception.UserNotFoundException;
+import nl.ordina.jobcrawler.exception.RoleNotFoundException;
+import nl.ordina.jobcrawler.exception.UserNotFoundException;
 import nl.ordina.jobcrawler.model.Role;
-import nl.ordina.jobcrawler.model.RoleName;
+import nl.ordina.jobcrawler.util.RoleName;
 import nl.ordina.jobcrawler.model.User;
-import nl.ordina.jobcrawler.model.UserDTO;
+import nl.ordina.jobcrawler.util.UserDTO;
 import nl.ordina.jobcrawler.repo.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -16,7 +16,7 @@ import java.util.Optional;
 import java.util.Set;
 
 @Service
-public class UserService implements CRUDService<User, Long> {
+public class UserService {
 
     private final UserRepository userRepository;
     private final RoleService roleService;
@@ -27,28 +27,18 @@ public class UserService implements CRUDService<User, Long> {
         this.roleService = roleService;
     }
 
-    @Override
-    public Optional<User> findById(Long id) {
-        return userRepository.findById(id);
-    }
-
-    @Override
     public List<User> findAll() {
         return userRepository.findAll();
     }
 
-    // TODO Long aLong is not used can be removed
-    @Override
-    public User update(Long aLong, User user) {
+    public User update(User user) {
         return userRepository.save(user);
     }
 
-    @Override
     public User save(User user) {
         return userRepository.save(user);
     }
 
-    @Override
     public boolean delete(Long id) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new UserNotFoundException(String.format("Fail! -> Could not find user with id: %d in database.", id)));

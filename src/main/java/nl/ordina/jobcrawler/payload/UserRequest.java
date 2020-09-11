@@ -1,4 +1,4 @@
-package nl.ordina.jobcrawler.model;
+package nl.ordina.jobcrawler.payload;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -8,7 +8,7 @@ import javax.validation.constraints.Size;
 
 @Getter
 @Setter
-public class UserForm {
+public class UserRequest {
     @NotBlank
     @Size(min = 3, max = 60)
     private String username;

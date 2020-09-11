@@ -6,7 +6,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import nl.ordina.jobcrawler.controller.exception.VacancyURLMalformedException;
+import nl.ordina.jobcrawler.exception.VacancyURLMalformedException;
 import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.Column;

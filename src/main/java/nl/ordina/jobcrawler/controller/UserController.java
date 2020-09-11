@@ -1,8 +1,7 @@
 package nl.ordina.jobcrawler.controller;
 
 import nl.ordina.jobcrawler.model.User;
-import nl.ordina.jobcrawler.model.UserDTO;
-import nl.ordina.jobcrawler.service.RoleService;
+import nl.ordina.jobcrawler.util.UserDTO;
 import nl.ordina.jobcrawler.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -62,7 +61,7 @@ public class UserController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Object> updateUser(@Valid @RequestBody UserDTO userDTO) {
         User user = userService.convertToUser(userDTO);
-        userService.update(user.getId(), user);
+        userService.update(user);
         return ResponseEntity.status(HttpStatus.OK).body(Map.of("success", true));
     }
 

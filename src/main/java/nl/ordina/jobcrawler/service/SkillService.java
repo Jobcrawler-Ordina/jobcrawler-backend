@@ -1,6 +1,6 @@
 package nl.ordina.jobcrawler.service;
 
-import nl.ordina.jobcrawler.controller.exception.SkillNotFoundException;
+import nl.ordina.jobcrawler.exception.SkillNotFoundException;
 import nl.ordina.jobcrawler.model.Skill;
 import nl.ordina.jobcrawler.model.Vacancy;
 import nl.ordina.jobcrawler.repo.SkillRepository;
@@ -21,7 +21,7 @@ import java.util.UUID;
 
 
 @Service
-public class SkillService implements CRUDService<Skill, UUID> {
+public class SkillService {
 
     private final SkillRepository skillRepository;
 
@@ -40,7 +40,6 @@ public class SkillService implements CRUDService<Skill, UUID> {
      * @param id ID of the skill to retrieve.
      * @return An optional of the requested skill if found, and an empty optional otherwise.
      */
-    @Override
     public Optional<Skill> findById(UUID id) {
         return skillRepository.findById(id);
     }
@@ -50,7 +49,6 @@ public class SkillService implements CRUDService<Skill, UUID> {
      *
      * @return All skills in the database.
      */
-    @Override
     public List<Skill> findAll() {
         return skillRepository.findAll();
     }
@@ -61,7 +59,6 @@ public class SkillService implements CRUDService<Skill, UUID> {
      * @param newSkill The skill with the values to be updated.
      * @return True if the update succeeded, otherwise false.
      */
-    @Override
     public Skill update(UUID id, Skill newSkill) {
 
         return skillRepository.findById(id)
@@ -78,7 +75,6 @@ public class SkillService implements CRUDService<Skill, UUID> {
      * @param skill The skill to save to the database.
      * @return The saved skill.
      */
-    @Override
     public Skill save(Skill skill) {
         return skillRepository.save(skill);
     }
@@ -89,7 +85,6 @@ public class SkillService implements CRUDService<Skill, UUID> {
      * @param id The id of the skill to delete.
      * @return True if the operation was successful, false otherwise.
      */
-    @Override
     public boolean delete(UUID id) {
         try {
             skillRepository.deleteById(id);
@@ -107,15 +102,6 @@ public class SkillService implements CRUDService<Skill, UUID> {
     public void deleteReferencesToSkill(String name) {
         skillRepository.deleteReferencesToSkill(name);
     }
-
-
-
-    // delete a certain skill by name
-    public void deleteSkillByName(String name) {
-        deleteReferencesToSkill(name);
-        skillRepository.deleteSkillByName(name);
-    }
-
 
     // Given a list of skills from the database, add the links to the vacancy-skills table
     // for the given vacancy

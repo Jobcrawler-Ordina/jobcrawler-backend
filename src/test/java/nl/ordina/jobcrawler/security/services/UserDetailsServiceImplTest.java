@@ -1,7 +1,7 @@
 package nl.ordina.jobcrawler.security.services;
 
 import nl.ordina.jobcrawler.model.Role;
-import nl.ordina.jobcrawler.model.RoleName;
+import nl.ordina.jobcrawler.util.RoleName;
 import nl.ordina.jobcrawler.model.User;
 import nl.ordina.jobcrawler.service.UserService;
 import org.junit.jupiter.api.Assertions;

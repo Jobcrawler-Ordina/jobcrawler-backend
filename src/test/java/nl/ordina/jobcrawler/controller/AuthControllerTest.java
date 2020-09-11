@@ -1,12 +1,12 @@
 package nl.ordina.jobcrawler.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import nl.ordina.jobcrawler.controller.exception.RoleNotFoundException;
-import nl.ordina.jobcrawler.controller.exception.UserNotFoundException;
+import nl.ordina.jobcrawler.exception.RoleNotFoundException;
+import nl.ordina.jobcrawler.exception.UserNotFoundException;
 import nl.ordina.jobcrawler.model.Role;
-import nl.ordina.jobcrawler.model.RoleName;
+import nl.ordina.jobcrawler.util.RoleName;
 import nl.ordina.jobcrawler.model.User;
-import nl.ordina.jobcrawler.model.UserForm;
+import nl.ordina.jobcrawler.payload.UserRequest;
 import nl.ordina.jobcrawler.security.jwt.JwtProvider;
 import nl.ordina.jobcrawler.security.services.UserPrinciple;
 import nl.ordina.jobcrawler.service.RoleService;
@@ -84,7 +84,7 @@ public class AuthControllerTest {
 
     private Role adminRole;
 
-    private UserForm userForm;
+    private UserRequest userForm;
 
     private User user;
 
@@ -105,7 +105,7 @@ public class AuthControllerTest {
         adminRole = new Role();
         adminRole.setName(RoleName.ROLE_ADMIN);
 
-        userForm = new UserForm();
+        userForm = new UserRequest();
         userForm.setUsername("admin");
         userForm.setPassword("password");
 

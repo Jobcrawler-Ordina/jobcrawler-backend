@@ -2,7 +2,7 @@ package nl.ordina.jobcrawler.model;
 
 import lombok.Getter;
 import lombok.Setter;
-import lombok.ToString;
+import nl.ordina.jobcrawler.util.RoleName;
 import org.hibernate.annotations.NaturalId;
 
 import javax.persistence.Column;

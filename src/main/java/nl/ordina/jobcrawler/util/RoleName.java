@@ -1,4 +1,4 @@
-package nl.ordina.jobcrawler.model;
+package nl.ordina.jobcrawler.util;
 
 /**
  * Available roles

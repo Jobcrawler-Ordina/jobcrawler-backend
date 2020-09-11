@@ -1,17 +1,18 @@
 package nl.ordina.jobcrawler.service;
 
-import nl.ordina.jobcrawler.controller.exception.RoleNotFoundException;
+import nl.ordina.jobcrawler.exception.RoleNotFoundException;
 import nl.ordina.jobcrawler.model.Role;
-import nl.ordina.jobcrawler.model.RoleName;
+import nl.ordina.jobcrawler.util.RoleName;
 import nl.ordina.jobcrawler.repo.RoleRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
 
 @Service
-public class RoleService implements CRUDService<Role, Long> {
+public class RoleService {
 
     private final RoleRepository roleRepository;
 
@@ -20,32 +21,21 @@ public class RoleService implements CRUDService<Role, Long> {
         this.roleRepository = roleRepository;
     }
 
-    @Override
-    public Optional<Role> findById(Long id) {
-        return roleRepository.findById(id);
-    }
-
-    @Override
     public List<Role> findAll() {
         return roleRepository.findAll();
     }
 
-    @Override
-    public Role update(Long aLong, Role role) {
-        return roleRepository.save(role);
-    }
-
-    @Override
     public Role save(Role role) {
         return roleRepository.save(role);
     }
 
-    @Override
     public boolean delete(Long id) {
-        Role role = roleRepository.findById(id)
-                .orElseThrow(() -> new RoleNotFoundException(String.format("Fail! -> Could not find role with id: %d in database.", id)));
-        roleRepository.delete(role);
-        return true;
+        try {
+            roleRepository.deleteById(id);
+            return true;
+        } catch (EmptyResultDataAccessException e) {
+            throw new RoleNotFoundException(String.format("Role with id: %d not found.", id));
+        }
     }
 
     public Optional<Role> findByName(RoleName roleName) {

@@ -1,10 +1,10 @@
 package nl.ordina.jobcrawler.service;
 
-import nl.ordina.jobcrawler.controller.exception.UserNotFoundException;
+import nl.ordina.jobcrawler.exception.UserNotFoundException;
 import nl.ordina.jobcrawler.model.Role;
-import nl.ordina.jobcrawler.model.RoleName;
+import nl.ordina.jobcrawler.util.RoleName;
 import nl.ordina.jobcrawler.model.User;
-import nl.ordina.jobcrawler.model.UserDTO;
+import nl.ordina.jobcrawler.util.UserDTO;
 import nl.ordina.jobcrawler.repo.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -28,7 +28,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-public class UserServiceTest {
+class UserServiceTest {
 
     @Mock
     private UserRepository userRepository;
@@ -65,18 +65,7 @@ public class UserServiceTest {
     }
 
     @Test
-    public void findByID() {
-        int id = 5;
-        when(userRepository.findById((long) id)).thenReturn(Optional.of(userList.get(id - 1)));
-        User user = userService.findById((long) id)
-                .orElseThrow(() -> new UserNotFoundException(String.format("Fail! -> User with id %d not found!", id)));
-
-        assertEquals(user.getId(), id);
-        verify(userRepository, times(1)).findById((long) id);
-    }
-
-    @Test
-    public void findAll() {
+    void findAll() {
         when(userRepository.findAll()).thenReturn(userList);
         List<User> allUsers = userService.findAll();
 
@@ -85,11 +74,11 @@ public class UserServiceTest {
     }
 
     @Test
-    public void updateUser() {
+    void updateUser() {
         User user4 = userList.get(4);
         user4.setUsername("newUsername");
         when(userRepository.save(user4)).thenReturn(user4);
-        User updatedUser = userService.update(user4.getId(), user4);
+        User updatedUser = userService.update(user4);
 
         assertEquals(updatedUser.getUsername(), user4.getUsername());
         verify(userRepository, times(1)).save(any());
@@ -97,12 +86,12 @@ public class UserServiceTest {
 
     @Test
     void updateDitIsAlGenoeg() {
-        userService.update(1L, new User());
+        userService.update(new User());
         verify(userRepository, times(1)).save(any());
     }
 
     @Test
-    public void saveUser() {
+    void saveUser() {
         User newUser = new User("newUser", "newPassword");
         newUser.setId(11L);
         when(userRepository.save(newUser)).thenReturn(newUser);
@@ -113,7 +102,7 @@ public class UserServiceTest {
     }
 
     @Test
-    public void deleteUser() {
+    void deleteUser() {
         long id = 1L;
         when(userRepository.findById(id)).thenReturn(Optional.of(userList.get((int) id - 1)));
         doNothing().when(userRepository).delete(any());
@@ -125,7 +114,7 @@ public class UserServiceTest {
     }
 
     @Test
-    public void findByIdAndUsername() {
+    void findByIdAndUsername() {
         long id = 6L;
         User user6 = userList.get((int) id);
         when(userRepository.findByIdAndUsername(id, user6.getUsername())).thenReturn(Optional.of(user6));
@@ -138,7 +127,7 @@ public class UserServiceTest {
     }
 
     @Test
-    public void findByUsername() {
+    void findByUsername() {
         User user7 = userList.get(7);
         when(userRepository.findByUsername(user7.getUsername())).thenReturn(Optional.of(user7));
 
@@ -150,7 +139,7 @@ public class UserServiceTest {
     }
 
     @Test
-    public void count() {
+    void count() {
         when(userRepository.count()).thenReturn((long) userList.size());
         long count = userService.count();
 
@@ -159,7 +148,7 @@ public class UserServiceTest {
     }
 
     @Test
-    public void existByUsername() {
+    void existByUsername() {
         User user8 = userList.get(8);
         when(userRepository.existsByUsername(user8.getUsername())).thenReturn(true);
 
@@ -170,7 +159,7 @@ public class UserServiceTest {
     }
 
     @Test
-    public void convertToUser() {
+    void convertToUser() {
         UserDTO userDTO = new UserDTO();
         userDTO.setId(1L);
         userDTO.setUsername("username1");
@@ -185,8 +174,8 @@ public class UserServiceTest {
 
         User convertedUser = userService.convertToUser(userDTO);
 
-        assertEquals(convertedUser.getRoles().size(), 2);
-        assertEquals(convertedUser.getUsername(), userDTO.getUsername());
+        assertEquals(2, convertedUser.getRoles().size());
+        assertEquals(userDTO.getUsername(), convertedUser.getUsername());
         assertTrue(convertedUser.getRoles().contains(adminRole));
 
         verify(userRepository, times(1)).findByIdAndUsername(userDTO.getId(), userDTO.getUsername());
@@ -194,7 +183,7 @@ public class UserServiceTest {
     }
 
     @Test
-    public void convertToUserDTO() {
+    void convertToUserDTO() {
         User user9 = userList.get(9);
         Set<Role> roles = new HashSet<>();
         roles.add(adminRole);
@@ -203,8 +192,8 @@ public class UserServiceTest {
 
         UserDTO userDTO = userService.convertToUserDTO(user9);
 
-        assertEquals(userDTO.getUsername(), user9.getUsername());
-        assertEquals(userDTO.getRoles().size(), 2);
+        assertEquals(user9.getUsername(), userDTO.getUsername());
+        assertEquals(2, userDTO.getRoles().size());
         assertTrue(userDTO.getRoles().contains("ROLE_ADMIN"));
         assertTrue(userDTO.getRoles().contains("ROLE_USER"));
     }

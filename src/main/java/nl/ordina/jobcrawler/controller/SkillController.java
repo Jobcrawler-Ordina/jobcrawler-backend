@@ -1,7 +1,7 @@
 package nl.ordina.jobcrawler.controller;
 
 
-import nl.ordina.jobcrawler.controller.exception.SkillNotFoundException;
+import nl.ordina.jobcrawler.exception.SkillNotFoundException;
 import nl.ordina.jobcrawler.model.Skill;
 import nl.ordina.jobcrawler.model.assembler.SkillModelAssembler;
 import nl.ordina.jobcrawler.service.SkillService;
@@ -22,12 +22,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.validation.Valid;
-import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
-import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 
 @CrossOrigin
 @RestController

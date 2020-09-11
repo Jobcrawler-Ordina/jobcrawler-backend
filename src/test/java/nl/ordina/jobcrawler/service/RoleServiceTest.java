@@ -1,8 +1,8 @@
 package nl.ordina.jobcrawler.service;
 
-import nl.ordina.jobcrawler.controller.exception.RoleNotFoundException;
+import nl.ordina.jobcrawler.exception.RoleNotFoundException;
 import nl.ordina.jobcrawler.model.Role;
-import nl.ordina.jobcrawler.model.RoleName;
+import nl.ordina.jobcrawler.util.RoleName;
 import nl.ordina.jobcrawler.repo.RoleRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -53,16 +53,6 @@ public class RoleServiceTest {
     }
 
     @Test
-    public void findById() {
-        when(roleRepository.findById(1L)).thenReturn(Optional.of(adminRole));
-        Role role = roleService.findById(1L)
-                .orElseThrow(() -> new RoleNotFoundException("Role not found"));
-
-        assertEquals(role.getName(), adminRole.getName());
-        verify(roleRepository, times(1)).findById(1L);
-    }
-
-    @Test
     public void findAll() {
         when(roleRepository.findAll()).thenReturn(roleList);
         List<Role> findAllRoles = roleService.findAll();
@@ -70,16 +60,6 @@ public class RoleServiceTest {
         assertNotNull(findAllRoles);
         assertEquals(findAllRoles.size(), 2);
         verify(roleRepository, times(1)).findAll();
-    }
-
-    @Test
-    public void update() {
-        when(roleRepository.save(adminRole)).thenReturn(adminRole);
-        Role updatedRole = roleService.update(adminRole.getId(), adminRole);
-
-        assertNotNull(updatedRole);
-        assertEquals(updatedRole.getName(), adminRole.getName());
-        verify(roleRepository, times(1)).save(adminRole);
     }
 
     @Test

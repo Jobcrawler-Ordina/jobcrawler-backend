@@ -1,7 +1,7 @@
 package nl.ordina.jobcrawler.controller;
 
-import nl.ordina.jobcrawler.SearchResult;
-import nl.ordina.jobcrawler.controller.exception.VacancyNotFoundException;
+import nl.ordina.jobcrawler.payload.SearchResult;
+import nl.ordina.jobcrawler.exception.VacancyNotFoundException;
 import nl.ordina.jobcrawler.model.Skill;
 import nl.ordina.jobcrawler.model.Vacancy;
 import nl.ordina.jobcrawler.model.assembler.SkillModelAssembler;
@@ -32,10 +32,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
-import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 
 @CrossOrigin
 @RestController
