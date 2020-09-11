@@ -1,16 +1,19 @@
 package nl.ordina.jobcrawler.model;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.*;
 import nl.ordina.jobcrawler.controller.exception.VacancyURLMalformedException;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Type;
+import org.springframework.data.annotation.CreatedDate;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.time.LocalDateTime;
 import java.util.Set;
 import java.util.UUID;
 
@@ -38,7 +41,9 @@ public class Vacancy {
     private String hours;
     private String location;
     private String salary;
-    private String postingDate;
+    @JsonFormat(timezone = "Europe/Amsterdam", pattern = "yyyy-MM-dd HH:mm:ss")
+    @CreatedDate
+    private LocalDateTime postingDate;
     @Column(columnDefinition = "TEXT")
     private String about;
 
@@ -56,7 +61,7 @@ public class Vacancy {
 
         URL url;
         HttpURLConnection huc;
-        int responseCode = 0;
+        int responseCode;
 
         try {
             url = new URL(this.vacancyURL);
@@ -80,18 +85,17 @@ public class Vacancy {
     @Override
     public String toString() {
         String newLine = "\n";
-        StringBuilder returnValue = new StringBuilder();
-        returnValue.append(vacancyURL.toString() + newLine);
-        returnValue.append(title + newLine);
-        returnValue.append(broker + newLine);
-        returnValue.append(vacancyNumber + newLine);
-        returnValue.append(hours + newLine);
-        returnValue.append(location + newLine);
-        returnValue.append(postingDate + newLine);
-        returnValue.append(about + newLine);
-        returnValue.append(skills.toString() + newLine + newLine);
-        returnValue.append("*****************************************");
-        return returnValue.toString();
+        return new StringBuilder()
+                .append(vacancyURL).append(newLine)
+                .append(title).append(newLine)
+                .append(broker).append(newLine)
+                .append(vacancyNumber).append(newLine)
+                .append(hours).append(newLine)
+                .append(location).append(newLine)
+                .append(postingDate).append(newLine)
+                .append(about).append(newLine)
+                .append(skills.toString()).append(newLine).append(newLine)
+                .append("*****************************************").toString();
 
     }
 }

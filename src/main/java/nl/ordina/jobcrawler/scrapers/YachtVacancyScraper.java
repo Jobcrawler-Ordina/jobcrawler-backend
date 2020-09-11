@@ -4,17 +4,22 @@ import lombok.extern.slf4j.Slf4j;
 import nl.ordina.jobcrawler.model.Vacancy;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.FormatStyle;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.regex.Pattern;
 
 
 @Slf4j
@@ -23,9 +28,12 @@ public class YachtVacancyScraper extends VacancyScraper {
 
     private static final String VACANCY_URL_PREFIX = "https://www.yacht.nl";
 
+    private final Pattern dmyPattern = Pattern.compile("^(3[01]|[12][0-9]|0[1-9]) [a-z]+ [0-9]{4}$");
+    private final DateTimeFormatter dmyFormatter = DateTimeFormatter.ofLocalizedDate(FormatStyle.LONG)
+            .withLocale(new Locale("nl", "NL"));
+
     RestTemplate restTemplate = new RestTemplate();
 
-    @Autowired
     public YachtVacancyScraper() {
         super(
                 "https://www.yacht.nl/vacatures?_hn:type=resource&_hn:ref=r2_r1_r1&&vakgebiedProf=IT", // Required search URL. Can be retrieved using getSEARCH_URL()
@@ -41,7 +49,7 @@ public class YachtVacancyScraper extends VacancyScraper {
 
     @Override
     public List<Vacancy> getVacancies() {
-        log.info(String.format("%s -- Start scraping", getBROKER().toUpperCase()));
+        log.info(String.format("%s -- Start scraping", getBroker().toUpperCase()));
         List<Vacancy> vacancies = new CopyOnWriteArrayList<>();
 
         int totalnumberOfPages = 1;
@@ -50,10 +58,10 @@ public class YachtVacancyScraper extends VacancyScraper {
 
             if (pageNumber == 1) {
                 totalnumberOfPages = yachtVacancyResponse.getPages();
-                log.info(String.format("%s -- Total number of pages: %s", getBROKER(), totalnumberOfPages));
+                log.info(String.format("%s -- Total number of pages: %s", getBroker(), totalnumberOfPages));
             }
 
-            log.info(String.format("%s -- Retrieving vacancy urls from page: %d of %d", getBROKER(), yachtVacancyResponse.getCurrentPage(), yachtVacancyResponse.getPages()));
+            log.info(String.format("%s -- Retrieving vacancy urls from page: %d of %d", getBroker(), yachtVacancyResponse.getCurrentPage(), yachtVacancyResponse.getPages()));
 
             yachtVacancyResponse.getVacancies().parallelStream().forEach( (Map<String, Object> vacancyData) -> {
                 Map<String, Object> vacancyMetaData = (Map<String, Object>) vacancyData.get("meta");
@@ -65,20 +73,20 @@ public class YachtVacancyScraper extends VacancyScraper {
                         .vacancyURL(vacancyURL)
                         .title((String) vacancyData.get("title"))
                         .hours((String) vacancyMetaData.get("hours"))
-                        .broker(getBROKER())
+                        .broker(getBroker())
                         .vacancyNumber((String) vacancyData.get("vacancyNumber"))
                         .location((String) vacancyMetaData.get("location"))
-                        .postingDate((String) vacancyData.get("date"))
+                        .postingDate(getPostingDate((String) vacancyData.get("date")))
                         .about(getVacancyAbout(vacancyDoc))
                         .salary((String) vacancyMetaData.get("salary"))
                         .build();
 
                 vacancies.add(vacancy);
-                log.info(String.format("%s - Vacancy found: %s", getBROKER(), vacancy.getTitle()));
+                log.info(String.format("%s - Vacancy found: %s", getBroker(), vacancy.getTitle()));
             });
 
         }
-        log.info(String.format("%s -- Returning scraped vacancies", getBROKER()));
+        log.info(String.format("%s -- Returning scraped vacancies", getBroker()));
         return vacancies;
     }
 
@@ -94,7 +102,7 @@ public class YachtVacancyScraper extends VacancyScraper {
         restTemplate.getMessageConverters().add(mappingJackson2HttpMessageConverter);
 
         ResponseEntity<YachtVacancyResponse> response
-                = restTemplate.getForEntity(getSEARCH_URL() + "&pagina=" + pageNumber, YachtVacancyResponse.class);
+                = restTemplate.getForEntity(getSearchUrl() + "&pagina=" + pageNumber, YachtVacancyResponse.class);
 
         return response.getBody();
     }
@@ -110,4 +118,11 @@ public class YachtVacancyScraper extends VacancyScraper {
         return vacancyBody.text();
     }
 
+    private LocalDateTime getPostingDate(String date) {
+        return checkDatePattern(date) ?  LocalDate.parse(date, dmyFormatter).atStartOfDay() : null;
+    }
+
+    private boolean checkDatePattern(String s) {
+        return s != null && dmyPattern.matcher(s).matches();
+    }
 }
