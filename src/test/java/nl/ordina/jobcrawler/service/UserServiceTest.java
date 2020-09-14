@@ -6,12 +6,14 @@ import nl.ordina.jobcrawler.util.RoleName;
 import nl.ordina.jobcrawler.model.User;
 import nl.ordina.jobcrawler.util.UserDTO;
 import nl.ordina.jobcrawler.repo.UserRepository;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.dao.EmptyResultDataAccessException;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -22,7 +24,9 @@ import java.util.Set;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -69,48 +73,35 @@ class UserServiceTest {
         when(userRepository.findAll()).thenReturn(userList);
         List<User> allUsers = userService.findAll();
 
-        assertEquals(allUsers.size(), userList.size());
+        assertEquals(userList.size(), allUsers.size());
         verify(userRepository, times(1)).findAll();
     }
 
     @Test
-    void updateUser() {
-        User user4 = userList.get(4);
-        user4.setUsername("newUsername");
-        when(userRepository.save(user4)).thenReturn(user4);
-        User updatedUser = userService.update(user4);
-
-        assertEquals(updatedUser.getUsername(), user4.getUsername());
-        verify(userRepository, times(1)).save(any());
-    }
-
-    @Test
-    void updateDitIsAlGenoeg() {
+    void update() {
         userService.update(new User());
         verify(userRepository, times(1)).save(any());
     }
 
     @Test
     void saveUser() {
-        User newUser = new User("newUser", "newPassword");
-        newUser.setId(11L);
-        when(userRepository.save(newUser)).thenReturn(newUser);
-        User savedUser = userService.save(newUser);
-
-        assertEquals(savedUser.getUsername(), newUser.getUsername());
+        userService.save(new User());
         verify(userRepository, times(1)).save(any());
     }
 
     @Test
     void deleteUser() {
-        long id = 1L;
-        when(userRepository.findById(id)).thenReturn(Optional.of(userList.get((int) id - 1)));
-        doNothing().when(userRepository).delete(any());
-        boolean result = userService.delete(id);
-
+        boolean result = userService.delete(1L);
         assertTrue(result);
-        verify(userRepository, times(1)).findById(id);
-        verify(userRepository, times(1)).delete(any());
+        verify(userRepository, times(1)).deleteById(any());
+    }
+
+    @Test
+    void deleteUser_throws_exception() {
+        doThrow(EmptyResultDataAccessException.class).when(userRepository).deleteById(anyLong());
+        Assertions.assertThrows(UserNotFoundException.class, () -> {
+           userService.delete(1L);
+        });
     }
 
     @Test

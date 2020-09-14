@@ -4,12 +4,14 @@ import nl.ordina.jobcrawler.exception.RoleNotFoundException;
 import nl.ordina.jobcrawler.model.Role;
 import nl.ordina.jobcrawler.util.RoleName;
 import nl.ordina.jobcrawler.repo.RoleRepository;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.dao.EmptyResultDataAccessException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -19,7 +21,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -64,21 +66,23 @@ class RoleServiceTest {
 
     @Test
     void save() {
-        when(roleRepository.save(userRole)).thenReturn(userRole);
-        Role savedRole = roleService.save(userRole);
-
-        assertNotNull(savedRole);
-        assertEquals(savedRole.getName(), userRole.getName());
+        roleService.save(userRole);
         verify(roleRepository, times(1)).save(userRole);
     }
 
     @Test
     void delete() {
-        doNothing().when(roleRepository).deleteById(anyLong());
-
         boolean result = roleService.delete(adminRole.getId());
         assertTrue(result);
         verify(roleRepository, times(1)).deleteById(anyLong());
+    }
+
+    @Test
+    void delete_throws_exception() {
+        doThrow(EmptyResultDataAccessException.class).when(roleRepository).deleteById(anyLong());
+        Assertions.assertThrows(RoleNotFoundException.class, () -> {
+            roleService.delete(1L);
+        });
     }
 
     @Test

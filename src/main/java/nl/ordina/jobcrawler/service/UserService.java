@@ -8,6 +8,7 @@ import nl.ordina.jobcrawler.model.User;
 import nl.ordina.jobcrawler.util.UserDTO;
 import nl.ordina.jobcrawler.repo.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.stereotype.Service;
 
 import java.util.HashSet;
@@ -40,10 +41,12 @@ public class UserService {
     }
 
     public boolean delete(Long id) {
-        User user = userRepository.findById(id)
-                .orElseThrow(() -> new UserNotFoundException(String.format("Fail! -> Could not find user with id: %d in database.", id)));
-        userRepository.delete(user);
-        return true;
+        try {
+            userRepository.deleteById(id);
+            return true;
+        } catch (EmptyResultDataAccessException e) {
+            throw new UserNotFoundException(String.format("User with id: %d not found.", id));
+        }
     }
 
     public Optional<User> findByIdAndUsername(long id, String username) {
