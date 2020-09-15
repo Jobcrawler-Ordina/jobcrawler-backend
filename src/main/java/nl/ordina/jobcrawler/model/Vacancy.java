@@ -3,7 +3,7 @@ package nl.ordina.jobcrawler.model;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.*;
-import nl.ordina.jobcrawler.controller.exception.VacancyURLMalformedException;
+import nl.ordina.jobcrawler.exception.VacancyURLMalformedException;
 import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.*;

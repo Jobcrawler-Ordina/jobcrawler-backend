@@ -2,7 +2,6 @@ package nl.ordina.jobcrawler.repo;
 
 import nl.ordina.jobcrawler.model.Skill;
 import nl.ordina.jobcrawler.model.Vacancy;
-import nl.ordina.jobcrawler.utils.VacancyFactory;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.internal.util.collections.Sets;
@@ -18,7 +17,6 @@ import java.util.UUID;
 import static nl.ordina.jobcrawler.repo.VacancySpecifications.findBySkill;
 import static nl.ordina.jobcrawler.repo.VacancySpecifications.findByValue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 /**
  *
