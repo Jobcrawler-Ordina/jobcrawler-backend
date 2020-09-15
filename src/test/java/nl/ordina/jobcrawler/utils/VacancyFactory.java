@@ -3,12 +3,16 @@ package nl.ordina.jobcrawler.utils;
 import nl.ordina.jobcrawler.model.Location;
 import nl.ordina.jobcrawler.model.Skill;
 import nl.ordina.jobcrawler.model.Vacancy;
+import org.assertj.core.util.Sets;
 
-import java.util.HashSet;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.UUID;
 
 public class VacancyFactory {
+
     public static Vacancy create(String title) {
+        final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
         return Vacancy.builder()
                 .id(UUID.randomUUID())
                 .vacancyURL("example.com")
@@ -16,10 +20,10 @@ public class VacancyFactory {
                 .broker("broker")
                 .vacancyNumber("1")
                 .hours("30")
- //               .locationString("location example")
-                .postingDate("14 April 2020")
+                .locationString("location example")
+                .postingDate(LocalDateTime.parse("2020-04-14 00:00", formatter))
                 .about("this is a description of the example job")
-                .skills(new HashSet<Skill>())
+                .skills(Sets.newHashSet())
                 .build();
     }
 }

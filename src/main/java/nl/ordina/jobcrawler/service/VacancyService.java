@@ -1,7 +1,7 @@
 package nl.ordina.jobcrawler.service;
 
 import lombok.extern.slf4j.Slf4j;
-import nl.ordina.jobcrawler.controller.exception.VacancyURLMalformedException;
+import nl.ordina.jobcrawler.exception.VacancyURLMalformedException;
 import nl.ordina.jobcrawler.model.Vacancy;
 import nl.ordina.jobcrawler.repo.VacancyRepository;
 import org.springframework.dao.DataAccessException;
@@ -22,7 +22,7 @@ import static nl.ordina.jobcrawler.repo.VacancySpecifications.findByValue;
 
 @Slf4j
 @Service
-public class VacancyService implements CRUDService<Vacancy, UUID> {
+public class VacancyService {
 
     private final VacancyRepository vacancyRepository;
 
@@ -36,12 +36,10 @@ public class VacancyService implements CRUDService<Vacancy, UUID> {
      * @param id ID of the vacancy to retrieve.
      * @return An optional of the requested vacancy if found, and an empty optional otherwise.
      */
-    @Override
     public Optional<Vacancy> findById(UUID id) {
         return vacancyRepository.findById(id);
     }
 
-    @Override
     public List<Vacancy> findAll() {
         return vacancyRepository.findAll();
     }
@@ -87,25 +85,12 @@ public class VacancyService implements CRUDService<Vacancy, UUID> {
     }
 
     /**
-     * Updates the specified vacancy, identified by its id.
-     *
-     * @param vacancy The vacancy to update.
-     * @return True if the update succeeded, otherwise false.
-     */
-    @Override
-    public Vacancy update(UUID id, Vacancy vacancy) {
-        return null;
-    }
-
-
-    /**
      * Saves the specified vacancy to the database.
      *
      * @param vacancy The vacancy to save to the database.
      * @return The saved vacancy.
      * @throws VacancyURLMalformedException if the URL could not be reached.
      */
-    @Override
     public Vacancy save(Vacancy vacancy) {
 
         if (vacancy
@@ -126,7 +111,6 @@ public class VacancyService implements CRUDService<Vacancy, UUID> {
      * @param id The id of the vacancy to delete.
      * @return True if the operation was successful, false otherwise.
      */
-    @Override
     public boolean delete(UUID id) {
 
         try {

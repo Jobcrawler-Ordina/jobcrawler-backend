@@ -13,6 +13,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 /*
@@ -26,6 +28,10 @@ import java.util.*;
 @Slf4j
 @Component
 public class HuxleyITVacancyScraper extends VacancyScraper {
+
+    private final Pattern ymdPattern = Pattern
+            .compile("^[0-9]{4}-(1[0-2]|0[1-9])-(3[01]|[12][0-9]|0[1-9])T[0-9]{2}:[0-9]{2}:[0-9]{2}.[0-9]{6}[0-9]?Z$");
+    private final DateTimeFormatter ymdFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSSSSS'Z'");
 
     private static final String VACANCY_URL_PREFIX = "https://www.huxley.com/nl-nl/job/kyc/";
 
@@ -57,44 +63,37 @@ public class HuxleyITVacancyScraper extends VacancyScraper {
             - The first time to read how many vacancies are stored.
             - The second time to get ALL stored vacancies by supplying this number as wanted number of results.
          */
-        log.info(String.format("%s -- Start scraping", getBROKER().toUpperCase()));
+        log.info(String.format("%s -- Start scraping", getBroker().toUpperCase()));
 
         int totalVacancies = scrapeVacancies(0).getHits();
         List<Map<String, Object>> vacanciesData = scrapeVacancies(totalVacancies).getVacanciesData();
 
         List<Vacancy> vacancies = new ArrayList<>();
         for (Map<String, Object> vacancyData : vacanciesData) {
-
-/*            Location location;
-            System.out.println(locationRepository==null);
-            if((locationRepository==null)) {
-                Optional<Location> existCheckLocation = locationRepository.findByLocationName((String) vacancyData.get("city"));
-                if (!existCheckLocation.isPresent()) {
-                    location = new Location((String) vacancyData.get("city"));
-                } else {
-                    UUID id = existCheckLocation.get().getId();
-                    location = locationRepository.findById(id).get();
-                }
-            } else {
-                location = new Location((String) vacancyData.get("city"));
-            }*/
-
             Vacancy vacancy = Vacancy.builder()
                     .vacancyURL(VACANCY_URL_PREFIX + vacancyData.get("jobReference"))
                     .title((String) vacancyData.get("title"))
-                    .broker(getBROKER())
+                    .broker(getBroker())
                     .vacancyNumber((String) vacancyData.get("jobReference"))
                     .locationString((String) vacancyData.get("city"))
                     .salary((String) vacancyData.get("salaryText"))
-                    .postingDate((String) vacancyData.get("postDate"))
+                    .postingDate(getPostingDate((String) vacancyData.get("postDate")))
                     .about((String) vacancyData.get("description"))
                     .build();
 
             vacancies.add(vacancy);
-            log.info(String.format("%s - Vacancy found: %s", getBROKER(), vacancy.getTitle()));
+            log.info(String.format("%s - Vacancy found: %s", getBroker(), vacancy.getTitle()));
         }
-        log.info(String.format("%s -- Returning scraped vacancies", getBROKER()));
+        log.info(String.format("%s -- Returning scraped vacancies", getBroker()));
         return vacancies;
+    }
+
+    private LocalDateTime getPostingDate(final String date) {
+        return checkDatePattern(date) ? LocalDateTime.parse(date, ymdFormatter) : null;
+    }
+
+    private boolean checkDatePattern(String s) {
+        return s != null && ymdPattern.matcher(s).matches();
     }
 
     /**
@@ -132,7 +131,7 @@ public class HuxleyITVacancyScraper extends VacancyScraper {
 
         // Build and trigger the request
         HttpEntity<Map<String, Object>> entity = new HttpEntity<>(body, headers);
-        ResponseEntity<HuxleyITResponse> response = restTemplate.postForEntity(getSEARCH_URL(), entity, HuxleyITResponse.class);
+        ResponseEntity<HuxleyITResponse> response = restTemplate.postForEntity(getSearchUrl(), entity, HuxleyITResponse.class);
 
         // Return the result
         return response.getBody();

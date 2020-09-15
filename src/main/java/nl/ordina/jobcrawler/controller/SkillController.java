@@ -1,7 +1,7 @@
 package nl.ordina.jobcrawler.controller;
 
 
-import nl.ordina.jobcrawler.controller.exception.SkillNotFoundException;
+import nl.ordina.jobcrawler.exception.SkillNotFoundException;
 import nl.ordina.jobcrawler.model.Skill;
 import nl.ordina.jobcrawler.model.assembler.SkillModelAssembler;
 import nl.ordina.jobcrawler.service.SkillService;
@@ -10,23 +10,11 @@ import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.IanaLinkRelations;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
-import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
-
-import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
-import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 
 @CrossOrigin
 @RestController
@@ -61,6 +49,7 @@ public class SkillController {
      * Code 400 Bad Request if the given body is invalid
      */
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<EntityModel<Skill>> createSkill(@Valid @RequestBody Skill skill) {
 
         EntityModel<Skill> returnedSkill = skillModelAssembler.toModel(skillService.save(skill));
@@ -86,6 +75,7 @@ public class SkillController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<EntityModel<Skill>> updateSkill(@PathVariable UUID id, @Valid @RequestBody Skill skill) {
         skillService.findById(id).orElseThrow(() -> new SkillNotFoundException(id));
         EntityModel<Skill> updatedSkillEntityModel = skillModelAssembler.toModel(skillService.update(id, skill));
@@ -104,7 +94,8 @@ public class SkillController {
      * 404 Not Found if a skill with the specified ID is not found
      */
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> deleteSkill(@PathVariable UUID id) {
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Object> deleteSkill(@PathVariable UUID id) {
         skillService.findById(id).orElseThrow(() -> new SkillNotFoundException(id));
         skillService.delete(id);
         return ResponseEntity.noContent().build();

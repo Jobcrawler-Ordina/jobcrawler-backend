@@ -3,12 +3,18 @@ package nl.ordina.jobcrawler.controller;
 import nl.ordina.jobcrawler.service.ScraperService;
 import org.json.JSONException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.io.IOException;
+
+import java.util.Map;
 
 @CrossOrigin
 @RestController
@@ -26,11 +32,11 @@ public class ScraperController {
      * start the scraping of jobs
      */
     @PutMapping
-    public void scrape() throws IOException, JSONException {
-        /* made in a new thread so that the sender of the request does not have to wait for a response until the
-         * scraping is finished.
-         */
-            Thread newThread = new Thread(scraperService::scrape);
-            newThread.start();
+    @PreAuthorize("hasRole('ADMIN')")
+    @Async
+    public ResponseEntity<Object> scrape() throws IOException, JSONException {
+        scraperService.scrape();
+
+        return ResponseEntity.status(HttpStatus.OK).body(Map.of("success", true));
     }
 }

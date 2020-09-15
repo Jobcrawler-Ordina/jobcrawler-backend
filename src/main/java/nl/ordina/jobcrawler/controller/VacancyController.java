@@ -1,27 +1,28 @@
 package nl.ordina.jobcrawler.controller;
 
 import nl.ordina.jobcrawler.SearchResult;
-import nl.ordina.jobcrawler.controller.exception.VacancyNotFoundException;
 import nl.ordina.jobcrawler.model.Location;
+import nl.ordina.jobcrawler.payload.SearchResult;
+import nl.ordina.jobcrawler.exception.VacancyNotFoundException;
 import nl.ordina.jobcrawler.model.Skill;
 import nl.ordina.jobcrawler.model.Vacancy;
 import nl.ordina.jobcrawler.model.assembler.LocationModelAssembler;
 import nl.ordina.jobcrawler.model.assembler.SkillModelAssembler;
 import nl.ordina.jobcrawler.model.assembler.VacancyModelAssembler;
 import nl.ordina.jobcrawler.service.VacancyService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.IanaLinkRelations;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
-import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -34,7 +35,6 @@ public class VacancyController {
     private final VacancyService vacancyService;
     private final VacancyModelAssembler vacancyModelAssembler;
 
-    @Autowired
     public VacancyController(VacancyService vacancyService, VacancyModelAssembler vacancyModelAssembler) {
         this.vacancyService = vacancyService;
         this.vacancyModelAssembler = vacancyModelAssembler;
@@ -52,11 +52,14 @@ public class VacancyController {
     @GetMapping
     public ResponseEntity<SearchResult> getVacancies(@RequestParam(required = false) Optional<String> value,
                                                      @RequestParam(required = false) Optional<Set<String>> skills,
+                                                     @RequestParam(defaultValue = "desc") String dir,
+                                                     @RequestParam(defaultValue = "postingDate") String sort,
                                                      @RequestParam(defaultValue = "1") int page,
                                                      @RequestParam(defaultValue = "10") int size) {
         try {
 
-            Pageable paging = PageRequest.of(page, size);
+            Sort sorting = dir.equals("desc") ? Sort.by(Sort.Direction.DESC, sort) : Sort.by(Sort.Direction.ASC, sort);
+            Pageable paging = PageRequest.of(page, size, sorting);
 
             Page<Vacancy> vacancies = value.filter(v -> !v.isBlank()).map(v -> vacancyService.findByAnyValue(v, paging))
                     .orElse(skills.filter(s -> !s.isEmpty()).map(s -> vacancyService.findBySkills(s, paging))
@@ -71,8 +74,7 @@ public class VacancyController {
             searchResult.setCurrentPage(vacancies.getNumber());
             searchResult.setTotalItems(vacancies.getTotalElements());
             searchResult.setTotalPages(vacancies.getTotalPages());
-            ResponseEntity<SearchResult> ro = new ResponseEntity<>(searchResult, HttpStatus.OK);
-            return ro;
+            return new ResponseEntity<>(searchResult, HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
@@ -92,6 +94,7 @@ public class VacancyController {
      * Code 400 Bad Request if the given body is invalid
      */
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<EntityModel<Vacancy>> createVacancy(@Valid @RequestBody Vacancy vacancy) {
         EntityModel<Vacancy> returnedVacancy = vacancyModelAssembler.toModel(vacancyService.save(vacancy));
         return ResponseEntity
@@ -128,13 +131,6 @@ public class VacancyController {
         return new SkillModelAssembler().toCollectionModel(vacancy.getSkills());
     }
 
-/*    @GetMapping("/{id}/location")
-    public EntityModel<Location> getLocation(@PathVariable UUID id) {
-        Location location = vacancyService.findById(id)
-                .orElseThrow(() -> new VacancyNotFoundException(id)).getLocation();
-        return new LocationModelAssembler().toModel(location);
-    }*/
-
     /**
      * Deletes the vacancy with the specified ID.
      *
@@ -144,7 +140,8 @@ public class VacancyController {
      * 404 Not Found if a vacancy with the specified ID is not found
      */
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> deleteVacancy(@PathVariable UUID id) {
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Object> deleteVacancy(@PathVariable UUID id) {
         vacancyService.findById(id).orElseThrow(() -> new VacancyNotFoundException(id));
         vacancyService.delete(id);
         return ResponseEntity.noContent().build();

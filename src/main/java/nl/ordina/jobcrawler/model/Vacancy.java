@@ -1,8 +1,9 @@
 package nl.ordina.jobcrawler.model;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.*;
-import nl.ordina.jobcrawler.controller.exception.VacancyURLMalformedException;
+import nl.ordina.jobcrawler.exception.VacancyURLMalformedException;
 import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.*;
@@ -10,6 +11,7 @@ import javax.validation.constraints.NotNull;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.time.LocalDateTime;
 import java.util.Set;
 import java.util.UUID;
 
@@ -36,7 +38,8 @@ public class Vacancy {
     private String locationString;
     private String hours;
     private String salary;
-    private String postingDate;
+    @JsonFormat(timezone = "Europe/Amsterdam", pattern = "yyyy-MM-dd HH:mm:ss")
+    private LocalDateTime postingDate;
     @Column(columnDefinition = "TEXT")
     private String about;
 
@@ -52,20 +55,13 @@ public class Vacancy {
     @JoinColumn(name = "location_id")
     Location location;
 
-/*    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    @JoinTable(
-            name = "vacancy_location",
-            joinColumns = @JoinColumn(name = "vacancy_id"),
-            inverseJoinColumns = @JoinColumn(name = "location_id"))
-    Location location;*/
-
     public boolean hasValidURL() {
         if (!this.vacancyURL.startsWith("http"))
             this.vacancyURL = "https://" + this.vacancyURL; //adding the protocol, if not present
 
         URL url;
         HttpURLConnection huc;
-        int responseCode = 0;
+        int responseCode;
 
         try {
             url = new URL(this.vacancyURL);
@@ -85,28 +81,6 @@ public class Vacancy {
             throw new VacancyURLMalformedException(this.vacancyURL);
         }
     }
-
-/*    @Override
-    public String toString() {
-        String newLine = "\n";
-        StringBuilder returnValue = new StringBuilder();
-        returnValue.append(vacancyURL.toString() + newLine);
-        returnValue.append(title + newLine);
-        returnValue.append(broker + newLine);
-        returnValue.append(vacancyNumber + newLine);
-        returnValue.append(locationString + newLine);
-        returnValue.append(hours + newLine);
-        returnValue.append(salary + newLine);
-        returnValue.append(postingDate + newLine);
-        returnValue.append(about + newLine);
-        returnValue.append(skills.toString() + newLine + newLine);
-        returnValue.append(location.getLocationName() + newLine);
-        returnValue.append(location.getLocation_id() + newLine);
-        returnValue.append(location.getLat() + newLine);
-        returnValue.append(location.getLon() + newLine);
-        returnValue.append("*****************************************");
-        return returnValue.toString();
-    }*/
 
     @Override
     public String toString() {
