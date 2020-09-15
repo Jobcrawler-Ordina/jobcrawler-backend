@@ -10,6 +10,7 @@ import nl.ordina.jobcrawler.service.VacancyService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.IanaLinkRelations;
@@ -48,11 +49,14 @@ public class VacancyController {
     @GetMapping
     public ResponseEntity<SearchResult> getVacancies(@RequestParam(required = false) Optional<String> value,
                                                      @RequestParam(required = false) Optional<Set<String>> skills,
+                                                     @RequestParam(defaultValue = "desc") String dir,
+                                                     @RequestParam(defaultValue = "postingDate") String sort,
                                                      @RequestParam(defaultValue = "1") int page,
                                                      @RequestParam(defaultValue = "10") int size) {
         try {
 
-            Pageable paging = PageRequest.of(page, size);
+            Sort sorting = dir.equals("desc") ? Sort.by(Sort.Direction.DESC, sort) : Sort.by(Sort.Direction.ASC, sort);
+            Pageable paging = PageRequest.of(page, size, sorting);
 
             Page<Vacancy> vacancies = value.filter(v -> !v.isBlank()).map(v -> vacancyService.findByAnyValue(v, paging))
                     .orElse(skills.filter(s -> !s.isEmpty()).map(s -> vacancyService.findBySkills(s, paging))
