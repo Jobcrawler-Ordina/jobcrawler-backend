@@ -1,13 +1,12 @@
 package nl.ordina.jobcrawler.controller;
 
-import nl.ordina.jobcrawler.SearchResult;
-import nl.ordina.jobcrawler.controller.exception.VacancyNotFoundException;
+import nl.ordina.jobcrawler.payload.SearchResult;
+import nl.ordina.jobcrawler.exception.VacancyNotFoundException;
 import nl.ordina.jobcrawler.model.Skill;
 import nl.ordina.jobcrawler.model.Vacancy;
 import nl.ordina.jobcrawler.model.assembler.SkillModelAssembler;
 import nl.ordina.jobcrawler.model.assembler.VacancyModelAssembler;
 import nl.ordina.jobcrawler.service.VacancyService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -17,10 +16,10 @@ import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.IanaLinkRelations;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
-import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -33,7 +32,6 @@ public class VacancyController {
     private final VacancyService vacancyService;
     private final VacancyModelAssembler vacancyModelAssembler;
 
-    @Autowired
     public VacancyController(VacancyService vacancyService, VacancyModelAssembler vacancyModelAssembler) {
         this.vacancyService = vacancyService;
         this.vacancyModelAssembler = vacancyModelAssembler;
@@ -93,6 +91,7 @@ public class VacancyController {
      * Code 400 Bad Request if the given body is invalid
      */
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<EntityModel<Vacancy>> createVacancy(@Valid @RequestBody Vacancy vacancy) {
         EntityModel<Vacancy> returnedVacancy = vacancyModelAssembler.toModel(vacancyService.save(vacancy));
         return ResponseEntity
@@ -138,7 +137,8 @@ public class VacancyController {
      * 404 Not Found if a vacancy with the specified ID is not found
      */
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> deleteVacancy(@PathVariable UUID id) {
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Object> deleteVacancy(@PathVariable UUID id) {
         vacancyService.findById(id).orElseThrow(() -> new VacancyNotFoundException(id));
         vacancyService.delete(id);
         return ResponseEntity.noContent().build();

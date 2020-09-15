@@ -1,4 +1,4 @@
-package nl.ordina.jobcrawler.controller.exception;
+package nl.ordina.jobcrawler.exception;
 
 public class HTMLStructureException extends RuntimeException {
     public HTMLStructureException(String s) {
