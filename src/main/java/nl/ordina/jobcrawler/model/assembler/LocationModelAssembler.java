@@ -21,7 +21,7 @@ public class LocationModelAssembler implements RepresentationModelAssembler<Loca
 
     @Override
     public EntityModel<Location> toModel(Location location) {
-        return EntityModel.of(location,linkTo(methodOn(LocationController.class).getLocationById(location.getId())).withSelfRel(),
+        return EntityModel.of(location,linkTo(methodOn(LocationController.class).getLocationByIdOrName(location.getLocationName())).withSelfRel(),
         linkTo(methodOn(LocationController.class).getLocations()).withRel("locations"));
     }
 

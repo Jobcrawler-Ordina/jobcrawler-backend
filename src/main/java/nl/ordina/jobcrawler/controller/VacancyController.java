@@ -71,7 +71,8 @@ public class VacancyController {
             searchResult.setCurrentPage(vacancies.getNumber());
             searchResult.setTotalItems(vacancies.getTotalElements());
             searchResult.setTotalPages(vacancies.getTotalPages());
-            return new ResponseEntity<>(searchResult, HttpStatus.OK);
+            ResponseEntity<SearchResult> ro = new ResponseEntity<>(searchResult, HttpStatus.OK);
+            return ro;
         } catch (Exception e) {
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }

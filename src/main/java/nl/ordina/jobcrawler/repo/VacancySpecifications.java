@@ -41,7 +41,6 @@ public final class VacancySpecifications {
         return (root, query, cb) -> {
             List<Predicate> allPredicates = new ArrayList<>();
             allPredicates.add(cb.like(cb.lower(root.get("about")), String.format(LIKE_QUERY_FORMAT, value.toLowerCase())));
-            allPredicates.add(cb.like(cb.lower(root.get("location")), String.format(LIKE_QUERY_FORMAT, value.toLowerCase())));
             allPredicates.add(cb.like(cb.lower(root.get("title")), String.format(LIKE_QUERY_FORMAT, value.toLowerCase())));
 
             return cb.or(allPredicates.toArray(new Predicate[0]));
