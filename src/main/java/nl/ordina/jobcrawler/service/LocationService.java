@@ -20,16 +20,14 @@ import java.util.UUID;
 
 @Slf4j
 @Service
-public class LocationService implements CRUDService<Location, UUID> {
+public class LocationService {
 
     private final LocationRepository locationRepository;
 
-//    @Autowired
     public LocationService(LocationRepository locationRepository) {
         this.locationRepository = locationRepository;
     }
 
-    @Override
     public Optional<Location> findById(UUID id) {
         return locationRepository.findById(id);
     }
@@ -104,22 +102,18 @@ public class LocationService implements CRUDService<Location, UUID> {
         return (c * r);
     }
 
-    @Override
     public List<Location> findAll() {
         return locationRepository.findAll();
     }
 
-    @Override
     public Location update(UUID uuid, Location location) {
         return null;
     }
 
-    @Override
     public Location save(Location location) {
         return locationRepository.save(location);
     }
 
-    @Override
     public boolean delete(UUID id) {
         locationRepository.deleteById(id);
         return false;

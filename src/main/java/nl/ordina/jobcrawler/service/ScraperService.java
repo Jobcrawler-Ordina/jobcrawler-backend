@@ -68,7 +68,7 @@ public class ScraperService {
         this.jobBirdScraper = jobBirdScraper;
     }
 
-    //@PostConstruct
+    @PostConstruct
     @Scheduled(cron = "0 0 12,18 * * *")
     // Runs two times a day. At 12pm and 6pm
     public void scrape() {

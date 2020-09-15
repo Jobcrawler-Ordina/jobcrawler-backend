@@ -1,6 +1,6 @@
 package nl.ordina.jobcrawler.controller;
 
-import nl.ordina.jobcrawler.SearchResult;
+import nl.ordina.jobcrawler.payload.SearchResult;
 import nl.ordina.jobcrawler.model.Location;
 import nl.ordina.jobcrawler.payload.SearchResult;
 import nl.ordina.jobcrawler.exception.VacancyNotFoundException;

@@ -1,8 +1,7 @@
 package nl.ordina.jobcrawler.controller;
 
-import nl.ordina.jobcrawler.controller.exception.LocationNotFoundException;
+import nl.ordina.jobcrawler.exception.LocationNotFoundException;
 import nl.ordina.jobcrawler.model.Location;
-import nl.ordina.jobcrawler.model.Vacancy;
 import nl.ordina.jobcrawler.model.assembler.LocationModelAssembler;
 import nl.ordina.jobcrawler.service.LocationService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,7 +9,6 @@ import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 import java.util.UUID;
 
 @RestController

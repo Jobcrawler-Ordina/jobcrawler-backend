@@ -16,6 +16,7 @@ import org.springframework.web.client.RestTemplate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.regex.Pattern;
 
 /*
  * Instead of scraping the page HTML for urls, this scraper gets the vacancy data directly from the HuxleyIT API.
