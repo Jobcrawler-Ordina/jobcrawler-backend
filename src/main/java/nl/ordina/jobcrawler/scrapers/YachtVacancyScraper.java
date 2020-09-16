@@ -63,7 +63,7 @@ public class YachtVacancyScraper extends VacancyScraper {
 
             log.info(String.format("%s -- Retrieving vacancy urls from page: %d of %d", getBroker(), yachtVacancyResponse.getCurrentPage(), yachtVacancyResponse.getPages()));
 
-            yachtVacancyResponse.getVacancies().parallelStream().forEach( (Map<String, Object> vacancyData) -> {
+            yachtVacancyResponse.getVacancies().parallelStream().forEach((Map<String, Object> vacancyData) -> {
                 Map<String, Object> vacancyMetaData = (Map<String, Object>) vacancyData.get("meta");
                 String vacancyURL = (String) vacancyData.get("detailUrl");
                 vacancyURL = vacancyURL.contains("?") ? vacancyURL.split("\\?")[0] : vacancyURL;
@@ -72,7 +72,7 @@ public class YachtVacancyScraper extends VacancyScraper {
                 Vacancy vacancy = Vacancy.builder()
                         .vacancyURL(vacancyURL)
                         .title((String) vacancyData.get("title"))
-                        .hours((String) vacancyMetaData.get("hours"))
+                        .hours(getHours((String) vacancyMetaData.get("hours")))
                         .broker(getBroker())
                         .vacancyNumber((String) vacancyData.get("vacancyNumber"))
                         .location((String) vacancyMetaData.get("location"))
@@ -119,10 +119,23 @@ public class YachtVacancyScraper extends VacancyScraper {
     }
 
     private LocalDateTime getPostingDate(String date) {
-        return checkDatePattern(date) ?  LocalDate.parse(date, dmyFormatter).atStartOfDay() : null;
+        return checkDatePattern(date) ? LocalDate.parse(date, dmyFormatter).atStartOfDay() : null;
     }
 
     private boolean checkDatePattern(String s) {
         return s != null && dmyPattern.matcher(s).matches();
+    }
+
+    private Integer getHours(String input) {
+        if (input.length() > 2) {
+            String possibleHours = input.substring(0, 2);
+            try {
+                return Integer.parseInt(possibleHours);
+            } catch (NumberFormatException e) {
+                return null;
+            }
+        } else {
+            return null;
+        }
     }
 }
