@@ -39,7 +39,7 @@ class PersistenceTests {
 
     @Test
     void testRepoFindById() {
-        String sUuid = "891d77f4-c0f6-431a-a118-62e3e698d8fc";
+        String sUuid = "3b457fc2-8c52-412a-b41e-3b05ec86708d";
         assertEquals(sUuid, vacancyRepository.findById(UUID.fromString(sUuid)).orElse(new Vacancy()).getId().toString());
     }
 
@@ -47,9 +47,9 @@ class PersistenceTests {
     void findBySkills() {
         Pageable paging = PageRequest.of(1, 10);
         assertEquals(7, vacancyRepository.findAll(findBySkill(Sets.newSet("JAVA")), paging).getTotalElements());
-        assertEquals(20, vacancyRepository.findAll(findBySkill(Sets.newSet("Maven")), paging).getTotalElements());
-        assertEquals(42, vacancyRepository.findAll(findBySkill(Sets.newSet("Angular")), paging).getTotalElements());
-        assertEquals(7, vacancyRepository.findAll(findBySkill(Sets.newSet("Maven", "Angular")), paging)
+        assertEquals(18, vacancyRepository.findAll(findBySkill(Sets.newSet("Maven")), paging).getTotalElements());
+        assertEquals(37, vacancyRepository.findAll(findBySkill(Sets.newSet("Angular")), paging).getTotalElements());
+        assertEquals(4, vacancyRepository.findAll(findBySkill(Sets.newSet("Maven", "Angular")), paging)
                 .getTotalElements());
 
     }
@@ -57,7 +57,7 @@ class PersistenceTests {
     @Test
     void testSkilRepo() {
         List<Skill> skills = skillRepository.findByOrderByNameAsc();
-        assertEquals(3, skills.size());
+        assertEquals(5, skills.size());
     }
 
     @Test

@@ -142,11 +142,11 @@ public class JobBirdScraperTest extends UseLocalSavedFiles {
     public void setVacancySpecifics_happyFlow() throws IOException {
         Document doc = getDocFromUrl("JobBird/jobbird04_vacancyspecifics.htm");
         Vacancy vacancy = new Vacancy();
-        vacancy.setHours(jobBirdScraperTestable.getHoursFromPage(doc));
+        vacancy.setHours(jobBirdScraperTestable.retrieveWorkHours(doc.select("div.card-body").text()));
         vacancy.setLocation(jobBirdScraperTestable.getLocation(doc));
         vacancy.setPostingDate(jobBirdScraperTestable.getPublishDate(doc));
         assertEquals("Apeldoorn", vacancy.getLocation());
-        assertEquals("32", vacancy.getHours());
+        assertNull(vacancy.getHours());
         LocalDateTime expectedDate =
         LocalDateTime.parse("2020-05-30 00:00", DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"));
         assertEquals( expectedDate, vacancy.getPostingDate());
@@ -159,19 +159,18 @@ public class JobBirdScraperTest extends UseLocalSavedFiles {
     public void setVacancySpecifics_Missing() throws IOException {
         Document doc = getDocFromUrl("JobBird/jobbird04_vacancyspecifics_missing.htm");
         Vacancy vacancy = new Vacancy();
-        vacancy.setHours(jobBirdScraperTestable.getHoursFromPage(doc));
+        vacancy.setHours(jobBirdScraperTestable.retrieveWorkHours(doc.select("div.card-body").text()));
         vacancy.setLocation(jobBirdScraperTestable.getLocation(doc));
         vacancy.setPostingDate(jobBirdScraperTestable.getPublishDate(doc));
         assertEquals("", vacancy.getLocation());
-        assertEquals("0", vacancy.getHours());
-        assertNull(vacancy.getPostingDate());
+        assertNull(vacancy.getHours());
     }
 
     @Test
     public void testGetUrenPerWeek() throws IOException {
         Document doc =  getDocFromUrl("JobBird/jobbird03_vacancy.htm");
-        String result = jobBirdScraperTestable.getHoursFromPage(doc);
-        assertEquals("Full-time", result);
+        Integer result = jobBirdScraperTestable.retrieveWorkHours(doc.select("div.card-body").text());
+        assertNull(result);
     }
 
     @Test
