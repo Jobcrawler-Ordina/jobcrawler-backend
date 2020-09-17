@@ -59,7 +59,7 @@ public abstract class VacancyScraper {
     public Integer retrieveWorkHours(String description) {
 
         // Try to split on the word 'hours' and search for the first integer after a positive result of splitting
-        String[] splitDescription = description.toLowerCase().split("hours|uren| uur");
+        String[] splitDescription = description.toLowerCase().split("hours| uren| uur");
 
         if (splitDescription.length > 1) {
             int substringEnd = Math.min(splitDescription[1].length(), 18);
