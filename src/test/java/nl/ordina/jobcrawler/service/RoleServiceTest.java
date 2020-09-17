@@ -60,7 +60,7 @@ class RoleServiceTest {
         List<Role> findAllRoles = roleService.findAll();
 
         assertNotNull(findAllRoles);
-        assertEquals(findAllRoles.size(), 2);
+        assertEquals(2, findAllRoles.size());
         verify(roleRepository, times(1)).findAll();
     }
 

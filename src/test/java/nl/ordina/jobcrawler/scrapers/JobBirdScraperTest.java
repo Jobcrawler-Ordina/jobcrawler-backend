@@ -30,7 +30,7 @@ import static org.mockito.Mockito.*;
 
 @Slf4j
 @ExtendWith(MockitoExtension.class)
-public class JobBirdScraperTest extends UseLocalSavedFiles {
+class JobBirdScraperTest extends UseLocalSavedFiles {
 
 
     @InjectMocks
@@ -54,7 +54,7 @@ public class JobBirdScraperTest extends UseLocalSavedFiles {
     }
 
     @BeforeEach
-    public  void init() {
+    public void init() {
         // in several tests, the logService and the documentService of the testable is mocked.
         // Reset to the real logService and the real documentService
         // in case it concerns a different test case
@@ -65,62 +65,60 @@ public class JobBirdScraperTest extends UseLocalSavedFiles {
     }
 
     @Test
-    public void test_getLastPageToScrape() throws HTMLStructureException, IOException {
-        Document doc =  getDocFromUrl("JobBird/jobbird01_should_count_5_pages.htm");
+    void test_getLastPageToScrape() throws HTMLStructureException, IOException {
+        Document doc = getDocFromUrl("JobBird/jobbird01_should_count_5_pages.htm");
         int iLastPageToScrape = jobBirdScraperTestable.getLastPageToScrape(doc);
         assertEquals(5, iLastPageToScrape);
     }
 
     //happy flow results in 5 pages
     @Test
-    public void getTotalnrOfPagesTestFile_HappyFlow() throws IOException, HTMLStructureException {
+    void getTotalnrOfPagesTestFile_HappyFlow() throws IOException, HTMLStructureException {
         Document doc = getDocFromUrl("JobBird/jobbird01_should_count_5_pages.htm");
-        int count =  jobBirdScraperTestable.getTotalNumberOfPages(doc);
+        int count = jobBirdScraperTestable.getTotalNumberOfPages(doc);
         assertEquals(5, count);
     }
 
     /* page structure altered, page number section not found
      * should return zero */
     @Test
-    public void getTotalnrOfPagesTestFile_invalidPageStructure() throws HTMLStructureException {
+    void getTotalnrOfPagesTestFile_invalidPageStructure() throws HTMLStructureException, IOException {
+        Document doc = Jsoup.parse(getFile("JobBird/jobbird02_invpage.htm"), "UTF-8", "");
         Assertions.assertThrows(HTMLStructureException.class, () -> jobBirdScraperTestable
-                .getTotalNumberOfPages(Jsoup.parse(getFile("JobBird/jobbird02_invpage.htm"), "UTF-8", "")));
+                .getTotalNumberOfPages(doc));
     }
 
     /* build mock document by using elements with html doc structure for 2 pages, check the happy flow
      * it turns out it is hard to mock a document by creating it this way,
      * as a consequence, html files are used instead in the rest of this module
-    */
+     */
     @Test
-    public void getTotalnrOfPagesTest_HappyFlow() {
+    void getTotalnrOfPagesTest_HappyFlow() {
 
 
-            Element el1 = new Element("el1");
-            Element el2 =  new Element("el2");
-            Element el3 =  new Element("el3");
+        Element el1 = new Element("el1");
+        Element el2 = new Element("el2");
+        Element el3 = new Element("el3");
 
-            Elements children = new Elements();
-            children.add(el1);
-            children.add(el2);
-            Element parent1 = new Element("parent1");
-            parent1.appendChild(el1);
-            parent1.appendChild(el2);
-            Element parent2 = new Element("parent2");
-            parent2.appendChild(parent1);
-            parent2.appendChild(el3);
+        Elements children = new Elements();
+        children.add(el1);
+        children.add(el2);
+        Element parent1 = new Element("parent1");
+        parent1.appendChild(el1);
+        parent1.appendChild(el2);
+        Element parent2 = new Element("parent2");
+        parent2.appendChild(parent1);
+        parent2.appendChild(el3);
 
-            //when (connectionDocumentServiceMock.getConnection(anyString())).thenReturn(documentMock);
-            when (documentMock.select("span.page-link")).thenReturn(children);
-
-//            when (e2Mock.parent()).thenReturn(parent1);
-            int count =  jobBirdScraperTestable.getTotalNumberOfPages(documentMock);
-            assertEquals(2, count);
+        when(documentMock.select("span.page-link")).thenReturn(children);
+        int count = jobBirdScraperTestable.getTotalNumberOfPages(documentMock);
+        assertEquals(2, count);
     }
 
     /* set vacancy title using vacancy htm file */
     @Test
-    public void setVacancyTitle_HappyFlow() throws IOException {
-        Document doc =  getDocFromUrl("JobBird/jobbird03_vacancy.htm");
+    void setVacancyTitle_HappyFlow() throws IOException {
+        Document doc = getDocFromUrl("JobBird/jobbird03_vacancy.htm");
         String result = jobBirdScraperTestable.getVacancyTitle(doc);
         assertEquals("Applications Engineering - Software Engineering Internship (Fall 2020)", result);
     }
@@ -130,16 +128,16 @@ public class JobBirdScraperTest extends UseLocalSavedFiles {
      *  If title cannot be found in the html a HTMLStructureException should be thrown
      */
     @Test
-    public void setVacancyTitle_invalidPageStructure() throws IOException {
+    void setVacancyTitle_invalidPageStructure() throws IOException {
         Document doc = getDocFromUrl("JobBird/jobbird03_vacancy_notitle.htm");
         assertEquals("", jobBirdScraperTestable.getVacancyTitle(doc));
     }
 
     /*
-    *  Happy flow, location, hours and date exist in page
-    */
+     *  Happy flow, location, hours and date exist in page
+     */
     @Test
-    public void setVacancySpecifics_happyFlow() throws IOException {
+    void setVacancySpecifics_happyFlow() throws IOException {
         Document doc = getDocFromUrl("JobBird/jobbird04_vacancyspecifics.htm");
         Vacancy vacancy = new Vacancy();
         vacancy.setHours(jobBirdScraperTestable.retrieveWorkHours(doc.select("div.card-body").text()));
@@ -148,15 +146,15 @@ public class JobBirdScraperTest extends UseLocalSavedFiles {
         assertEquals("Apeldoorn", vacancy.getLocation());
         assertNull(vacancy.getHours());
         LocalDateTime expectedDate =
-        LocalDateTime.parse("2020-05-30 00:00", DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"));
-        assertEquals( expectedDate, vacancy.getPostingDate());
+                LocalDateTime.parse("2020-05-30 00:00", DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"));
+        assertEquals(expectedDate, vacancy.getPostingDate());
     }
 
 
     /* Unhappy flow, either location, hours or date cannot be located, an empty string should be returned
      */
     @Test
-    public void setVacancySpecifics_Missing() throws IOException {
+    void setVacancySpecifics_Missing() throws IOException {
         Document doc = getDocFromUrl("JobBird/jobbird04_vacancyspecifics_missing.htm");
         Vacancy vacancy = new Vacancy();
         vacancy.setHours(jobBirdScraperTestable.retrieveWorkHours(doc.select("div.card-body").text()));
@@ -167,24 +165,24 @@ public class JobBirdScraperTest extends UseLocalSavedFiles {
     }
 
     @Test
-    public void testGetUrenPerWeek() throws IOException {
-        Document doc =  getDocFromUrl("JobBird/jobbird03_vacancy.htm");
+    void testGetUrenPerWeek() throws IOException {
+        Document doc = getDocFromUrl("JobBird/jobbird03_vacancy.htm");
         Integer result = jobBirdScraperTestable.retrieveWorkHours(doc.select("div.card-body").text());
         assertNull(result);
     }
 
     @Test
-    public void testGetVacancyAbout() {
-        when (elementsMock.text()).thenReturn("about");
-        when(documentMock.select( "div.jobContainer")).thenReturn(elementsMock);
+    void testGetVacancyAbout() {
+        when(elementsMock.text()).thenReturn("about");
+        when(documentMock.select("div.jobContainer")).thenReturn(elementsMock);
         String about = jobBirdScraperTestable.getVacancyAbout(documentMock);
         assertEquals("about", about);
     }
 
 
     @Test
-    public void testRetrieveVacancyURLS() throws IOException {
-        Document doc =  getDocFromUrl("JobBird/jobbirdvacatures.htm");
+    void testRetrieveVacancyURLS() throws IOException {
+        Document doc = getDocFromUrl("JobBird/jobbirdvacatures.htm");
         ArrayList<String> vacancyURLS = jobBirdScraperTestable.retrieveVacancyURLsFromDoc(doc);
         System.out.println("nr of vacancy URLS" + vacancyURLS.size());
         assertEquals(15, vacancyURLS.size());
@@ -193,7 +191,7 @@ public class JobBirdScraperTest extends UseLocalSavedFiles {
 
 
     @Test
-    public void testContinueSearching() {
+    void testContinueSearching() {
         ArrayList<String> vacancyURLs = new ArrayList<>();
         ArrayList<String> vacancyURLsOnPage = new ArrayList<>();
 
@@ -207,38 +205,38 @@ public class JobBirdScraperTest extends UseLocalSavedFiles {
 
         vacancyURLsOnPage.add("the same url");
         boolean resultWhenContainsTheSame = jobBirdScraperTestable.continueSearching(vacancyURLs, vacancyURLsOnPage);
-        assertFalse( resultWhenContainsTheSame);
+        assertFalse(resultWhenContainsTheSame);
     }
 
 
     @Test
-    public void testGetVacancyURLs() throws IOException {
+    void testGetVacancyURLs() throws IOException {
 
-        Document overviewPage =  getDocFromUrl("JobBird/jobbird01_should_count_5_pages.htm");
+        Document overviewPage = getDocFromUrl("JobBird/jobbird01_should_count_5_pages.htm");
 
-        when (documentServiceMock.getDocument(anyString())).thenReturn(overviewPage);
-        jobBirdScraperTestable.setLogService( logServiceMock);
-        jobBirdScraperTestable.setDocumentService( documentServiceMock);
+        when(documentServiceMock.getDocument(anyString())).thenReturn(overviewPage);
+        jobBirdScraperTestable.setLogService(logServiceMock);
+        jobBirdScraperTestable.setDocumentService(documentServiceMock);
 
         List<String> resultList = jobBirdScraperTestable.getVacancyURLs();
         assertEquals(15, resultList.size());
-        assertTrue( resultList.contains("https://www.jobbird.com/nl/vacature/10216416-senior-software-engineer-backend-energy"));
+        assertTrue(resultList.contains("https://www.jobbird.com/nl/vacature/10216416-senior-software-engineer-backend-energy"));
 
-        Document wrongStructurePage =  getDocFromUrl("JobBird/jobbird02_invpage.htm");
+        Document wrongStructurePage = getDocFromUrl("JobBird/jobbird02_invpage.htm");
 
-        when (documentServiceMock.getDocument(anyString())).thenReturn(wrongStructurePage);
+        when(documentServiceMock.getDocument(anyString())).thenReturn(wrongStructurePage);
         resultList = jobBirdScraperTestable.getVacancyURLs();
         assertEquals(0, resultList.size());
         verify(logServiceMock, times(1)).logError("HTML structure altered in a critical way:null");
     }
 
     @Test
-    public void testRetrieveURLs() throws Exception {
-        Document overviewPage =  getDocFromUrl("JobBird/jobbird01_should_count_5_pages.htm");
+    void testRetrieveURLs() throws Exception {
+        Document overviewPage = getDocFromUrl("JobBird/jobbird01_should_count_5_pages.htm");
 
-        when (documentServiceMock.getDocument(anyString())).thenReturn(overviewPage);
-        jobBirdScraperTestable.setLogService( logServiceMock);
-        jobBirdScraperTestable.setDocumentService( documentServiceMock);
+        when(documentServiceMock.getDocument(anyString())).thenReturn(overviewPage);
+        jobBirdScraperTestable.setLogService(logServiceMock);
+        jobBirdScraperTestable.setDocumentService(documentServiceMock);
 
         List<String> resultList = jobBirdScraperTestable.retrieveURLs();
         verify(logServiceMock, times(1)).logInfo("JOBBIRD -- Start scraping");
@@ -248,29 +246,29 @@ public class JobBirdScraperTest extends UseLocalSavedFiles {
 
 
     @Test
-    public void testGetVacancies () throws Exception {
+    void testGetVacancies() throws Exception {
         List<String> urlList = new ArrayList<>();
         urlList.add("dummy url");
-        Document doc =  getDocFromUrl("JobBird/jobbird03_vacancy.htm");
+        Document doc = getDocFromUrl("JobBird/jobbird03_vacancy.htm");
 
-        jobBirdScraperTestable.setLogService( logServiceMock);
-        jobBirdScraperTestable.setDocumentService( documentServiceMock);
-        when (documentServiceMock.getDocument(anyString())).thenReturn(doc);
+        jobBirdScraperTestable.setLogService(logServiceMock);
+        jobBirdScraperTestable.setDocumentService(documentServiceMock);
+        when(documentServiceMock.getDocument(anyString())).thenReturn(doc);
 
         List<Vacancy> vacancies = jobBirdScraperTestable.retrieveVacancies(urlList);
         assertEquals(1, vacancies.size());
         Vacancy vacancy = vacancies.get(0);
 
-        assertEquals( "Applications Engineering - Software Engineering Internship (Fall 2020)",
+        assertEquals("Applications Engineering - Software Engineering Internship (Fall 2020)",
                 vacancy.getTitle());
 
 
     }
 
     @Test
-    public void testRetrieveVacancyPostingDate() throws IOException {
+    void testRetrieveVacancyPostingDate() throws IOException {
         Document doc = getDocFromUrl("JobBird/jobbirdvacatures.htm");
-        jobBirdScraperTestable.setDocumentService( documentServiceMock);
+        jobBirdScraperTestable.setDocumentService(documentServiceMock);
         when(documentServiceMock.getDocument(anyString())).thenReturn(doc);
         List<Vacancy> vacancies = jobBirdScraperTestable.retrieveVacancies(Collections.singletonList("dummy url"));
         assertNotNull(vacancies.get(0).getPostingDate());

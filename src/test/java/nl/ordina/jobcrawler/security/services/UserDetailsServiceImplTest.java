@@ -23,7 +23,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-public class UserDetailsServiceImplTest {
+class UserDetailsServiceImplTest {
 
     @InjectMocks
     private UserDetailsServiceImpl userDetailsService;
@@ -32,7 +32,7 @@ public class UserDetailsServiceImplTest {
     private UserService userService;
 
     @Test
-    public void loadByUserName() {
+    void loadByUserName() {
         User user = new User("admin", "password");
         user.setId(1L);
         Role adminRole = new Role();
@@ -49,9 +49,9 @@ public class UserDetailsServiceImplTest {
     }
 
     @Test
-    public void loadByUserName_throws_exception() {
+    void loadByUserName_throws_exception() {
+        when(userService.findByUsername("admin")).thenReturn(Optional.empty());
         Assertions.assertThrows(UsernameNotFoundException.class, () -> {
-            when(userService.findByUsername("admin")).thenReturn(Optional.empty());
             UserDetails userDetails = userDetailsService.loadUserByUsername("admin");
         });
     }
