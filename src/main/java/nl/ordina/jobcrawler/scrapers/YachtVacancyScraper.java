@@ -81,6 +81,7 @@ public class YachtVacancyScraper extends VacancyScraper {
                         .postingDate(getPostingDate((String) vacancyData.get("date")))
                         .about(getVacancyAbout(vacancyDoc))
                         .salary((String) vacancyMetaData.get("salary"))
+                        .company((String) vacancyData.get("company"))
                         .build();
 
                 vacancies.add(vacancy);

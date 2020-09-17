@@ -95,6 +95,7 @@ public class JobBirdScraper extends VacancyScraper {
                         .location(getLocation(doc))
                         .postingDate(getPublishDate(doc))
                         .about(getVacancyAbout(doc))
+                        .company(getCompanyName(doc))
                         .build();
 
                 vacancies.add(vacancy);
@@ -208,7 +209,7 @@ public class JobBirdScraper extends VacancyScraper {
      * these are <li elements with as attribute value the number of the page
      * continue until the page link with the text "next"
      */
-    protected int getTotalNumberOfPages(Document doc) throws HTMLStructureException {
+    protected int getTotalNumberOfPages(Document doc) {
 
         try {
             Elements elements = doc.select("span.page-link");
@@ -313,31 +314,6 @@ public class JobBirdScraper extends VacancyScraper {
         return s != null && ymdPattern.matcher(s).matches();
     }
 
-
-    /*
-     *   The job bird vacancy page structure is quite loose.
-     *   A number of vacancy page are in Dutch and quite often, the "About" can be found between
-     *   a line (div) "Functieomschrijving" just after  <div id="jobContent"  class = "card-body>
-     *  and a heading <h3>Vaardigheden</h3>
-     *
-     *   A number of vacancy pages have the about section
-     *
-     *  we cannot be sure about the exact layout, so it would be possible to extract the portion just
-     *  after the jobContent when the first line contains Functieomschrijving, read until Vaardigheden.
-     *
-     *
-     *  In other cases it is not so simple. When aforementioned receipt does not work we can
-     *  we can do the following:
-     *
-     * gather all elements until one of the following occurs:
-     *  - english offer: A sentence containing skills
-     *
-     *
-     * For the time being, the About contains all text contained within the jobcontainer card div element
-     *   <div class="jobContainer card">
-     *
-     * */
-
     /**
      * Retrieve the vacancy body to store in postgres database
      *
@@ -347,6 +323,11 @@ public class JobBirdScraper extends VacancyScraper {
     protected String getVacancyAbout(Document doc) {
         Elements aboutElements = doc.select("div#jobContent");
         return Jsoup.clean(aboutElements.html(), Whitelist.basic());
+    }
+
+    private String getCompanyName(Document doc) {
+        Elements itemListElements = doc.select("span.dashed-list__item");
+        return itemListElements.last().text();
     }
 
 
