@@ -2,6 +2,8 @@ package nl.ordina.jobcrawler.scrapers;
 
 import lombok.extern.slf4j.Slf4j;
 import nl.ordina.jobcrawler.model.Vacancy;
+import org.jsoup.Jsoup;
+import org.jsoup.safety.Whitelist;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -80,7 +82,7 @@ public class HuxleyITVacancyScraper extends VacancyScraper {
                     .hours(retrieveWorkHours((String) vacancyData.get("description")))
                     .salary((String) vacancyData.get("salaryText"))
                     .postingDate(getPostingDate((String) vacancyData.get("postDate")))
-                    .about((String) vacancyData.get("description"))
+                    .about(Jsoup.clean((String) vacancyData.get("description"), Whitelist.basic()))
                     .build();
 
             vacancies.add(vacancy);

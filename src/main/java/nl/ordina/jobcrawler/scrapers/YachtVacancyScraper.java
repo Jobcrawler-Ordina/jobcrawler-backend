@@ -2,8 +2,10 @@ package nl.ordina.jobcrawler.scrapers;
 
 import lombok.extern.slf4j.Slf4j;
 import nl.ordina.jobcrawler.model.Vacancy;
+import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
+import org.jsoup.safety.Whitelist;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
@@ -115,7 +117,7 @@ public class YachtVacancyScraper extends VacancyScraper {
     private String getVacancyAbout(Document doc) {
         // Extracts the about part from the vacancy
         Element vacancyBody = doc.select(".rich-text--vacancy").first();
-        return vacancyBody.text();
+        return Jsoup.clean(vacancyBody.html(), Whitelist.basic());
     }
 
     private LocalDateTime getPostingDate(String date) {

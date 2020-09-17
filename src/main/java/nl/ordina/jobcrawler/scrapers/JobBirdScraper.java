@@ -5,8 +5,10 @@ import nl.ordina.jobcrawler.exception.HTMLStructureException;
 import nl.ordina.jobcrawler.model.Vacancy;
 import nl.ordina.jobcrawler.service.DocumentService;
 import nl.ordina.jobcrawler.service.LogService;
+import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
+import org.jsoup.safety.Whitelist;
 import org.jsoup.select.Elements;
 import org.springframework.stereotype.Component;
 
@@ -343,8 +345,8 @@ public class JobBirdScraper extends VacancyScraper {
      * @return String vacancy body
      */
     protected String getVacancyAbout(Document doc) {
-        Elements aboutElements = doc.select("div.jobContainer");
-        return aboutElements.text();
+        Elements aboutElements = doc.select("div#jobContent");
+        return Jsoup.clean(aboutElements.html(), Whitelist.basic());
     }
 
 
