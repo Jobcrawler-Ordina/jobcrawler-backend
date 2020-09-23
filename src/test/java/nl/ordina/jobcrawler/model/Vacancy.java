@@ -46,6 +46,7 @@ public class Vacancy {
     private LocalDateTime postingDate;
     @Column(columnDefinition = "TEXT")
     private String about;
+    private String company;
 
     @ManyToMany
     @JoinTable(

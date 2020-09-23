@@ -109,6 +109,7 @@ public class Vacancy {
                 .append(hours).append(newLine)
                 .append(location).append(newLine)
                 .append(postingDate).append(newLine)
+                .append(company).append(newLine)
                 .append(about).append(newLine)
                 .append(skills.toString()).append(newLine).append(newLine)
                 .append("*****************************************").toString();

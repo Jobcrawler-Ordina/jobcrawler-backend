@@ -144,7 +144,7 @@ class JobBirdScraperTest extends UseLocalSavedFiles {
         vacancy.setLocation(jobBirdScraperTestable.getLocation(doc));
         vacancy.setPostingDate(jobBirdScraperTestable.getPublishDate(doc));
         assertEquals("Apeldoorn", vacancy.getLocation());
-        assertNull(vacancy.getHours());
+        assertEquals(32, vacancy.getHours());
         LocalDateTime expectedDate =
                 LocalDateTime.parse("2020-05-30 00:00", DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"));
         assertEquals(expectedDate, vacancy.getPostingDate());
@@ -172,15 +172,6 @@ class JobBirdScraperTest extends UseLocalSavedFiles {
     }
 
     @Test
-    void testGetVacancyAbout() {
-        when(elementsMock.text()).thenReturn("about");
-        when(documentMock.select("div.jobContainer")).thenReturn(elementsMock);
-        String about = jobBirdScraperTestable.getVacancyAbout(documentMock);
-        assertEquals("about", about);
-    }
-
-
-    @Test
     void testRetrieveVacancyURLS() throws IOException {
         Document doc = getDocFromUrl("JobBird/jobbirdvacatures.htm");
         ArrayList<String> vacancyURLS = jobBirdScraperTestable.retrieveVacancyURLsFromDoc(doc);
@@ -188,7 +179,6 @@ class JobBirdScraperTest extends UseLocalSavedFiles {
         assertEquals(15, vacancyURLS.size());
         assertEquals("https://www.jobbird.com/nl/vacature/10424942-integratie-tester", vacancyURLS.get(2));
     }
-
 
     @Test
     void testContinueSearching() {

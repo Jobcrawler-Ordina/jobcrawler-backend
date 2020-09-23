@@ -83,6 +83,7 @@ public class HuxleyITVacancyScraper extends VacancyScraper {
                     .salary((String) vacancyData.get("salaryText"))
                     .postingDate(getPostingDate((String) vacancyData.get("postDate")))
                     .about(Jsoup.clean((String) vacancyData.get("description"), Whitelist.basic()))
+                    .company("")
                     .build();
 
             vacancies.add(vacancy);
