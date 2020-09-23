@@ -114,6 +114,7 @@ public class YachtVacancyScraper extends VacancyScraper {
      * This method selects the vacancy details from the html document
      *
      * @param doc jsoup document of a vacancy
+     * @return cleaned html string of vacancy body
      */
     private String getVacancyAbout(Document doc) {
         // Extracts the about part from the vacancy

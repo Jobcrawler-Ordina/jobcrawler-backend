@@ -56,6 +56,11 @@ public abstract class VacancyScraper {
         return broker;
     }
 
+    /**
+     * The work hours might be hidden somewhere in the vacancy body. This method tries to split on certain words and looks for a number close to this split.
+     * @param description vacancy body
+     * @return Integer that can either contain the working hours per week or returns null
+     */
     public Integer retrieveWorkHours(String description) {
 
         // Try to split on the word 'hours' and search for the first integer after a positive result of splitting
@@ -77,10 +82,20 @@ public abstract class VacancyScraper {
         return null;
     }
 
+    /**
+     * @param input String to look for numbers
+     * @return Matcher that contains matches
+     */
     private Matcher matcher(String input) {
         return Pattern.compile("\\d+").matcher(input);
     }
 
+    /**
+     *
+     * @param text Contains numbers that might be found
+     * @param direction search direction, in front (select latest, closest to split) or behind of the split.
+     * @return Integer with working hours or null
+     */
     private Integer findHours(Matcher text, String direction) {
         String result = null;
         try {

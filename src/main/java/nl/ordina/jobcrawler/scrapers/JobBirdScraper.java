@@ -325,6 +325,11 @@ public class JobBirdScraper extends VacancyScraper {
         return Jsoup.clean(aboutElements.html(), Whitelist.basic());
     }
 
+    /**
+     * Retrieves company name
+     * @param doc Document which is needed to retrieve the company name
+     * @return String company name
+     */
     private String getCompanyName(Document doc) {
         Elements itemListElements = doc.select("span.dashed-list__item");
         return itemListElements.last().text();
