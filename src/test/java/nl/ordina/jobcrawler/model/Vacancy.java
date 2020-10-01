@@ -38,7 +38,7 @@ public class Vacancy {
     private String title;
     private String broker;
     private String vacancyNumber;
-    private String hours;
+    private Integer hours;
     private String location;
     private String salary;
     @JsonFormat(timezone = "Europe/Amsterdam", pattern = "yyyy-MM-dd HH:mm:ss")
@@ -46,6 +46,7 @@ public class Vacancy {
     private LocalDateTime postingDate;
     @Column(columnDefinition = "TEXT")
     private String about;
+    private String company;
 
     @ManyToMany
     @JoinTable(

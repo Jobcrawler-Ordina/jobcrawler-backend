@@ -2,6 +2,8 @@ package nl.ordina.jobcrawler.scrapers;
 
 import lombok.extern.slf4j.Slf4j;
 import nl.ordina.jobcrawler.model.Vacancy;
+import org.jsoup.Jsoup;
+import org.jsoup.safety.Whitelist;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -17,6 +19,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /*
@@ -77,9 +80,11 @@ public class HuxleyITVacancyScraper extends VacancyScraper {
                     .broker(getBroker())
                     .vacancyNumber((String) vacancyData.get("jobReference"))
                     .location((String) vacancyData.get("city"))
+                    .hours(retrieveWorkHours((String) vacancyData.get("description")))
                     .salary((String) vacancyData.get("salaryText"))
                     .postingDate(getPostingDate((String) vacancyData.get("postDate")))
-                    .about((String) vacancyData.get("description"))
+                    .about(Jsoup.clean((String) vacancyData.get("description"), Whitelist.basic()))
+                    .company("")
                     .build();
 
             vacancies.add(vacancy);

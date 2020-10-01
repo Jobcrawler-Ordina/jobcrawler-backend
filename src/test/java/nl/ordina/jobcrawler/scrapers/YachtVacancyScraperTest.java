@@ -21,7 +21,7 @@ import static org.mockito.Mockito.*;
 
 
 @ExtendWith(MockitoExtension.class)
-public class YachtVacancyScraperTest extends UseLocalSavedFiles {
+class YachtVacancyScraperTest extends UseLocalSavedFiles {
 
     @InjectMocks
     private YachtVacancyScraper yachtVacancyScraper;
@@ -47,7 +47,7 @@ public class YachtVacancyScraperTest extends UseLocalSavedFiles {
     }
 
     @Test
-    public void test_getVacancies() {
+    void test_getVacancies() {
         when(restTemplateMock.getForEntity(anyString(), any(Class.class))).thenReturn(jsonResponse);
         List<Vacancy> vacancyList = yachtVacancyScraper.getVacancies();
         assertEquals(2, vacancyList.size());
@@ -60,7 +60,7 @@ public class YachtVacancyScraperTest extends UseLocalSavedFiles {
     }
 
     @Test
-    public void test_getVacancies_throws_exception() {
+    void test_getVacancies_throws_exception() {
         when(restTemplateMock.getForEntity(anyString(), any(Class.class))).thenReturn(noDataResponse);
 
         // Calling the getVacancies() method causes a NullPointerException as the returned data gives an empty json response.

@@ -38,7 +38,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @ContextConfiguration(classes = { UserController.class, TestSecurityConfiguration.class })
 @WebMvcTest
-public class UserControllerTest {
+class UserControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
@@ -76,7 +76,7 @@ public class UserControllerTest {
     }
 
     @Test
-    public void GET_all_users() throws Exception {
+    void GET_all_users() throws Exception {
         when(userService.findAll()).thenReturn(userList);
         when(userService.convertToUserDTO(any())).thenCallRealMethod();
 
@@ -90,7 +90,7 @@ public class UserControllerTest {
     }
 
     @Test
-    public void PUT_update_user() throws Exception {
+    void PUT_update_user() throws Exception {
         UserDTO userDTO = new UserDTO();
         userDTO.setId(userList.get(0).getId());
         userDTO.setUsername(userList.get(0).getUsername());
@@ -119,7 +119,7 @@ public class UserControllerTest {
     }
 
     @Test
-    public void DELETE_user_by_id() throws Exception {
+    void DELETE_user_by_id() throws Exception {
         when(userService.delete(anyLong())).thenReturn(true);
         mockMvc.perform(delete("/user/1"))
                 .andExpect(status().isOk())

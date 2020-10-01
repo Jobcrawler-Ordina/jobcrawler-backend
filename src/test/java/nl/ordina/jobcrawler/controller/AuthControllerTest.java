@@ -54,7 +54,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ContextConfiguration(classes = { AuthController.class })
 @WebMvcTest
 @WithMockUser
-public class AuthControllerTest {
+class AuthControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
@@ -121,7 +121,7 @@ public class AuthControllerTest {
     }
 
     @Test
-    public void POST_signin_with_valid_credentials() throws Exception {
+    void POST_signin_with_valid_credentials() throws Exception {
         Set<Role> roles = new HashSet<>();
         roles.add(adminRole);
         user.setRoles(roles);
@@ -143,7 +143,7 @@ public class AuthControllerTest {
     }
 
     @Test
-    public void POST_signin_no_admin_role() throws Exception {
+    void POST_signin_no_admin_role() throws Exception {
         Set<Role> roles = new HashSet<>();
         roles.add(userRole);
         user.setRoles(roles);
@@ -164,7 +164,7 @@ public class AuthControllerTest {
     }
 
     @Test
-    public void POST_signin_throws_UserNotFoundException() throws Exception {
+    void POST_signin_throws_UserNotFoundException() throws Exception {
             when(userService.findByUsername(anyString())).thenReturn(Optional.empty());
 
             mockMvc.perform(post("/auth/signin")
@@ -179,7 +179,7 @@ public class AuthControllerTest {
     }
 
     @Test
-    public void POST_signin_throws_RoleNotFoundException() throws Exception {
+    void POST_signin_throws_RoleNotFoundException() throws Exception {
         when(userService.findByUsername(anyString())).thenReturn(Optional.of(user));
         when(roleService.findByName(any())).thenReturn(Optional.empty());
 
@@ -196,7 +196,7 @@ public class AuthControllerTest {
     }
 
     @Test
-    public void GET_allowance() throws Exception {
+    void GET_allowance() throws Exception {
         setAllowance(true);
 
         mockMvc.perform(get("/auth/allow")
@@ -206,7 +206,7 @@ public class AuthControllerTest {
     }
 
     @Test
-    public void PUT_change_allowance() throws Exception {
+    void PUT_change_allowance() throws Exception {
         mockMvc.perform(get("/auth/allow"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.allow").value(true));
@@ -219,7 +219,7 @@ public class AuthControllerTest {
     }
 
     @Test
-    public void POST_signup_success() throws Exception {
+    void POST_signup_success() throws Exception {
         setAllowance(true);
         when(userService.existsByUsername(anyString())).thenReturn(false);
         when(userService.count()).thenReturn(0L);
@@ -239,7 +239,7 @@ public class AuthControllerTest {
     }
 
     @Test
-    public void POST_signup_username_taken() throws Exception {
+    void POST_signup_username_taken() throws Exception {
         setAllowance(true);
         when(userService.existsByUsername(anyString())).thenReturn(true);
 
@@ -254,7 +254,7 @@ public class AuthControllerTest {
     }
 
     @Test
-    public void POST_signup_registration_closed() throws Exception {
+    void POST_signup_registration_closed() throws Exception {
         setAllowance(false);
 
         mockMvc.perform(post("/auth/signup")
@@ -266,7 +266,7 @@ public class AuthControllerTest {
     }
 
     @Test
-    public void GET_refresh_token() throws Exception {
+    void GET_refresh_token() throws Exception {
         // First generate valid token that needs to be refreshed. Can't refresh an invalid token.
         Authentication authentication = new UsernamePasswordAuthenticationToken(userPrinciple, null, authorityList);
         String jwtToken = jwtProvider.generateJwtToken(authentication).get(0);
