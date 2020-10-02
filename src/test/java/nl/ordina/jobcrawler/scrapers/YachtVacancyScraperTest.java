@@ -51,8 +51,8 @@ class YachtVacancyScraperTest extends UseLocalSavedFiles {
         when(restTemplateMock.getForEntity(anyString(), any(Class.class))).thenReturn(jsonResponse);
         List<Vacancy> vacancyList = yachtVacancyScraper.getVacancies();
         assertEquals(2, vacancyList.size());
-        assertTrue("Moerdijk".equals(vacancyList.get(0).getLocation()) || "Moerdijk"
-                .equals(vacancyList.get(1).getLocation()));
+        assertTrue("Moerdijk".equals(vacancyList.get(0).getLocationString()) || "Moerdijk"
+                .equals(vacancyList.get(1).getLocationString()));
         assertTrue(vacancyList.get(0).getVacancyURL().contains("github"));
         assertNotNull(vacancyList.get(0).getPostingDate());
 

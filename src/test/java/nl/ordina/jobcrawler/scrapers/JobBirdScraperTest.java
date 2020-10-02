@@ -141,9 +141,9 @@ class JobBirdScraperTest extends UseLocalSavedFiles {
         Document doc = getDocFromUrl("JobBird/jobbird04_vacancyspecifics.htm");
         Vacancy vacancy = new Vacancy();
         vacancy.setHours(jobBirdScraperTestable.retrieveWorkHours(doc.select("div.card-body").text()));
-        vacancy.setLocation(jobBirdScraperTestable.getLocation(doc));
+        vacancy.setLocationString(jobBirdScraperTestable.getLocation(doc));
         vacancy.setPostingDate(jobBirdScraperTestable.getPublishDate(doc));
-        assertEquals("Apeldoorn", vacancy.getLocation());
+        assertEquals("Apeldoorn", vacancy.getLocationString());
         assertEquals(32, vacancy.getHours());
         LocalDateTime expectedDate =
                 LocalDateTime.parse("2020-05-30 00:00", DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"));
@@ -158,9 +158,9 @@ class JobBirdScraperTest extends UseLocalSavedFiles {
         Document doc = getDocFromUrl("JobBird/jobbird04_vacancyspecifics_missing.htm");
         Vacancy vacancy = new Vacancy();
         vacancy.setHours(jobBirdScraperTestable.retrieveWorkHours(doc.select("div.card-body").text()));
-        vacancy.setLocation(jobBirdScraperTestable.getLocation(doc));
+        vacancy.setLocationString(jobBirdScraperTestable.getLocation(doc));
         vacancy.setPostingDate(jobBirdScraperTestable.getPublishDate(doc));
-        assertEquals("", vacancy.getLocation());
+        assertEquals("", vacancy.getLocationString());
         assertNull(vacancy.getHours());
     }
 

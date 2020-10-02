@@ -20,7 +20,7 @@ public class VacancyFactory {
                 .broker("broker")
                 .vacancyNumber("1")
                 .hours(30)
-                .location("location example")
+                .locationString("location example")
                 .postingDate(LocalDateTime.parse("2020-04-14 00:00", formatter))
                 .about("this is a description of the example job")
                 .skills(Sets.newHashSet())
