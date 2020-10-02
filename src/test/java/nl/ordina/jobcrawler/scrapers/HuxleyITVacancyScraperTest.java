@@ -23,7 +23,7 @@ import static org.mockito.Mockito.when;
 
 
 @ExtendWith(MockitoExtension.class)
-public class HuxleyITVacancyScraperTest extends UseLocalSavedFiles {
+class HuxleyITVacancyScraperTest extends UseLocalSavedFiles {
 
     @InjectMocks
     private HuxleyITVacancyScraper huxleyITVacancyScraper;
@@ -48,7 +48,7 @@ public class HuxleyITVacancyScraperTest extends UseLocalSavedFiles {
     }
 
     @Test
-    public void test_getVacancies() {
+    void test_getVacancies() {
         when(restTemplateMock.postForEntity(anyString(), any(), any(Class.class)))
                 .thenReturn(jsonResponse);
         List<Vacancy> vacancyList = huxleyITVacancyScraper.getVacancies();

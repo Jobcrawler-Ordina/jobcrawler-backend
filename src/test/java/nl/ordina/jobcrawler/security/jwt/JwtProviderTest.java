@@ -19,45 +19,43 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class JwtProviderTest {
+class JwtProviderTest {
 
     private final JwtProvider jwtProvider = new JwtProvider();
 
     private Authentication authentication;
-    private UserPrinciple userPrinciple;
-    private List<GrantedAuthority> authorityList;
     private String token;
 
     @BeforeEach
     public void init() {
-        authorityList = new ArrayList<>();
+        List<GrantedAuthority> authorityList = new ArrayList<>();
         authorityList.add(new SimpleGrantedAuthority("ROLE_ADMIN"));
-        userPrinciple = new UserPrinciple(1L, "admin", "password", authorityList);
+        UserPrinciple userPrinciple = new UserPrinciple(1L, "admin", "password", authorityList);
         authentication = new UsernamePasswordAuthenticationToken(userPrinciple, null, authorityList);
         token = jwtProvider.generateJwtToken(authentication).get(0);
     }
 
     @Test
-    public void generateJwtTokenTest() {
+    void generateJwtTokenTest() {
         List<String> jwt = jwtProvider.generateJwtToken(authentication);
         assertNotNull(jwt.get(0));
-        assertEquals(jwt.get(1), "1800");
+        assertEquals("1800", jwt.get(1));
     }
 
     @Test
-    public void getUserNameFromJwtTokenTest() {
+    void getUserNameFromJwtTokenTest() {
         String username = jwtProvider.getUserNameFromJwtToken(token);
-        assertEquals(username, "admin");
+        assertEquals("admin", username);
     }
 
     @Test
-    public void validateJwtTokenTest() {
+    void validateJwtTokenTest() {
         boolean valid = jwtProvider.validateJwtToken(token);
         assertTrue(valid);
     }
 
     @Test
-    public void validateJwtTokenTest_invalid_token_MalformedJwtException() {
+    void validateJwtTokenTest_invalid_token_MalformedJwtException() {
         assertThatThrownBy(() -> {
             boolean valid = jwtProvider.validateJwtToken("randomstringthatshouldactasatoken");
         }).isInstanceOf(JwtException.class)
@@ -65,7 +63,7 @@ public class JwtProviderTest {
     }
 
     @Test
-    public void validateJwtTokenTest_empty_token_IllegalArgumentException() {
+    void validateJwtTokenTest_empty_token_IllegalArgumentException() {
         assertThatThrownBy(() -> {
             boolean valid = jwtProvider.validateJwtToken("");
         }).isInstanceOf(JwtException.class)
@@ -73,7 +71,7 @@ public class JwtProviderTest {
     }
 
     @Test
-    public void validateJwtTokenTest_expired_token_ExpiredJwtException() {
+    void validateJwtTokenTest_expired_token_ExpiredJwtException() {
         assertThatThrownBy(() -> {
             boolean valid = jwtProvider.validateJwtToken("eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJ0aW1vIiwiaWF0IjoxNTk5MDMyODg5LCJleHAiOjE1OTkwMzQ2ODl9.-ULgqcWxzyljTxSkJspLPW9-kHkRSt695PLa9MnGR-hT70X6DVQaGV58UHvc5rTmXt3OtgFpAAjNbhqkqfESrw");
         }).isInstanceOf(JwtException.class)
@@ -81,15 +79,15 @@ public class JwtProviderTest {
     }
 
     @Test
-    public void refreshTokenTest() {
+    void refreshTokenTest() {
         List<String> newToken = jwtProvider.refreshToken(token);
-        assertEquals(newToken.size(), 2);
+        assertEquals(2, newToken.size());
         assertNotNull(newToken.get(0));
-        assertEquals(newToken.get(1), "1800");
+        assertEquals("1800", newToken.get(1));
     }
 
     @Test
-    public void refreshToken_throws_exception() {
+    void refreshToken_throws_exception() {
         assertThatThrownBy(() -> {
             List<String> newToken = jwtProvider.refreshToken("");
         }).isInstanceOf(JwtException.class)

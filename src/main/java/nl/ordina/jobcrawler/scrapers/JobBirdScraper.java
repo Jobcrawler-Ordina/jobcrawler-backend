@@ -7,8 +7,10 @@ import nl.ordina.jobcrawler.model.Vacancy;
 import nl.ordina.jobcrawler.repo.LocationRepository;
 import nl.ordina.jobcrawler.service.DocumentService;
 import nl.ordina.jobcrawler.service.LogService;
+import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
+import org.jsoup.safety.Whitelist;
 import org.jsoup.select.Elements;
 import org.springframework.stereotype.Component;
 
@@ -61,7 +63,7 @@ public class JobBirdScraper extends VacancyScraper {
     }
 
     private LogService logService = new LogService();
-    private DocumentService documentService  = new DocumentService();
+    private DocumentService documentService = new DocumentService();
 
     private static final int MAX_NR_OF_PAGES = 25;  // 25 seems enough for demo purposes, can be up to approx 60
     // at a certain point the vacancy date will be missing
@@ -79,7 +81,6 @@ public class JobBirdScraper extends VacancyScraper {
     }
 
 
-
     protected List<String> retrieveURLs() {
         logService.logInfo(String.format("%s -- Start scraping", getBroker().toUpperCase()));
         return getVacancyURLs();
@@ -94,11 +95,12 @@ public class JobBirdScraper extends VacancyScraper {
                 Vacancy vacancy = Vacancy.builder()
                         .vacancyURL(vacancyURL)
                         .title(getVacancyTitle(doc))
-                        .hours(getHoursFromPage(doc))
+                        .hours(retrieveWorkHours(doc.select("div.card-body").text()))
                         .broker(getBroker())
                         .locationString((String) getLocation(doc))
                         .postingDate(getPublishDate(doc))
                         .about(getVacancyAbout(doc))
+                        .company(getCompanyName(doc))
                         .build();
 
                 vacancies.add(vacancy);
@@ -194,7 +196,7 @@ public class JobBirdScraper extends VacancyScraper {
      * @param doc The HTML document containing the URLs to the vacancies
      * @return the index of the last page to scrape
      */
-    protected int getLastPageToScrape(Document doc)  {
+    protected int getLastPageToScrape(Document doc) {
         int totalNumberOfPages = getTotalNumberOfPages(doc);
         // TODO: we could get more sophisticated logic in place to limit the number of pages.
         // For example, we could look at the posting date of each vacancy, and limit it to thirty days.
@@ -212,7 +214,7 @@ public class JobBirdScraper extends VacancyScraper {
      * these are <li elements with as attribute value the number of the page
      * continue until the page link with the text "next"
      */
-    protected int getTotalNumberOfPages(Document doc) throws HTMLStructureException {
+    protected int getTotalNumberOfPages(Document doc) {
 
         try {
             Elements elements = doc.select("span.page-link");
@@ -258,7 +260,7 @@ public class JobBirdScraper extends VacancyScraper {
      * @param doc Document which is needed to retrieve vacancy title
      * @return String vacancy title
      */
-    protected String getVacancyTitle(Document doc)  {
+    protected String getVacancyTitle(Document doc) {
         Element vacancyHeader = doc.select("h1.no-margin").first();
 
         if (vacancyHeader != null) {
@@ -307,6 +309,9 @@ public class JobBirdScraper extends VacancyScraper {
                 result = checkDatePattern(date) ? LocalDate.parse(date, ymdFormatter).atStartOfDay() : null;
             }
         }
+        if (result == null) {
+            return LocalDate.now().atStartOfDay();
+        }
         return result;
     }
 
@@ -315,77 +320,24 @@ public class JobBirdScraper extends VacancyScraper {
     }
 
     /**
-     * Retrieve the hours respectively the minimum allowed hours from the relevant part of the page.
-     *
-     * @param doc Document which is needed to retrieve hours
-     * @return String hours
-     */
-    protected String getHoursFromPage(Document doc) {
-        try {
-            Elements elements = doc.select("div.card-body");
-            // TODO when the tag Uren per week does not contain character ':' very long strings are happening
-            // Search the childnodes for the tag "<strong>Uren per week:</strong>
-            // in principle, the text is free format with a few common headings
-            for (Element e : elements) {
-                for (Element child : e.children()) {
-                    String minString = "<strong>Minimum aantal uren per week</strong>";
-                    if (child.toString().contains("Uren per week")) {
-                        String uren = child.text();
-                        String[] urenArr = uren.split(":");
-                        if (urenArr.length > 1) {
-                            uren = urenArr[1];
-                            return uren.trim().length() > 255 ? uren.substring(0, 254) : uren.trim();
-                        }
-                    } else if (child.toString().contains(minString)) {
-                        String sElement = child.toString();
-                        int index = child.toString().indexOf(minString);
-                        index += minString.length();
-                        String sRest = sElement.substring(index);
-                        index = sRest.indexOf("<");
-                        String sUren = sRest.substring(0, index);
-                        return sUren.trim().length() > 255 ? sUren.substring(0, 254) : sUren.trim();
-                    }
-                }
-            }
-        } catch (Exception e) {
-            // nothing, it will not always parse.
-            return "0";
-        }
-        return "0"; // catch all when working hours not mentioned on the page
-    }
-
-    /*
-     *   The job bird vacancy page structure is quite loose.
-     *   A number of vacancy page are in Dutch and quite often, the "About" can be found between
-     *   a line (div) "Functieomschrijving" just after  <div id="jobContent"  class = "card-body>
-     *  and a heading <h3>Vaardigheden</h3>
-     *
-     *   A number of vacancy pages have the about section
-     *
-     *  we cannot be sure about the exact layout, so it would be possible to extract the portion just
-     *  after the jobContent when the first line contains Functieomschrijving, read until Vaardigheden.
-     *
-     *
-     *  In other cases it is not so simple. When aforementioned receipt does not work we can
-     *  we can do the following:
-     *
-     * gather all elements until one of the following occurs:
-     *  - english offer: A sentence containing skills
-     *
-     *
-     * For the time being, the About contains all text contained within the jobcontainer card div element
-     *   <div class="jobContainer card">
-     *
-     * */
-
-    /**
      * Retrieve the vacancy body to store in postgres database
+     *
      * @param doc Document which is needed to retrieve the body
      * @return String vacancy body
      */
     protected String getVacancyAbout(Document doc) {
-        Elements aboutElements = doc.select("div.jobContainer");
-        return aboutElements.text();
+        Elements aboutElements = doc.select("div#jobContent");
+        return Jsoup.clean(aboutElements.html(), Whitelist.basic());
+    }
+
+    /**
+     * Retrieves company name
+     * @param doc Document which is needed to retrieve the company name
+     * @return String company name
+     */
+    private String getCompanyName(Document doc) {
+        Elements itemListElements = doc.select("span.dashed-list__item");
+        return itemListElements.last().text();
     }
 
 
