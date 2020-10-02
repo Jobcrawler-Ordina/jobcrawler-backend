@@ -115,6 +115,7 @@ public class Vacancy {
                 ", salary='" + salary + '\'' +
                 ", postingDate='" + postingDate + '\'' +
                 ", about='" + about + '\'' +
+                ", company='" + company + '\'' +
                 ", skills=" + skills +
                 ", location_filled=" + !(location==null);
             if(!(location==null)) {
