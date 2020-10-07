@@ -2,9 +2,8 @@ package nl.ordina.jobcrawler.scrapers;
 
 import lombok.extern.slf4j.Slf4j;
 import nl.ordina.jobcrawler.model.Vacancy;
-import nl.ordina.jobcrawler.model.Location;
+import nl.ordina.jobcrawler.payload.VacancyDTO;
 import nl.ordina.jobcrawler.repo.LocationRepository;
-import nl.ordina.jobcrawler.repo.VacancyRepository;
 import org.jsoup.Jsoup;
 import org.jsoup.safety.Whitelist;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,7 +17,6 @@ import org.springframework.web.client.RestTemplate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /*
@@ -61,7 +59,7 @@ public class HuxleyITVacancyScraper extends VacancyScraper {
      * @return List with vacancies.
      */
     @Override
-    public List<Vacancy> getVacancies() {
+    public List<VacancyDTO> getVacancies() {
         /*
             The HuxleyIT API wants to know a total number of vacancies to return. When called, it also returns the total number of vacancies stored.
             In order to get all vacancies that are stored, the API is called twice:
@@ -73,9 +71,9 @@ public class HuxleyITVacancyScraper extends VacancyScraper {
         int totalVacancies = scrapeVacancies(0).getHits();
         List<Map<String, Object>> vacanciesData = scrapeVacancies(totalVacancies).getVacanciesData();
 
-        List<Vacancy> vacancies = new ArrayList<>();
+        List<VacancyDTO> vacancyDTOs = new ArrayList<>();
         for (Map<String, Object> vacancyData : vacanciesData) {
-            Vacancy vacancy = Vacancy.builder()
+            VacancyDTO vacancyDTO = VacancyDTO.builder()
                     .vacancyURL(VACANCY_URL_PREFIX + vacancyData.get("jobReference"))
                     .title((String) vacancyData.get("title"))
                     .broker(getBroker())
@@ -88,11 +86,11 @@ public class HuxleyITVacancyScraper extends VacancyScraper {
                     .company("")
                     .build();
 
-            vacancies.add(vacancy);
-            log.info(String.format("%s - Vacancy found: %s", getBroker(), vacancy.getTitle()));
+            vacancyDTOs.add(vacancyDTO);
+            log.info(String.format("%s - Vacancy found: %s", getBroker(), vacancyDTO.getTitle()));
         }
         log.info(String.format("%s -- Returning scraped vacancies", getBroker()));
-        return vacancies;
+        return vacancyDTOs;
     }
 
     private LocalDateTime getPostingDate(final String date) {

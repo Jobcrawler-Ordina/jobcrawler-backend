@@ -1,12 +1,9 @@
 package nl.ordina.jobcrawler.model.assembler;
 
 import nl.ordina.jobcrawler.controller.LocationController;
-import nl.ordina.jobcrawler.controller.VacancyController;
 import nl.ordina.jobcrawler.model.Location;
-import nl.ordina.jobcrawler.model.Vacancy;
 import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.EntityModel;
-import org.springframework.hateoas.RepresentationModel;
 import org.springframework.hateoas.server.RepresentationModelAssembler;
 import org.springframework.stereotype.Component;
 

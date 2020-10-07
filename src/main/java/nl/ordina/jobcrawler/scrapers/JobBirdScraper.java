@@ -1,9 +1,9 @@
 package nl.ordina.jobcrawler.scrapers;
 
 import lombok.extern.slf4j.Slf4j;
-import nl.ordina.jobcrawler.model.Location;
 import nl.ordina.jobcrawler.exception.HTMLStructureException;
 import nl.ordina.jobcrawler.model.Vacancy;
+import nl.ordina.jobcrawler.payload.VacancyDTO;
 import nl.ordina.jobcrawler.repo.LocationRepository;
 import nl.ordina.jobcrawler.service.DocumentService;
 import nl.ordina.jobcrawler.service.LogService;
@@ -19,8 +19,6 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.regex.Pattern;
 
@@ -86,26 +84,26 @@ public class JobBirdScraper extends VacancyScraper {
         return getVacancyURLs();
     }
 
-    protected List<Vacancy> retrieveVacancies(List<String> vacancyURLs) {
-        List<Vacancy> vacancies = new CopyOnWriteArrayList<>();
+    protected List<VacancyDTO> retrieveVacancies(List<String> vacancyURLs) {
+        List<VacancyDTO> vacancies = new CopyOnWriteArrayList<>();
 
         vacancyURLs.parallelStream().forEach(vacancyURL -> {
             Document doc = documentService.getDocument(vacancyURL);
             if (doc != null) {
-                Vacancy vacancy = Vacancy.builder()
+                VacancyDTO vacancyDTO = VacancyDTO.builder()
                         .vacancyURL(vacancyURL)
                         .title(getVacancyTitle(doc))
                         .hours(retrieveWorkHours(doc.select("div.card-body").text()))
                         .broker(getBroker())
-                        .locationString((String) getLocation(doc))
+                        .locationString(getLocation(doc))
                         .postingDate(getPublishDate(doc))
                         .about(getVacancyAbout(doc))
                         .company(getCompanyName(doc))
                         .build();
 
-                vacancies.add(vacancy);
+                vacancies.add(vacancyDTO);
 
-                log.info(String.format("%s - Vacancy found: %s", getBroker(), vacancy.getTitle()));
+                log.info(String.format("%s - Vacancy found: %s", getBroker(), vacancyDTO.getTitle()));
             }
         });
         log.info(String.format("%s -- Returning scraped vacancies", getBroker()));
@@ -120,7 +118,7 @@ public class JobBirdScraper extends VacancyScraper {
      * @return List with vacancies.
      */
     @Override
-    public List<Vacancy> getVacancies() {
+    public List<VacancyDTO> getVacancies() {
 
         List<String> vacancyURLs = retrieveURLs();
         return retrieveVacancies(vacancyURLs);

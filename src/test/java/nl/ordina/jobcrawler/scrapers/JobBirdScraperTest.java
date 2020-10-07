@@ -3,8 +3,10 @@ package nl.ordina.jobcrawler.scrapers;
 import lombok.extern.slf4j.Slf4j;
 import nl.ordina.jobcrawler.exception.HTMLStructureException;
 import nl.ordina.jobcrawler.model.Vacancy;
+import nl.ordina.jobcrawler.payload.VacancyDTO;
 import nl.ordina.jobcrawler.service.DocumentService;
 import nl.ordina.jobcrawler.service.LogService;
+import nl.ordina.jobcrawler.service.VacancyService;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -139,15 +141,15 @@ class JobBirdScraperTest extends UseLocalSavedFiles {
     @Test
     void setVacancySpecifics_happyFlow() throws IOException {
         Document doc = getDocFromUrl("JobBird/jobbird04_vacancyspecifics.htm");
-        Vacancy vacancy = new Vacancy();
-        vacancy.setHours(jobBirdScraperTestable.retrieveWorkHours(doc.select("div.card-body").text()));
-        vacancy.setLocationString(jobBirdScraperTestable.getLocation(doc));
-        vacancy.setPostingDate(jobBirdScraperTestable.getPublishDate(doc));
-        assertEquals("Apeldoorn", vacancy.getLocationString());
-        assertEquals(32, vacancy.getHours());
+        VacancyDTO vacancyDTO = new VacancyDTO();
+        vacancyDTO.setHours(jobBirdScraperTestable.retrieveWorkHours(doc.select("div.card-body").text()));
+        vacancyDTO.setLocationString(jobBirdScraperTestable.getLocation(doc));
+        vacancyDTO.setPostingDate(jobBirdScraperTestable.getPublishDate(doc));
+        assertEquals("Apeldoorn", vacancyDTO.getLocationString());
+        assertEquals(32, vacancyDTO.getHours());
         LocalDateTime expectedDate =
                 LocalDateTime.parse("2020-05-30 00:00", DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"));
-        assertEquals(expectedDate, vacancy.getPostingDate());
+        assertEquals(expectedDate, vacancyDTO.getPostingDate());
     }
 
 
@@ -156,12 +158,12 @@ class JobBirdScraperTest extends UseLocalSavedFiles {
     @Test
     void setVacancySpecifics_Missing() throws IOException {
         Document doc = getDocFromUrl("JobBird/jobbird04_vacancyspecifics_missing.htm");
-        Vacancy vacancy = new Vacancy();
-        vacancy.setHours(jobBirdScraperTestable.retrieveWorkHours(doc.select("div.card-body").text()));
-        vacancy.setLocationString(jobBirdScraperTestable.getLocation(doc));
-        vacancy.setPostingDate(jobBirdScraperTestable.getPublishDate(doc));
-        assertEquals("", vacancy.getLocationString());
-        assertNull(vacancy.getHours());
+        VacancyDTO vacancyDTO = new VacancyDTO();
+        vacancyDTO.setHours(jobBirdScraperTestable.retrieveWorkHours(doc.select("div.card-body").text()));
+        vacancyDTO.setLocationString(jobBirdScraperTestable.getLocation(doc));
+        vacancyDTO.setPostingDate(jobBirdScraperTestable.getPublishDate(doc));
+        assertEquals("", vacancyDTO.getLocationString());
+        assertNull(vacancyDTO.getHours());
     }
 
     @Test
@@ -245,14 +247,13 @@ class JobBirdScraperTest extends UseLocalSavedFiles {
         jobBirdScraperTestable.setDocumentService(documentServiceMock);
         when(documentServiceMock.getDocument(anyString())).thenReturn(doc);
 
-        List<Vacancy> vacancies = jobBirdScraperTestable.retrieveVacancies(urlList);
+        List<VacancyDTO> vacancyDTOs = jobBirdScraperTestable.retrieveVacancies(urlList);
+        List<Vacancy> vacancies = VacancyService.convertVacancyDTOs(vacancyDTOs);
         assertEquals(1, vacancies.size());
         Vacancy vacancy = vacancies.get(0);
 
         assertEquals("Applications Engineering - Software Engineering Internship (Fall 2020)",
                 vacancy.getTitle());
-
-
     }
 
     @Test
@@ -260,8 +261,7 @@ class JobBirdScraperTest extends UseLocalSavedFiles {
         Document doc = getDocFromUrl("JobBird/jobbirdvacatures.htm");
         jobBirdScraperTestable.setDocumentService(documentServiceMock);
         when(documentServiceMock.getDocument(anyString())).thenReturn(doc);
-        List<Vacancy> vacancies = jobBirdScraperTestable.retrieveVacancies(Collections.singletonList("dummy url"));
-        assertNotNull(vacancies.get(0).getPostingDate());
+        List<VacancyDTO> vacancyDTOs = jobBirdScraperTestable.retrieveVacancies(Collections.singletonList("dummy url"));
+        assertNotNull(vacancyDTOs.get(0).getPostingDate());
     }
-
 }

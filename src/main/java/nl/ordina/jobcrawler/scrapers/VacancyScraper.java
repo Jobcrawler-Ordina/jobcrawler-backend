@@ -1,12 +1,12 @@
 package nl.ordina.jobcrawler.scrapers;
 
 import nl.ordina.jobcrawler.model.Vacancy;
+import nl.ordina.jobcrawler.payload.VacancyDTO;
 import nl.ordina.jobcrawler.repo.LocationRepository;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 
 import java.io.IOException;
-import java.text.ParseException;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -121,6 +121,6 @@ public abstract class VacancyScraper {
      *
      * @return List of vacancies
      */
-    abstract public List<Vacancy> getVacancies();
+    abstract public List<VacancyDTO> getVacancies();
 
 }

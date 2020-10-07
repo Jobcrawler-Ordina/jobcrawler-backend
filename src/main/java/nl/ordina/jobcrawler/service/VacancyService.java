@@ -3,18 +3,19 @@ package nl.ordina.jobcrawler.service;
 import lombok.extern.slf4j.Slf4j;
 import nl.ordina.jobcrawler.exception.VacancyURLMalformedException;
 import nl.ordina.jobcrawler.model.Vacancy;
+import nl.ordina.jobcrawler.payload.VacancyDTO;
 import nl.ordina.jobcrawler.repo.VacancyRepository;
+import org.jsoup.Jsoup;
+import org.jsoup.safety.Whitelist;
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import javax.persistence.EntityManager;
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Predicate;
-import javax.persistence.criteria.Root;
-import java.util.*;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import static nl.ordina.jobcrawler.repo.VacancySpecifications.findBySkill;
@@ -137,5 +138,29 @@ public class VacancyService {
      */
     public Optional<Vacancy> findByURL(String url) {
         return vacancyRepository.findByVacancyURLEquals(url);
+    }
+
+    public static List<Vacancy> convertVacancyDTOs(List<VacancyDTO> vacancyDTOs) {
+        List<Vacancy> vacancies = new CopyOnWriteArrayList<>();
+        Vacancy vacancy;
+        for(VacancyDTO vacancyDTO : vacancyDTOs) {
+            vacancy = convertVacancyDTO(vacancyDTO);
+            vacancies.add(vacancy);
+        }
+        return vacancies;
+    }
+
+    public static Vacancy convertVacancyDTO(VacancyDTO vacancyDTO) {
+        return Vacancy.builder()
+                .vacancyURL(vacancyDTO.getVacancyURL())
+                .title(vacancyDTO.getTitle())
+                .broker(vacancyDTO.getBroker())
+                .vacancyNumber(vacancyDTO.getVacancyNumber())
+                .hours(vacancyDTO.getHours())
+                .salary(vacancyDTO.getSalary())
+                .postingDate(vacancyDTO.getPostingDate())
+                .about(vacancyDTO.getAbout())
+                .company(vacancyDTO.getCompany())
+                .build();
     }
 }

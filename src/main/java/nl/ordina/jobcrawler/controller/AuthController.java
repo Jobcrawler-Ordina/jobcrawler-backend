@@ -2,14 +2,14 @@ package nl.ordina.jobcrawler.controller;
 
 import nl.ordina.jobcrawler.exception.RoleNotFoundException;
 import nl.ordina.jobcrawler.exception.UserNotFoundException;
-import nl.ordina.jobcrawler.payload.JwtResponse;
 import nl.ordina.jobcrawler.model.Role;
-import nl.ordina.jobcrawler.util.RoleName;
 import nl.ordina.jobcrawler.model.User;
+import nl.ordina.jobcrawler.payload.JwtResponse;
 import nl.ordina.jobcrawler.payload.UserRequest;
 import nl.ordina.jobcrawler.security.jwt.JwtProvider;
 import nl.ordina.jobcrawler.service.RoleService;
 import nl.ordina.jobcrawler.service.UserService;
+import nl.ordina.jobcrawler.util.RoleName;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -20,22 +20,10 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 /**
  * This class handles the authentication for users signing in.

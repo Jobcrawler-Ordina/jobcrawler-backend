@@ -1,19 +1,15 @@
 package nl.ordina.jobcrawler.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 import org.hibernate.annotations.GenericGenerator;
-import org.hibernate.collection.internal.PersistentBag;
 
-import javax.persistence.*;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
 import java.util.UUID;
-import java.util.concurrent.CopyOnWriteArrayList;
 
 @Getter
 @ToString
@@ -29,7 +25,6 @@ public class Location {
     private String locationName;
     private double lon;
     private double lat;
-    private double distance;
 
 /*    @OneToMany(mappedBy = "location", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
     @JsonIgnore

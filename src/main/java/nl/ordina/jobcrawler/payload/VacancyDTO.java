@@ -1,9 +1,11 @@
-package nl.ordina.jobcrawler.model;
+package nl.ordina.jobcrawler.payload;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.*;
 import nl.ordina.jobcrawler.exception.VacancyURLMalformedException;
+import nl.ordina.jobcrawler.model.Location;
+import nl.ordina.jobcrawler.model.Skill;
 import org.hibernate.annotations.GenericGenerator;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -24,8 +26,7 @@ import java.util.UUID;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@Entity
-public class Vacancy {
+public class VacancyDTO {
     /* this class will be saved in a table called vacancy
      *   a linking table called vacancy_skills will contain vacancy ID's and their corresponding skill ID's
      * */
@@ -39,6 +40,7 @@ public class Vacancy {
     private String title;
     private String broker;
     private String vacancyNumber;
+    private String locationString;
     private Integer hours;
     private String salary;
     @JsonFormat(timezone = "Europe/Amsterdam", pattern = "yyyy-MM-dd HH:mm:ss")
@@ -46,18 +48,6 @@ public class Vacancy {
     @Column(columnDefinition = "TEXT")
     private String about;
     private String company;
-
-    @ManyToMany
-    @JoinTable(
-            name = "vacancy_skills",
-            joinColumns = @JoinColumn(name = "vacancy_id"),
-            inverseJoinColumns = @JoinColumn(name = "skill_id"))
-    @JsonIgnore
-    Set<Skill> skills;  //a set is a collection that has no duplicates
-
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "location_id")
-    Location location;
 
     public boolean hasValidURL() {
         if (!this.vacancyURL.startsWith("http"))
@@ -109,16 +99,12 @@ public class Vacancy {
                 ", title='" + title + '\'' +
                 ", broker='" + broker + '\'' +
                 ", vacancyNumber='" + vacancyNumber + '\'' +
+                ", locationString='" + locationString + '\'' +
                 ", hours='" + hours + '\'' +
                 ", salary='" + salary + '\'' +
                 ", postingDate='" + postingDate + '\'' +
                 ", about='" + about + '\'' +
-                ", company='" + company + '\'' +
-                ", skills=" + skills +
-                ", location_filled=" + !(location==null);
-            if(!(location==null)) {
-                message = message + ", location_name=" + location.getLocationName();
-            }
+                ", company='" + company + '\'';
             message = message + '}';
             return message;
     }

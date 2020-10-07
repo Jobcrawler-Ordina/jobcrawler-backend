@@ -56,7 +56,7 @@ public class Vacancy {
     @JsonIgnore
     Set<Skill> skills;  //a set is a collection that has no duplicates
 
-    @ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "location_id")
     Location location;
 

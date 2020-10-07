@@ -1,9 +1,8 @@
 package nl.ordina.jobcrawler.scrapers;
 
 import lombok.extern.slf4j.Slf4j;
-import nl.ordina.jobcrawler.model.Location;
 import nl.ordina.jobcrawler.model.Vacancy;
-import nl.ordina.jobcrawler.repo.LocationRepository;
+import nl.ordina.jobcrawler.payload.VacancyDTO;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -18,7 +17,10 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.FormatStyle;
-import java.util.*;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.regex.Pattern;
 
@@ -49,9 +51,9 @@ public class YachtVacancyScraper extends VacancyScraper {
      */
 
     @Override
-    public List<Vacancy> getVacancies() {
+    public List<VacancyDTO> getVacancies() {
         log.info(String.format("%s -- Start scraping", getBroker().toUpperCase()));
-        List<Vacancy> vacancies = new CopyOnWriteArrayList<>();
+        List<VacancyDTO> vacancyDTOs = new CopyOnWriteArrayList<>();
 
         int totalnumberOfPages = 1;
         for (int pageNumber = 1; pageNumber <= totalnumberOfPages; pageNumber++) {
@@ -70,7 +72,7 @@ public class YachtVacancyScraper extends VacancyScraper {
                 vacancyURL = vacancyURL.contains("?") ? vacancyURL.split("\\?")[0] : vacancyURL;
                 vacancyURL = vacancyURL.contains("http") ? vacancyURL : VACANCY_URL_PREFIX + vacancyURL;
                 Document vacancyDoc = getDocument(vacancyURL);
-                Vacancy vacancy = Vacancy.builder()
+                VacancyDTO vacancyDTO = VacancyDTO.builder()
                         .vacancyURL(vacancyURL)
                         .title((String) vacancyData.get("title"))
                         .hours(getHours((String) vacancyMetaData.get("hours")))
@@ -83,13 +85,13 @@ public class YachtVacancyScraper extends VacancyScraper {
                         .company((String) vacancyData.get("company"))
                         .build();
 
-                vacancies.add(vacancy);
-                log.info(String.format("%s - Vacancy found: %s", getBroker(), vacancy.getTitle()));
+                vacancyDTOs.add(vacancyDTO);
+                log.info(String.format("%s - Vacancy found: %s", getBroker(), vacancyDTO.getTitle()));
             });
 
         }
         log.info(String.format("%s -- Returning scraped vacancies", getBroker()));
-        return vacancies;
+        return vacancyDTOs;
     }
 
     /**

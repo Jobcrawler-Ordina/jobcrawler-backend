@@ -2,7 +2,6 @@ package nl.ordina.jobcrawler.service;
 
 import lombok.extern.slf4j.Slf4j;
 import nl.ordina.jobcrawler.model.Location;
-
 import nl.ordina.jobcrawler.model.Vacancy;
 import nl.ordina.jobcrawler.repo.LocationRepository;
 import org.json.JSONException;

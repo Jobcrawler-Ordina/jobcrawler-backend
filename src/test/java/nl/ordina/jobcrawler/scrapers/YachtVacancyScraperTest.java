@@ -2,6 +2,7 @@ package nl.ordina.jobcrawler.scrapers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import nl.ordina.jobcrawler.model.Vacancy;
+import nl.ordina.jobcrawler.payload.VacancyDTO;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -49,12 +50,12 @@ class YachtVacancyScraperTest extends UseLocalSavedFiles {
     @Test
     void test_getVacancies() {
         when(restTemplateMock.getForEntity(anyString(), any(Class.class))).thenReturn(jsonResponse);
-        List<Vacancy> vacancyList = yachtVacancyScraper.getVacancies();
-        assertEquals(2, vacancyList.size());
-        assertTrue("Moerdijk".equals(vacancyList.get(0).getLocationString()) || "Moerdijk"
-                .equals(vacancyList.get(1).getLocationString()));
-        assertTrue(vacancyList.get(0).getVacancyURL().contains("github"));
-        assertNotNull(vacancyList.get(0).getPostingDate());
+        List<VacancyDTO> vacancyDTOList = yachtVacancyScraper.getVacancies();
+        assertEquals(2, vacancyDTOList.size());
+        assertTrue("Moerdijk".equals(vacancyDTOList.get(0).getLocationString()) || "Moerdijk"
+                .equals(vacancyDTOList.get(1).getLocationString()));
+        assertTrue(vacancyDTOList.get(0).getVacancyURL().contains("github"));
+        assertNotNull(vacancyDTOList.get(0).getPostingDate());
 
         verify(restTemplateMock, times(1)).getForEntity(anyString(), any(Class.class));
     }
@@ -65,7 +66,7 @@ class YachtVacancyScraperTest extends UseLocalSavedFiles {
 
         // Calling the getVacancies() method causes a NullPointerException as the returned data gives an empty json response.
         Assertions.assertThrows(NullPointerException.class, () -> {
-            List<Vacancy> vacancyList = yachtVacancyScraper.getVacancies();
+            List<VacancyDTO> vacancyDTOList = yachtVacancyScraper.getVacancies();
         });
 
         verify(restTemplateMock, times(1)).getForEntity(anyString(), any(Class.class));
