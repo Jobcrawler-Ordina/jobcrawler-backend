@@ -1,8 +1,12 @@
 package nl.ordina.jobcrawler.service;
 
+import lombok.extern.slf4j.Slf4j;
 import nl.ordina.jobcrawler.exception.VacancyURLMalformedException;
 import nl.ordina.jobcrawler.model.Vacancy;
+import nl.ordina.jobcrawler.payload.VacancyDTO;
 import nl.ordina.jobcrawler.repo.VacancyRepository;
+import org.jsoup.Jsoup;
+import org.jsoup.safety.Whitelist;
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -12,11 +16,12 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import static nl.ordina.jobcrawler.repo.VacancySpecifications.findBySkill;
 import static nl.ordina.jobcrawler.repo.VacancySpecifications.findByValue;
 
-
+@Slf4j
 @Service
 public class VacancyService {
 
@@ -39,7 +44,14 @@ public class VacancyService {
     public List<Vacancy> findAll() {
         return vacancyRepository.findAll();
     }
-
+    public CopyOnWriteArrayList<Vacancy> findByLocationid(UUID id) {
+        List<Vacancy> vacanciesList = vacancyRepository.findByLocation_Id(id);
+        CopyOnWriteArrayList<Vacancy> vacanciesList2 = new CopyOnWriteArrayList<>();
+        for(Vacancy vacancy: vacanciesList) {
+            vacanciesList2.add(vacancy);
+        }
+        return vacanciesList2;
+    }
 
     /**
      * Returns all vacancies in the database using pagination.
@@ -88,7 +100,9 @@ public class VacancyService {
         } else {
             throw new VacancyURLMalformedException(vacancy.getVacancyURL());
         }
-
+    }
+    public void saveAll(List<Vacancy> vacancies) {
+        vacancyRepository.saveAll(vacancies);
     }
 
 
@@ -108,7 +122,13 @@ public class VacancyService {
         }
 
     }
-
+    public void deleteAll(List<Vacancy> vacancies) {
+        UUID id;
+        for(Vacancy vacancy : vacancies) {
+            id = vacancy.getId();
+            delete(id);
+        }
+    }
 
     /**
      * Returns the vacancy with the specified url.
@@ -118,5 +138,29 @@ public class VacancyService {
      */
     public Optional<Vacancy> findByURL(String url) {
         return vacancyRepository.findByVacancyURLEquals(url);
+    }
+
+    public static List<Vacancy> convertVacancyDTOs(List<VacancyDTO> vacancyDTOs) {
+        List<Vacancy> vacancies = new CopyOnWriteArrayList<>();
+        Vacancy vacancy;
+        for(VacancyDTO vacancyDTO : vacancyDTOs) {
+            vacancy = convertVacancyDTO(vacancyDTO);
+            vacancies.add(vacancy);
+        }
+        return vacancies;
+    }
+
+    public static Vacancy convertVacancyDTO(VacancyDTO vacancyDTO) {
+        return Vacancy.builder()
+                .vacancyURL(vacancyDTO.getVacancyURL())
+                .title(vacancyDTO.getTitle())
+                .broker(vacancyDTO.getBroker())
+                .vacancyNumber(vacancyDTO.getVacancyNumber())
+                .hours(vacancyDTO.getHours())
+                .salary(vacancyDTO.getSalary())
+                .postingDate(vacancyDTO.getPostingDate())
+                .about(vacancyDTO.getAbout())
+                .company(vacancyDTO.getCompany())
+                .build();
     }
 }

@@ -1,7 +1,6 @@
 package nl.ordina.jobcrawler.security.services;
 
 import nl.ordina.jobcrawler.model.User;
-import nl.ordina.jobcrawler.repo.UserRepository;
 import nl.ordina.jobcrawler.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;

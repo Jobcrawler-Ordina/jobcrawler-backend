@@ -1,18 +1,28 @@
 package nl.ordina.jobcrawler.repo;
 
+import nl.ordina.jobcrawler.model.Location;
 import nl.ordina.jobcrawler.model.Skill;
 import nl.ordina.jobcrawler.model.Vacancy;
+import nl.ordina.jobcrawler.service.LocationService;
+import org.json.JSONException;
+import org.jsoup.Jsoup;
+import org.jsoup.safety.Whitelist;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.internal.util.collections.Sets;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.dao.IncorrectResultSizeDataAccessException;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import static nl.ordina.jobcrawler.repo.VacancySpecifications.findBySkill;
 import static nl.ordina.jobcrawler.repo.VacancySpecifications.findByValue;
@@ -37,9 +47,12 @@ class PersistenceTests {
     @Autowired
     private SkillRepository skillRepository;
 
+    @Autowired
+    private LocationRepository locationRepository;
+
     @Test
     void testRepoFindById() {
-        String sUuid = "9b54311a-2f29-4e62-8374-937c204da36e";
+        String sUuid = "e547d370-e5c2-4ed4-8f08-43d5a8f8d355";
         assertEquals(sUuid, vacancyRepository.findById(UUID.fromString(sUuid)).orElse(new Vacancy()).getId().toString());
     }
 
@@ -48,7 +61,7 @@ class PersistenceTests {
         Pageable paging = PageRequest.of(1, 10);
         assertEquals(9, vacancyRepository.findAll(findBySkill(Sets.newSet("JAVA")), paging).getTotalElements());
         assertEquals(19, vacancyRepository.findAll(findBySkill(Sets.newSet("Maven")), paging).getTotalElements());
-        assertEquals(27, vacancyRepository.findAll(findBySkill(Sets.newSet("Angular")), paging).getTotalElements());
+        assertEquals(32, vacancyRepository.findAll(findBySkill(Sets.newSet("Angular")), paging).getTotalElements());
         assertEquals(4, vacancyRepository.findAll(findBySkill(Sets.newSet("Maven", "Angular")), paging)
                 .getTotalElements());
 
@@ -63,7 +76,7 @@ class PersistenceTests {
     @Test
     void testFindByValue() {
         Pageable paging = PageRequest.of(1, 10);
-        assertEquals(94, vacancyRepository.findAll(findByValue("test"), paging).getTotalElements());
+        assertEquals(104, vacancyRepository.findAll(findByValue("test"), paging).getTotalElements());
     }
 
 }

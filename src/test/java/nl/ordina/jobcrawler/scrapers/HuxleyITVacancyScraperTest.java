@@ -2,6 +2,7 @@ package nl.ordina.jobcrawler.scrapers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import nl.ordina.jobcrawler.model.Vacancy;
+import nl.ordina.jobcrawler.payload.VacancyDTO;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -51,10 +52,10 @@ class HuxleyITVacancyScraperTest extends UseLocalSavedFiles {
     void test_getVacancies() {
         when(restTemplateMock.postForEntity(anyString(), any(), any(Class.class)))
                 .thenReturn(jsonResponse);
-        List<Vacancy> vacancyList = huxleyITVacancyScraper.getVacancies();
-        assertEquals(4, vacancyList.size());
-        assertEquals("Security Architect", vacancyList.get(0).getTitle());
-        vacancyList.forEach(v -> assertNotNull(v.getPostingDate()));
+        List<VacancyDTO> vacancyDTOList = huxleyITVacancyScraper.getVacancies();
+        assertEquals(4, vacancyDTOList.size());
+        assertEquals("Security Architect", vacancyDTOList.get(0).getTitle());
+        vacancyDTOList.forEach(v -> assertNotNull(v.getPostingDate()));
     }
 
 }

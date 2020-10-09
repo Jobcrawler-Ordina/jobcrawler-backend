@@ -39,7 +39,7 @@ public class Vacancy {
     private String broker;
     private String vacancyNumber;
     private Integer hours;
-    private String location;
+    private String locationString;
     private String salary;
     @JsonFormat(timezone = "Europe/Amsterdam", pattern = "yyyy-MM-dd HH:mm:ss")
     @CreatedDate
@@ -55,6 +55,10 @@ public class Vacancy {
             inverseJoinColumns = @JoinColumn(name = "skill_id"))
     @JsonIgnore
     Set<Skill> skills;  //a set is a collection that has no duplicates
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "location_id")
+    Location location;
 
     public boolean hasValidURL() {
         if (!this.vacancyURL.startsWith("http"))
@@ -83,20 +87,4 @@ public class Vacancy {
         }
     }
 
-    @Override
-    public String toString() {
-        String newLine = "\n";
-        return new StringBuilder()
-                .append(vacancyURL).append(newLine)
-                .append(title).append(newLine)
-                .append(broker).append(newLine)
-                .append(vacancyNumber).append(newLine)
-                .append(hours).append(newLine)
-                .append(location).append(newLine)
-                .append(postingDate).append(newLine)
-                .append(about).append(newLine)
-                .append(skills.toString()).append(newLine).append(newLine)
-                .append("*****************************************").toString();
-
-    }
 }

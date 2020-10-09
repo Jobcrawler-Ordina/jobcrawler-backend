@@ -24,8 +24,8 @@ public class VacancyModelAssembler implements RepresentationModelAssembler<Vacan
     @Override
     public EntityModel<Vacancy> toModel(Vacancy vacancy) {
         return EntityModel.of(vacancy,
-                linkTo(methodOn(VacancyController.class).getVacancy(vacancy.getId())).withSelfRel(),
-                linkTo(methodOn(VacancyController.class).getVacancies()).withRel("vacancies")
+                linkTo(methodOn(VacancyController.class).getVacancy(vacancy.getId())).withSelfRel()/*,
+                linkTo(methodOn(VacancyController.class).getVacancies()).withRel("vacancies")*/
         );
     }
 

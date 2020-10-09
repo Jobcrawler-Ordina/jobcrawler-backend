@@ -1,16 +1,19 @@
 package nl.ordina.jobcrawler.service;
 
 import lombok.extern.slf4j.Slf4j;
+import nl.ordina.jobcrawler.model.Location;
 import nl.ordina.jobcrawler.model.Skill;
 import nl.ordina.jobcrawler.model.Vacancy;
+import nl.ordina.jobcrawler.payload.VacancyDTO;
 import nl.ordina.jobcrawler.scrapers.HuxleyITVacancyScraper;
 import nl.ordina.jobcrawler.scrapers.JobBirdScraper;
 import nl.ordina.jobcrawler.scrapers.YachtVacancyScraper;
 import org.springframework.dao.IncorrectResultSizeDataAccessException;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import javax.transaction.Transactional;
+import javax.annotation.PostConstruct;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -26,19 +29,18 @@ Upon fetching the vacancies it runs a check to verify if the vacancy is already 
 @Service
 public class ScraperService {
 
-
     private final VacancyService vacancyService;
+    private final LocationService locationService;
+    private final SkillMatcherService skillMatcherService;
     private final YachtVacancyScraper yachtVacancyScraper;
     private final HuxleyITVacancyScraper huxleyITVacancyScraper;
     private final JobBirdScraper jobBirdScraper;
 
-    private final SkillMatcherService skillMatcherService;
-
-
-    public ScraperService(VacancyService vacancyService, SkillMatcherService skillMatcherService,
+    public ScraperService(VacancyService vacancyService, LocationService locationService, SkillMatcherService skillMatcherService,
                           YachtVacancyScraper yachtVacancyScraper, HuxleyITVacancyScraper huxleyITVacancyScraper,
                           JobBirdScraper jobBirdScraper) {
         this.vacancyService = vacancyService;
+        this.locationService = locationService;
         this.skillMatcherService = skillMatcherService;
         this.yachtVacancyScraper = yachtVacancyScraper;
         this.huxleyITVacancyScraper = huxleyITVacancyScraper;
@@ -46,22 +48,60 @@ public class ScraperService {
     }
 
     //@PostConstruct
-    @Scheduled(cron = "0 0 12,18 * * *")
+    //@Scheduled(cron = "0 0 12,18 * * *")
     // Runs two times a day. At 12pm and 6pm
+    @Transactional
     public void scrape() {
         log.info("CRON Scheduled -- Scrape vacancies");
-        List<Vacancy> allVacancies = startScraping();
+
+        List<VacancyDTO> allVacancyDTOs = startScraping();
+        Vacancy vacancy = new Vacancy();
         int existVacancy = 0;
         int newVacancy = 0;
-        for (Vacancy vacancy : allVacancies) {
+
+        for (VacancyDTO vacancyDTO : allVacancyDTOs) {
             try {
-                Optional<Vacancy> existCheck = vacancyService.findByURL(vacancy.getVacancyURL());
+                Optional<Vacancy> existCheck = vacancyService.findByURL(vacancyDTO.getVacancyURL());
                 if (existCheck.isPresent()) {
                     existVacancy++;
                 } else {
-                    Set<Skill> skills = skillMatcherService.findMatchingSkills(vacancy);
-                    vacancy.setSkills(skills);
-                    vacancyService.save(vacancy);
+                    vacancy = Vacancy.builder()
+                            .vacancyURL(vacancyDTO.getVacancyURL())
+                            .title(vacancyDTO.getTitle())
+                            .broker(vacancyDTO.getBroker())
+                            .vacancyNumber(vacancyDTO.getVacancyNumber())
+                            .hours(vacancyDTO.getHours())
+                            .salary(vacancyDTO.getSalary())
+                            .postingDate(vacancyDTO.getPostingDate())
+                            .about(vacancyDTO.getAbout())
+                            .company(vacancyDTO.getCompany())
+                            .build();
+                    String vacancyLocation = vacancyDTO.getLocationString();
+                    if(vacancyLocation.endsWith(", Nederland")) {vacancyLocation = vacancyLocation.substring(0,vacancyLocation.length()-11);}
+                    if(vacancyLocation.endsWith(", Netherlands")) {vacancyLocation = vacancyLocation.substring(0,vacancyLocation.length()-13);}
+                    if(vacancyLocation.endsWith(", the Netherlands")) {vacancyLocation = vacancyLocation.substring(0,vacancyLocation.length()-16);}
+                    if(vacancyLocation.equals("'s-Hertogenbosch")) {vacancyLocation = "Den Bosch";}
+                    if (vacancyLocation!="") {
+                        Optional<Location> existCheckLocation = locationService.findByLocationName(vacancyLocation);
+                        if (!existCheckLocation.isPresent()) {
+                            Location location = LocationService.getCoordinates(vacancyLocation);
+                            locationService.save(location);
+                            vacancy.setLocation(location);
+                            Set<Skill> skills = skillMatcherService.findMatchingSkills(vacancy);
+                            vacancy.setSkills(skills);
+                            vacancyService.save(vacancy);
+                        } else {
+                            Location location = existCheckLocation.get();
+                            vacancy.setLocation(location);
+                            Set<Skill> skills = skillMatcherService.findMatchingSkills(vacancy);
+                            vacancy.setSkills(skills);
+                            vacancyService.save(vacancy);
+                        }
+                    } else {
+                        Set<Skill> skills = skillMatcherService.findMatchingSkills(vacancy);
+                        vacancy.setSkills(skills);
+                        vacancyService.save(vacancy);
+                    }
                     newVacancy++;
                 }
             } catch (IncorrectResultSizeDataAccessException ie) {
@@ -73,11 +113,10 @@ public class ScraperService {
         log.info(newVacancy + " new vacancies added.");
         log.info(existVacancy + " existing vacancies found.");
         log.info("Finished scraping");
-        allVacancies.clear();
+        allVacancyDTOs.clear();
     }
 
-    @Scheduled(cron = "0 30 11,17 * * *")
-    // Runs two times a day. At 11.30am and 5.30pm.
+    @Scheduled(cron = "0 30 11,17 * * *") // Runs two times a day. At 11.30am and 5.30pm.
     public void deleteNonExistingVacancies() {
         log.info("CRON Scheduled -- Started deleting non-existing jobs");
         // Change this to find all with invalid url eg non-existing job
@@ -92,11 +131,12 @@ public class ScraperService {
         log.info("Finished deleting non-existing jobs");
     }
 
-    private List<Vacancy> startScraping() {
-        List<Vacancy> vacanciesList = new CopyOnWriteArrayList<>();
+    private List<VacancyDTO> startScraping() {
+        List<VacancyDTO> vacancyDTOsList = new CopyOnWriteArrayList<>();
         Arrays.asList(yachtVacancyScraper, huxleyITVacancyScraper, jobBirdScraper)
-                .parallelStream().forEach(vacancyScraper -> vacanciesList
+                .parallelStream().forEach(vacancyScraper -> vacancyDTOsList
                 .addAll(vacancyScraper.getVacancies()));
-        return vacanciesList;
+        return vacancyDTOsList;
     }
+
 }

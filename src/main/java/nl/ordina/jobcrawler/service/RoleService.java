@@ -2,8 +2,8 @@ package nl.ordina.jobcrawler.service;
 
 import nl.ordina.jobcrawler.exception.RoleNotFoundException;
 import nl.ordina.jobcrawler.model.Role;
-import nl.ordina.jobcrawler.util.RoleName;
 import nl.ordina.jobcrawler.repo.RoleRepository;
+import nl.ordina.jobcrawler.util.RoleName;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.stereotype.Service;

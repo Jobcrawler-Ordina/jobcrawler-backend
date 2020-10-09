@@ -1,11 +1,11 @@
 package nl.ordina.jobcrawler.controller;
 
-import nl.ordina.jobcrawler.payload.SearchResult;
 import nl.ordina.jobcrawler.exception.VacancyNotFoundException;
 import nl.ordina.jobcrawler.model.Skill;
 import nl.ordina.jobcrawler.model.Vacancy;
 import nl.ordina.jobcrawler.model.assembler.SkillModelAssembler;
 import nl.ordina.jobcrawler.model.assembler.VacancyModelAssembler;
+import nl.ordina.jobcrawler.payload.SearchResult;
 import nl.ordina.jobcrawler.service.VacancyService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
