@@ -1,6 +1,5 @@
 package nl.ordina.jobcrawler.service;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.extern.slf4j.Slf4j;
 import nl.ordina.jobcrawler.model.Location;
 import nl.ordina.jobcrawler.model.Skill;
@@ -9,16 +8,12 @@ import nl.ordina.jobcrawler.payload.VacancyDTO;
 import nl.ordina.jobcrawler.scrapers.HuxleyITVacancyScraper;
 import nl.ordina.jobcrawler.scrapers.JobBirdScraper;
 import nl.ordina.jobcrawler.scrapers.YachtVacancyScraper;
-import org.json.JSONException;
 import org.springframework.dao.IncorrectResultSizeDataAccessException;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.PostConstruct;
-import javax.persistence.Column;
-import java.io.IOException;
-import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;

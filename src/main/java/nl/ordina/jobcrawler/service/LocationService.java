@@ -57,14 +57,10 @@ public class LocationService {
         //add request header
         connection.setRequestProperty("User-Agent", "Mozilla/5.0");
         if (connection.getResponseCode() == 200) {
-/*            System.out.println("\nSending 'GET' request to URL : " + url);
-            System.out.println("Response Code : " + connection.getResponseCode());*/
-            BufferedReader in = new BufferedReader(
-                    new InputStreamReader(connection.getInputStream()));
-            String inputLine;
+            BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
             String response = in.readLine();
             response = response.substring(1, response.length() - 1);
-            System.out.println(response);
+            log.debug(response);
             in.close();
             //Read JSON response and return
             JSONObject jsonResponse = new JSONObject(response);
@@ -76,18 +72,13 @@ public class LocationService {
     }
 
     public static double getDistanceFromHome(Location homeLocation, Location vacancyLocation) {
-        double lon1 = homeLocation.getLon();
-        double lat1 = homeLocation.getLat();
-        double lon2 = vacancyLocation.getLon();
-        double lat2 = vacancyLocation.getLat();
-        System.out.println(Math.sqrt(Math.pow((lon2 - lon1), 2) + Math.pow((lat2 - lat1), 2)) * 100);
-        // The math module contains a function
-        // named toRadians which converts from
-        // degrees to radians.
-        lon1 = Math.toRadians(lon1);
-        lon2 = Math.toRadians(lon2);
-        lat1 = Math.toRadians(lat1);
-        lat2 = Math.toRadians(lat2);
+
+        // Convert degrees to radians
+        double lon1 = Math.toRadians(homeLocation.getLon());
+        double lat1 = Math.toRadians(homeLocation.getLat());
+        double lon2 = Math.toRadians(vacancyLocation.getLon());
+        double lat2 = Math.toRadians(vacancyLocation.getLat());
+
         // Haversine formula
         double dlon = lon2 - lon1;
         double dlat = lat2 - lat1;
@@ -103,10 +94,6 @@ public class LocationService {
 
     public List<Location> findAll() {
         return locationRepository.findAll();
-    }
-
-    public Location update(UUID uuid, Location location) {
-        return null;
     }
 
     public Location save(Location location) {
