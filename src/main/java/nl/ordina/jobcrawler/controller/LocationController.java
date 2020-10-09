@@ -7,8 +7,11 @@ import nl.ordina.jobcrawler.service.LocationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.EntityModel;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -47,10 +50,9 @@ public class LocationController {
         return locationModelAssembler.toModel(location);
     }
 
-    public CollectionModel<EntityModel<Location>> getLocations() {
-
-        return locationModelAssembler.toCollectionModel(locationService.findAll());
-
+    @GetMapping
+    public ResponseEntity<List<Location>> getLocations() {
+        return new ResponseEntity<>(locationService.findAll(), HttpStatus.OK);
     }
 
 

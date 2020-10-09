@@ -117,7 +117,7 @@ public class Vacancy {
                 ", skills=" + skills +
                 ", location_filled=" + !(location==null);
             if(!(location==null)) {
-                message = message + ", location_name=" + location.getLocationName();
+                message = message + ", location_name=" + location.getName();
             }
             message = message + '}';
             return message;

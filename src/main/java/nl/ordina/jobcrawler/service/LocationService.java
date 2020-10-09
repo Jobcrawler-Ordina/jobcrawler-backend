@@ -31,12 +31,12 @@ public class LocationService {
         return locationRepository.findById(id);
     }
 
-    public Optional<Location> findByLocationName(String locationName) {return locationRepository.findByLocationName(locationName); }
+    public Optional<Location> findByLocationName(String locationName) {return locationRepository.findByName(locationName); }
 
     public Optional<Location> findByLocationNameInVacancyList(String locationName, List<Vacancy> allVacancies) {
         for(Vacancy vacancy : allVacancies) {
             if(!(vacancy.getLocation()==null)) {
-                if (vacancy.getLocation().getLocationName().equals(locationName)) {
+                if (vacancy.getLocation().getName().equals(locationName)) {
                     return Optional.of(vacancy.getLocation());
                 }
             }

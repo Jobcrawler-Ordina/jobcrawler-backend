@@ -22,7 +22,7 @@ public class Location {
     @GeneratedValue(generator = "UUID")
     @GenericGenerator(name = "UUID", strategy = "org.hibernate.id.UUIDGenerator")
     private UUID id;
-    private String locationName;
+    private String name;
     private double lon;
     private double lat;
 
@@ -31,11 +31,11 @@ public class Location {
     List<Vacancy> vacancies;*/
 
     public Location(String locationName) {
-        this.locationName = locationName;
+        this.name = name;
     }
 
     public Location(String locationName, double lon, double lat) {
-        this.locationName = locationName;
+        this.name = name;
         this.lon = lon;
         this.lat = lat;
     }
