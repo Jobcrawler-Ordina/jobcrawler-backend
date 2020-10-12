@@ -44,4 +44,13 @@ public final class VacancySpecifications {
         };
     }
 
+    public static Specification<Vacancy> findByLocName(final String loc) {
+        return (root, query, cb) -> {
+            List<Predicate> allPredicates = new ArrayList<>();
+            allPredicates.add(cb.like(cb.lower(root.get("location").get("name")), String.format(LIKE_QUERY_FORMAT, loc.toLowerCase())));
+
+            return cb.or(allPredicates.toArray(new Predicate[0]));
+        };
+    }
+
 }

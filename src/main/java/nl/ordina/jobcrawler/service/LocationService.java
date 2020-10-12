@@ -2,6 +2,7 @@ package nl.ordina.jobcrawler.service;
 
 import lombok.extern.slf4j.Slf4j;
 import nl.ordina.jobcrawler.model.Location;
+import nl.ordina.jobcrawler.model.Skill;
 import nl.ordina.jobcrawler.model.Vacancy;
 import nl.ordina.jobcrawler.repo.LocationRepository;
 import org.json.JSONException;
@@ -25,6 +26,10 @@ public class LocationService {
 
     public LocationService(LocationRepository locationRepository) {
         this.locationRepository = locationRepository;
+    }
+
+    public List<Location> findByOrderByNameAsc() {
+        return locationRepository.findByOrderByNameAsc();
     }
 
     public Optional<Location> findById(UUID id) {

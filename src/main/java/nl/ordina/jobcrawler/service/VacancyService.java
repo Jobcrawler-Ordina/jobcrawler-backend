@@ -20,6 +20,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 import static nl.ordina.jobcrawler.repo.VacancySpecifications.findBySkill;
 import static nl.ordina.jobcrawler.repo.VacancySpecifications.findByValue;
+import static nl.ordina.jobcrawler.repo.VacancySpecifications.findByLocName;
 
 @Slf4j
 @Service
@@ -51,6 +52,10 @@ public class VacancyService {
             vacanciesList2.add(vacancy);
         }
         return vacanciesList2;
+    }
+
+    public Page<Vacancy> findByLocationName(String loc, Pageable paging) {
+        return vacancyRepository.findAll(findByLocName(loc), paging);
     }
 
     /**
