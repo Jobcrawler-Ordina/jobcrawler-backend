@@ -59,6 +59,10 @@ public class Vacancy {
     @JoinColumn(name = "location_id")
     Location location;
 
+    public boolean hasLocation() {
+        return this.location != null;
+    }
+
     public boolean hasValidURL() {
         if (!this.vacancyURL.startsWith("http"))
             this.vacancyURL = "https://" + this.vacancyURL; //adding the protocol, if not present

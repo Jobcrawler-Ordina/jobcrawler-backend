@@ -84,7 +84,7 @@ public class ScraperService {
                     if (vacancyLocation!="") {
                         Optional<Location> existCheckLocation = locationService.findByLocationName(vacancyLocation);
                         if (!existCheckLocation.isPresent()) {
-                            Location location = LocationService.getCoordinates(vacancyLocation);
+                            Location location = new Location(vacancyLocation,LocationService.getCoordinates(vacancyLocation));
                             locationService.save(location);
                             vacancy.setLocation(location);
                             Set<Skill> skills = skillMatcherService.findMatchingSkills(vacancy);

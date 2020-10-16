@@ -2,6 +2,7 @@ package nl.ordina.jobcrawler.service;
 
 import lombok.extern.slf4j.Slf4j;
 import nl.ordina.jobcrawler.exception.VacancyURLMalformedException;
+import nl.ordina.jobcrawler.model.Location;
 import nl.ordina.jobcrawler.model.Vacancy;
 import nl.ordina.jobcrawler.payload.VacancyDTO;
 import nl.ordina.jobcrawler.repo.VacancyRepository;
@@ -9,9 +10,11 @@ import org.jsoup.Jsoup;
 import org.jsoup.safety.Whitelist;
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -21,6 +24,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import static nl.ordina.jobcrawler.repo.VacancySpecifications.findBySkill;
 import static nl.ordina.jobcrawler.repo.VacancySpecifications.findByValue;
 import static nl.ordina.jobcrawler.repo.VacancySpecifications.findByLocName;
+import static nl.ordina.jobcrawler.repo.VacancySpecifications.findByDistance;
 
 @Slf4j
 @Service
@@ -54,8 +58,27 @@ public class VacancyService {
         return vacanciesList2;
     }
 
-    public Page<Vacancy> findByLocationName(String loc, Pageable paging) {
-        return vacancyRepository.findAll(findByLocName(loc), paging);
+    public Page<Vacancy> findByLocationAndDistance(String loc, Optional<Long> dist, Pageable paging) {
+        if((!dist.isPresent())||(dist.get()==0)) {
+            return vacancyRepository.findAll(findByLocName(loc), paging);
+        } else {
+            double[] coord;
+            try {
+                coord = LocationService.getCoordinates(loc);
+                List<Vacancy> vacancies = vacancyRepository.findAll();
+                vacancies.removeIf(v -> {if(v.hasLocation()) {
+                        return !(LocationService.getDistance(coord, v.getLocation().getCoord()) <= dist.get());
+                    } else {
+                        return false;
+                    }
+                });
+                Page<Vacancy> vacancies2 = new PageImpl<>(vacancies, paging, paging.getPageSize());
+                return vacancies2;
+            } catch (IOException e) {
+                e.printStackTrace();
+                return null;
+            }
+        }
     }
 
     /**

@@ -50,6 +50,7 @@ public class VacancyController {
     public ResponseEntity<SearchResult> getVacancies(@RequestParam(required = false) Optional<String> value,
                                                      @RequestParam(required = false) Optional<Set<String>> skills,
                                                      @RequestParam(required = false) Optional<String> location,
+                                                     @RequestParam(required = false) Optional<Long> distance,
                                                      @RequestParam(defaultValue = "desc") String dir,
                                                      @RequestParam(defaultValue = "postingDate") String sort,
                                                      @RequestParam(defaultValue = "1") int page,
@@ -61,7 +62,7 @@ public class VacancyController {
 
             Page<Vacancy> vacancies = value.filter(v -> !v.isBlank()).map(v -> vacancyService.findByAnyValue(v, paging))
                     .orElse(skills.filter(s -> !s.isEmpty()).map(s -> vacancyService.findBySkills(s, paging))
-                    .orElse(location.filter(l -> !l.isEmpty()).map(l -> vacancyService.findByLocationName(l, paging))
+                    .orElse(location.filter(l -> !l.isEmpty()).map(l -> vacancyService.findByLocationAndDistance(l, distance, paging))
                             .orElse(vacancyService.findAll(paging))));
 
             if (vacancies.getContent().isEmpty()) {

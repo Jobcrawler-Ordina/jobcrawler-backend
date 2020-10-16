@@ -1,9 +1,15 @@
 package nl.ordina.jobcrawler.repo;
 
+import nl.ordina.jobcrawler.model.Location;
 import nl.ordina.jobcrawler.model.Vacancy;
+import nl.ordina.jobcrawler.service.LocationService;
+import org.json.JSONException;
 import org.springframework.data.jpa.domain.Specification;
 
+import javax.persistence.criteria.Expression;
+import javax.persistence.criteria.ParameterExpression;
 import javax.persistence.criteria.Predicate;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -53,4 +59,14 @@ public final class VacancySpecifications {
         };
     }
 
+    public static Specification<Vacancy> findByDistance(final double[] coord, final double dist) {
+        return (root, query, cb) -> {
+            List<Predicate> allPredicates = new ArrayList<>();
+            root.get("location").get("lon").getModel();
+            //allPredicates.add(cb.le(cb.function("getDistance", Double.class, coord[0], cb.parameter(Double.class), coord[1], cb.parameter(Double.class), root.get("location").get("lon"), cb.parameter(Double.class), root.get("location").get("lat"), cb.parameter(Double.class)), dist) );
+            return cb.or(allPredicates.toArray(new Predicate[0]));
+        };
+    }
+
 }
+

@@ -49,8 +49,9 @@ public class LocationService {
         return Optional.empty();
     }
 
-    public static Location getCoordinates(String location) throws IOException, JSONException {
+    public static double[] getCoordinates(String location) throws IOException, JSONException {
         final String apiKey = "Xd5hXSuQvqUJJbJh3iacOXZAcskvP7gI";
+        double[] coord = new double[2];
         String location2 = location.concat(", Nederland");
         location2 = location2.replace(" ","%20");
         final String url = "http://open.mapquestapi.com/nominatim/v1/search.php?key=" + apiKey + "&format=json&q=" + location2 + "&addressdetails=1&limit=1";
@@ -70,25 +71,35 @@ public class LocationService {
             //Read JSON response and return
             JSONObject jsonResponse = new JSONObject(response);
 
-            return new Location(location, jsonResponse.getDouble("lon"), jsonResponse.getDouble("lat"));
-
+            coord[0] = jsonResponse.getDouble("lon");
+            coord[1] = jsonResponse.getDouble("lat");
+            return coord;
         }
-        return new Location(location, 0, 0);
+        return coord;
     }
 
-    public static double getDistanceFromHome(Location homeLocation, Location vacancyLocation) {
+    public static double getDistance(double[] coord1, double[] coord2) {
+        return getDistance(coord1[0], coord1[1], coord2[0], coord2[1]);
+    }
+    public static double getDistance(double[] coord1, double lon2, double lat2) {
+        return getDistance(coord1[0], coord1[1], lon2, lat2);
+    }
+    public static double getDistance(double lon1, double lat1, double[] coord2) {
+        return getDistance(lon1, lat1, coord2[0], coord2[1]);
+    }
 
+    public static double getDistance(double lon1, double lat1, double lon2, double lat2) {
         // Convert degrees to radians
-        double lon1 = Math.toRadians(homeLocation.getLon());
-        double lat1 = Math.toRadians(homeLocation.getLat());
-        double lon2 = Math.toRadians(vacancyLocation.getLon());
-        double lat2 = Math.toRadians(vacancyLocation.getLat());
+        double dlon1 = Math.toRadians(lon1);
+        double dlat1 = Math.toRadians(lat1);
+        double dlon2 = Math.toRadians(lon2);
+        double dlat2 = Math.toRadians(lat2);
 
         // Haversine formula
-        double dlon = lon2 - lon1;
-        double dlat = lat2 - lat1;
+        double dlon = dlon2 - dlon1;
+        double dlat = dlat2 - dlat1;
         double a = Math.pow(Math.sin(dlat / 2), 2)
-                + Math.cos(lat1) * Math.cos(lat2)
+                + Math.cos(dlat1) * Math.cos(dlat2)
                 * Math.pow(Math.sin(dlon / 2), 2);
         double c = 2 * Math.asin(Math.sqrt(a));
         // Radius of earth in kilometers. Use 3956 for miles

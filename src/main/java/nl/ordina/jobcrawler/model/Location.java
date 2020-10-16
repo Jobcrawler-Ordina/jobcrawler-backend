@@ -30,18 +30,23 @@ public class Location {
     @JsonIgnore
     List<Vacancy> vacancies;*/
 
-    public Location(String locationName) {
+    public Location(String name) {
         this.name = name;
     }
 
-    public Location(String locationName, double lon, double lat) {
+    public Location(String name, double[] coord) {
+        this(name, coord[0], coord[1]);
+    }
+
+    public Location(String name, double lon, double lat) {
         this.name = name;
         this.lon = lon;
         this.lat = lat;
     }
 
-    public double getLon() { return lon; }
-    public double getLat() { return lat; }
+    public double[] getCoord() {return new double[]{this.lon, this.lat}; }
+/*    public double getLon() { return lon; }
+    public double getLat() { return lat; }*/
 
 //    public PersistentBag getVacancies() { return (PersistentBag) vacancies; }
 /*    public CopyOnWriteArrayList<Vacancy> getVacanciesAsCOWA() {
