@@ -62,8 +62,7 @@ public final class VacancySpecifications {
     public static Specification<Vacancy> findByDistance(final double[] coord, final double dist) {
         return (root, query, cb) -> {
             List<Predicate> allPredicates = new ArrayList<>();
-            root.get("location").get("lon").getModel();
-            //allPredicates.add(cb.le(cb.function("getDistance", Double.class, coord[0], cb.parameter(Double.class), coord[1], cb.parameter(Double.class), root.get("location").get("lon"), cb.parameter(Double.class), root.get("location").get("lat"), cb.parameter(Double.class)), dist) );
+            allPredicates.add(cb.le(cb.function("getDistance", Double.class, coord[0], cb.parameter(Double.class), coord[1], cb.parameter(Double.class), root.get("location").get("lon"), cb.parameter(Double.class), root.get("location").get("lat"), cb.parameter(Double.class)), dist) );
             return cb.or(allPredicates.toArray(new Predicate[0]));
         };
     }
