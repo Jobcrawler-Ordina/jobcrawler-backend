@@ -29,13 +29,14 @@ public final class VacancySpecifications {
      */
     public static Specification<Vacancy> findBySkill(final Set<String> skills) {
         return (root, query, cb) ->
-          cb.and(skills.stream().map(s -> cb
-                    .like(root.get("about"), String
-                            .format(LIKE_QUERY_FORMAT, s))).toArray(Predicate[]::new));
+                cb.and(skills.stream().map(s -> cb
+                        .like(root.get("about"), String
+                                .format(LIKE_QUERY_FORMAT, s))).toArray(Predicate[]::new));
     }
 
     /**
      * This query will filter the vacancies by any search value that is entered in the search field.
+     *
      * @param value - search value
      * @return - filtered vacancies
      */
@@ -62,10 +63,36 @@ public final class VacancySpecifications {
     public static Specification<Vacancy> findByDistance(final double[] coord, final double dist) {
         return (root, query, cb) -> {
             List<Predicate> allPredicates = new ArrayList<>();
-            allPredicates.add(cb.le(cb.function("getDistance", Double.class, coord[0], cb.parameter(Double.class), coord[1], cb.parameter(Double.class), root.get("location").get("lon"), cb.parameter(Double.class), root.get("location").get("lat"), cb.parameter(Double.class)), dist) );
-            return cb.or(allPredicates.toArray(new Predicate[0]));
+            allPredicates.add(cb.le(cb.function("getDistance", Double.class, cb.literal(coord[0]), cb.literal(coord[1]), root.get("location").get("lon"), root.get("location").get("lat")), dist));
+            return cb.or(allPredicates.toArray(new Predicate[allPredicates.size()]));
         };
     }
 
+    public static Specification<Vacancy> findWithoutLocation() {
+        return (root, query, cb) -> {
+            List<Predicate> allPredicates = new ArrayList<>();
+            allPredicates.add(cb.isNull(root.get("location")));
+            return cb.or(allPredicates.toArray(new Predicate[allPredicates.size()]));
+        };
+    }
+/*    public static Specification<Vacancy> findByDistance(final double[] coord, final double dist) {
+        return (root, query, cb) -> {
+            Predicate p1 = cb.equal(root.get("location"),cb.literal(null));
+            Predicate p2 = cb
+                    .le(cb.function("getDistance", Double.class, cb.literal(coord[0]), cb.literal(coord[1]), root
+                            .get("location").get("lon"), root.get("location").get("lat")), dist);
+            return cb.or(p1, p2);
+        };
+    }*/
+
 }
 
+/*    public static Specification<Vacancy> findByDistance(final double[] coord, final double dist) {
+        return (root, query, cb) -> cb
+                .le(cb.function("getDistance", Double.class, cb.literal(coord[0]), cb.literal(coord[1]), root
+                        .get("location").get("lon"), root.get("location").get("lat")), dist);
+    }
+}*/
+
+//            allPredicates.add(cb.or(cb.isNull(root.get("location")), cb.le(cb.function("getDistance", Double.class, cb.literal(coord[0]), cb.literal(coord[1]), root.get("location").get("lon"), root.get("location").get("lat")), dist)));
+//            allPredicates.add(cb.le(cb.function("getDistance", Double.class, cb.literal(coord[0]), cb.literal(coord[1]), root.get("location").get("lon"), root.get("location").get("lat")), dist));

@@ -21,10 +21,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-import static nl.ordina.jobcrawler.repo.VacancySpecifications.findBySkill;
-import static nl.ordina.jobcrawler.repo.VacancySpecifications.findByValue;
-import static nl.ordina.jobcrawler.repo.VacancySpecifications.findByLocName;
-import static nl.ordina.jobcrawler.repo.VacancySpecifications.findByDistance;
+import static nl.ordina.jobcrawler.repo.VacancySpecifications.*;
 
 @Slf4j
 @Service
@@ -58,22 +55,21 @@ public class VacancyService {
         return vacanciesList2;
     }
 
-    public Page<Vacancy> findByLocationAndDistance(String loc, Optional<Long> dist, Pageable paging) {
+    public Page<Vacancy> findByLocationAndDistance(String loc, Optional<Long> dist, Boolean showEmptyLoc, Pageable paging) {
         if((!dist.isPresent())||(dist.get()==0)) {
             return vacancyRepository.findAll(findByLocName(loc), paging);
         } else {
             double[] coord;
             try {
                 coord = LocationService.getCoordinates(loc);
-                List<Vacancy> vacancies = vacancyRepository.findAll();
-                vacancies.removeIf(v -> {if(v.hasLocation()) {
-                        return !(LocationService.getDistance(coord, v.getLocation().getCoord()) <= dist.get());
-                    } else {
-                        return false;
-                    }
-                });
-                Page<Vacancy> vacancies2 = new PageImpl<>(vacancies, paging, paging.getPageSize());
-                return vacancies2;
+                List<Vacancy> vacancies = vacancyRepository.findAll(findByDistance(coord,dist.get()));
+                if (showEmptyLoc) {
+                    vacancies.addAll(vacancyRepository.findAll(findWithoutLocation()));
+                }
+                int ps = paging.getPageSize();
+                int pn = paging.getPageNumber();
+                PageImpl<Vacancy> p = new PageImpl<>(vacancies.subList(ps*pn,Math.min((pn+1)*ps, vacancies.size())), paging, vacancies.size());
+                return p;
             } catch (IOException e) {
                 e.printStackTrace();
                 return null;
@@ -88,7 +84,8 @@ public class VacancyService {
      * @return All vacancies in the database.
      */
     public Page<Vacancy> findAll(Pageable paging) {
-        return vacancyRepository.findAll(paging);
+        Page<Vacancy> v = vacancyRepository.findAll(paging);
+        return v;
     }
 
     /**
