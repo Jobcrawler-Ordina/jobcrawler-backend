@@ -83,8 +83,13 @@ public class VacancyService {
      * @param paging - used for pagination
      * @return All vacancies in the database.
      */
-    public Page<Vacancy> findAll(Pageable paging) {
-        Page<Vacancy> v = vacancyRepository.findAll(paging);
+    public Page<Vacancy> findAll(Boolean emptyLocs,Pageable paging) {
+        Page<Vacancy> v;
+        if(emptyLocs) {
+            v = vacancyRepository.findAll(paging);
+        } else {
+            v = vacancyRepository.findAll(findWithLocation(),paging);
+        }
         return v;
     }
 
