@@ -1,7 +1,6 @@
 package nl.ordina.jobcrawler.scrapers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import nl.ordina.jobcrawler.model.Vacancy;
 import nl.ordina.jobcrawler.payload.VacancyDTO;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;

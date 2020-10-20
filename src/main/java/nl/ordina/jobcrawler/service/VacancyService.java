@@ -20,6 +20,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.stream.Collectors;
 
 import static nl.ordina.jobcrawler.repo.VacancySpecifications.*;
 
@@ -171,13 +172,7 @@ public class VacancyService {
     }
 
     public static List<Vacancy> convertVacancyDTOs(List<VacancyDTO> vacancyDTOs) {
-        List<Vacancy> vacancies = new CopyOnWriteArrayList<>();
-        Vacancy vacancy;
-        for(VacancyDTO vacancyDTO : vacancyDTOs) {
-            vacancy = convertVacancyDTO(vacancyDTO);
-            vacancies.add(vacancy);
-        }
-        return vacancies;
+        return vacancyDTOs.stream().map(VacancyService::convertVacancyDTO).collect(Collectors.toList());
     }
 
     public static Vacancy convertVacancyDTO(VacancyDTO vacancyDTO) {

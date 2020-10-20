@@ -141,7 +141,7 @@ class JobBirdScraperTest extends UseLocalSavedFiles {
     @Test
     void setVacancySpecifics_happyFlow() throws IOException {
         Document doc = getDocFromUrl("JobBird/jobbird04_vacancyspecifics.htm");
-        VacancyDTO vacancyDTO = new VacancyDTO();
+        VacancyDTO vacancyDTO = VacancyDTO.builder().build();
         vacancyDTO.setHours(jobBirdScraperTestable.retrieveWorkHours(doc.select("div.card-body").text()));
         vacancyDTO.setLocationString(jobBirdScraperTestable.getLocation(doc));
         vacancyDTO.setPostingDate(jobBirdScraperTestable.getPublishDate(doc));
@@ -158,7 +158,7 @@ class JobBirdScraperTest extends UseLocalSavedFiles {
     @Test
     void setVacancySpecifics_Missing() throws IOException {
         Document doc = getDocFromUrl("JobBird/jobbird04_vacancyspecifics_missing.htm");
-        VacancyDTO vacancyDTO = new VacancyDTO();
+        VacancyDTO vacancyDTO = VacancyDTO.builder().build();
         vacancyDTO.setHours(jobBirdScraperTestable.retrieveWorkHours(doc.select("div.card-body").text()));
         vacancyDTO.setLocationString(jobBirdScraperTestable.getLocation(doc));
         vacancyDTO.setPostingDate(jobBirdScraperTestable.getPublishDate(doc));
