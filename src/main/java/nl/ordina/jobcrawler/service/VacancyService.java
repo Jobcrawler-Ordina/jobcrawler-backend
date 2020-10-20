@@ -5,21 +5,21 @@ import nl.ordina.jobcrawler.exception.VacancyURLMalformedException;
 import nl.ordina.jobcrawler.model.Vacancy;
 import nl.ordina.jobcrawler.payload.VacancyDTO;
 import nl.ordina.jobcrawler.repo.VacancyRepository;
-import org.jsoup.Jsoup;
-import org.jsoup.safety.Whitelist;
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.stream.Collectors;
 
-import static nl.ordina.jobcrawler.repo.VacancySpecifications.findBySkill;
-import static nl.ordina.jobcrawler.repo.VacancySpecifications.findByValue;
+import static nl.ordina.jobcrawler.repo.VacancySpecifications.*;
 
 @Slf4j
 @Service
@@ -44,13 +44,27 @@ public class VacancyService {
     public List<Vacancy> findAll() {
         return vacancyRepository.findAll();
     }
-    public CopyOnWriteArrayList<Vacancy> findByLocationid(UUID id) {
-        List<Vacancy> vacanciesList = vacancyRepository.findByLocation_Id(id);
-        CopyOnWriteArrayList<Vacancy> vacanciesList2 = new CopyOnWriteArrayList<>();
-        for(Vacancy vacancy: vacanciesList) {
-            vacanciesList2.add(vacancy);
+
+    public Page<Vacancy> findByLocationAndDistance(String loc, Optional<Long> dist, Boolean showEmptyLoc, Pageable paging) {
+        if((!dist.isPresent())||(dist.get()==0)) {
+            return vacancyRepository.findAll(findByLocName(loc), paging);
+        } else {
+            double[] coord;
+            try {
+                coord = LocationService.getCoordinates(loc);
+                List<Vacancy> vacancies = vacancyRepository.findAll(findByDistance(coord,dist.get()));
+                if (showEmptyLoc) {
+                    vacancies.addAll(vacancyRepository.findAll(findWithoutLocation()));
+                }
+                int ps = paging.getPageSize();
+                int pn = paging.getPageNumber();
+                PageImpl<Vacancy> p = new PageImpl<>(vacancies.subList(ps*pn,Math.min((pn+1)*ps, vacancies.size())), paging, vacancies.size());
+                return p;
+            } catch (IOException e) {
+                e.printStackTrace();
+                return null;
+            }
         }
-        return vacanciesList2;
     }
 
     /**
@@ -59,8 +73,14 @@ public class VacancyService {
      * @param paging - used for pagination
      * @return All vacancies in the database.
      */
-    public Page<Vacancy> findAll(Pageable paging) {
-        return vacancyRepository.findAll(paging);
+    public Page<Vacancy> findAll(Boolean emptyLocs,Pageable paging) {
+        Page<Vacancy> v;
+        if(emptyLocs) {
+            v = vacancyRepository.findAll(paging);
+        } else {
+            v = vacancyRepository.findAll(findWithLocation(),paging);
+        }
+        return v;
     }
 
     /**
@@ -122,13 +142,6 @@ public class VacancyService {
         }
 
     }
-    public void deleteAll(List<Vacancy> vacancies) {
-        UUID id;
-        for(Vacancy vacancy : vacancies) {
-            id = vacancy.getId();
-            delete(id);
-        }
-    }
 
     /**
      * Returns the vacancy with the specified url.
@@ -141,13 +154,7 @@ public class VacancyService {
     }
 
     public static List<Vacancy> convertVacancyDTOs(List<VacancyDTO> vacancyDTOs) {
-        List<Vacancy> vacancies = new CopyOnWriteArrayList<>();
-        Vacancy vacancy;
-        for(VacancyDTO vacancyDTO : vacancyDTOs) {
-            vacancy = convertVacancyDTO(vacancyDTO);
-            vacancies.add(vacancy);
-        }
-        return vacancies;
+        return vacancyDTOs.stream().map(VacancyService::convertVacancyDTO).collect(Collectors.toList());
     }
 
     public static Vacancy convertVacancyDTO(VacancyDTO vacancyDTO) {

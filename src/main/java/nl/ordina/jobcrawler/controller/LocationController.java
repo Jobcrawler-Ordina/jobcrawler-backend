@@ -2,6 +2,7 @@ package nl.ordina.jobcrawler.controller;
 
 import nl.ordina.jobcrawler.exception.LocationNotFoundException;
 import nl.ordina.jobcrawler.model.Location;
+import nl.ordina.jobcrawler.model.Skill;
 import nl.ordina.jobcrawler.model.assembler.LocationModelAssembler;
 import nl.ordina.jobcrawler.service.LocationService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -52,8 +53,7 @@ public class LocationController {
 
     @GetMapping
     public ResponseEntity<List<Location>> getLocations() {
-        return new ResponseEntity<>(locationService.findAll(), HttpStatus.OK);
+        return new ResponseEntity<>(locationService.findByOrderByNameAsc(), HttpStatus.OK);
     }
-
 
 }

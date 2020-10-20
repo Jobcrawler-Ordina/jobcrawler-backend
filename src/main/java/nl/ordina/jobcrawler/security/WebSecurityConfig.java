@@ -71,6 +71,8 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                 .antMatchers(HttpMethod.GET, "/vacancies/**").permitAll()
                 .antMatchers(HttpMethod.GET, "/skills/**").permitAll()
                 .antMatchers(HttpMethod.GET, "/locations/**").permitAll()
+                .antMatchers(HttpMethod.GET, "/distance/**").permitAll()
+                .antMatchers(HttpMethod.GET, "/coordinates/**").permitAll()
                 .anyRequest().authenticated()
                 .and()
                 .exceptionHandling().authenticationEntryPoint(unauthorizedHandler).and()
