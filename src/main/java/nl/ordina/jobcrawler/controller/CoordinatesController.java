@@ -1,6 +1,5 @@
 package nl.ordina.jobcrawler.controller;
 
-import nl.ordina.jobcrawler.model.Location;
 import nl.ordina.jobcrawler.service.LocationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;

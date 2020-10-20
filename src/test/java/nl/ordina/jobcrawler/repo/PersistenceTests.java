@@ -1,28 +1,18 @@
 package nl.ordina.jobcrawler.repo;
 
-import nl.ordina.jobcrawler.model.Location;
 import nl.ordina.jobcrawler.model.Skill;
 import nl.ordina.jobcrawler.model.Vacancy;
-import nl.ordina.jobcrawler.service.LocationService;
-import org.json.JSONException;
-import org.jsoup.Jsoup;
-import org.jsoup.safety.Whitelist;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.internal.util.collections.Sets;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-import org.springframework.dao.IncorrectResultSizeDataAccessException;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
-import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
-import java.util.concurrent.CopyOnWriteArrayList;
 
 import static nl.ordina.jobcrawler.repo.VacancySpecifications.findBySkill;
 import static nl.ordina.jobcrawler.repo.VacancySpecifications.findByValue;

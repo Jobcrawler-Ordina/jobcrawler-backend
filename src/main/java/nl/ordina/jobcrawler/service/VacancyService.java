@@ -2,12 +2,9 @@ package nl.ordina.jobcrawler.service;
 
 import lombok.extern.slf4j.Slf4j;
 import nl.ordina.jobcrawler.exception.VacancyURLMalformedException;
-import nl.ordina.jobcrawler.model.Location;
 import nl.ordina.jobcrawler.model.Vacancy;
 import nl.ordina.jobcrawler.payload.VacancyDTO;
 import nl.ordina.jobcrawler.repo.VacancyRepository;
-import org.jsoup.Jsoup;
-import org.jsoup.safety.Whitelist;
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -46,14 +43,6 @@ public class VacancyService {
 
     public List<Vacancy> findAll() {
         return vacancyRepository.findAll();
-    }
-    public CopyOnWriteArrayList<Vacancy> findByLocationid(UUID id) {
-        List<Vacancy> vacanciesList = vacancyRepository.findByLocation_Id(id);
-        CopyOnWriteArrayList<Vacancy> vacanciesList2 = new CopyOnWriteArrayList<>();
-        for(Vacancy vacancy: vacanciesList) {
-            vacanciesList2.add(vacancy);
-        }
-        return vacanciesList2;
     }
 
     public Page<Vacancy> findByLocationAndDistance(String loc, Optional<Long> dist, Boolean showEmptyLoc, Pageable paging) {
@@ -152,13 +141,6 @@ public class VacancyService {
             return false;
         }
 
-    }
-    public void deleteAll(List<Vacancy> vacancies) {
-        UUID id;
-        for(Vacancy vacancy : vacancies) {
-            id = vacancy.getId();
-            delete(id);
-        }
     }
 
     /**
