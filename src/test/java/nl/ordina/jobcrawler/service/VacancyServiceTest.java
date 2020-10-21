@@ -3,6 +3,7 @@ package nl.ordina.jobcrawler.service;
 import nl.ordina.jobcrawler.model.Vacancy;
 import nl.ordina.jobcrawler.payload.SearchRequest;
 import nl.ordina.jobcrawler.repo.VacancyRepository;
+import nl.ordina.jobcrawler.utils.MockData;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentMatchers;
@@ -29,8 +30,7 @@ class VacancyServiceTest {
 
     @Test
     public void findByAnyValue() {
-        final Vacancy vacancy = new Vacancy();
-        vacancy.setAbout("about");
+        final Vacancy vacancy = MockData.mockVacancy("title");
         final Page<Vacancy> mockVacancyPage = new PageImpl<>(Collections.singletonList(vacancy));
         SearchRequest searchRequest = new SearchRequest();
         Pageable paging = PageRequest.of(1, 15, Sort.Direction.ASC, "postingDate");
