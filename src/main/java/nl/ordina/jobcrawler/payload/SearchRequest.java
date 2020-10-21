@@ -12,11 +12,14 @@ import java.util.Set;
 @Data
 public class SearchRequest {
 
-    private String distance;
     private String keywords;
     private Set<String> skills;
 
     private LocalDateTime fromDate;
     private LocalDateTime toDate;
+
+    private Long distance;
+    private String location;
+    private double[] coord;
 
 }

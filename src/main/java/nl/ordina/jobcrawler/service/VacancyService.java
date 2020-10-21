@@ -3,22 +3,22 @@ package nl.ordina.jobcrawler.service;
 import lombok.extern.slf4j.Slf4j;
 import nl.ordina.jobcrawler.exception.VacancyURLMalformedException;
 import nl.ordina.jobcrawler.model.Vacancy;
+import nl.ordina.jobcrawler.payload.SearchRequest;
 import nl.ordina.jobcrawler.payload.VacancyDTO;
 import nl.ordina.jobcrawler.repo.VacancyRepository;
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-import static nl.ordina.jobcrawler.repo.VacancySpecifications.*;
+import static nl.ordina.jobcrawler.repo.VacancySpecifications.vacancySearch;
 
 @Slf4j
 @Service
@@ -44,64 +44,24 @@ public class VacancyService {
         return vacancyRepository.findAll();
     }
 
-    public Page<Vacancy> findByLocationAndDistance(String loc, Optional<Long> dist, Boolean showEmptyLoc, Pageable paging) {
-        if((!dist.isPresent())||(dist.get()==0)) {
-            return vacancyRepository.findAll(findByLocName(loc), paging);
-        } else {
-            double[] coord;
-            try {
-                coord = LocationService.getCoordinates(loc);
-                List<Vacancy> vacancies = vacancyRepository.findAll(findByDistance(coord,dist.get()));
-                if (showEmptyLoc) {
-                    vacancies.addAll(vacancyRepository.findAll(findWithoutLocation()));
-                }
-                int ps = paging.getPageSize();
-                int pn = paging.getPageNumber();
-                PageImpl<Vacancy> p = new PageImpl<>(vacancies.subList(ps*pn,Math.min((pn+1)*ps, vacancies.size())), paging, vacancies.size());
-                return p;
-            } catch (IOException e) {
-                e.printStackTrace();
-                return null;
-            }
-        }
-    }
-
-    /**
-     * Returns all vacancies in the database using pagination.
-     *
-     * @param paging - used for pagination
-     * @return All vacancies in the database.
-     */
-    public Page<Vacancy> findAll(Boolean emptyLocs,Pageable paging) {
-        Page<Vacancy> v;
-        if(emptyLocs) {
-            v = vacancyRepository.findAll(paging);
-        } else {
-            v = vacancyRepository.findAll(findWithLocation(),paging);
-        }
-        return v;
-    }
-
-    /**
-     * Returns all vacancies in the database filter by skills.
-     *
-     * @param skills - skills that needs to be filtered
-     * @param paging - used for pagination
-     * @return All vacancies in the database filtered by skills.
-     */
-    public Page<Vacancy> findBySkills(Set<String> skills, Pageable paging) {
-        return vacancyRepository.findAll(findBySkill(skills), paging);
-    }
-
     /**
      * Returns all vacancies in the database filter by any values that user enters in the search field.
      *
-     * @param value  - value that needs to be filtered
+     * @param searchRequest  - values that need to be filtered
      * @param paging - used for pagination
      * @return All vacancies in the database filter by any value.
      */
-    public Page<Vacancy> findByAnyValue(String value, Pageable paging) {
-        return vacancyRepository.findAll(findByValue(value), paging);
+    public Page<Vacancy> findByAnyValue(SearchRequest searchRequest, Pageable paging) {
+
+        if (!StringUtils.isEmpty(searchRequest.getLocation())) {
+            try {
+                searchRequest.setCoord(LocationService.getCoordinates(searchRequest.getLocation()));
+            } catch (IOException e) {
+                log.error(e.getMessage());
+            }
+        }
+
+        return vacancyRepository.findAll(vacancySearch(searchRequest), paging);
     }
 
     /**
