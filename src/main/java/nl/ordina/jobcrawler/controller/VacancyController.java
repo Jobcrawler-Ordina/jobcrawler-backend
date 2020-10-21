@@ -5,6 +5,7 @@ import nl.ordina.jobcrawler.model.Skill;
 import nl.ordina.jobcrawler.model.Vacancy;
 import nl.ordina.jobcrawler.model.assembler.SkillModelAssembler;
 import nl.ordina.jobcrawler.model.assembler.VacancyModelAssembler;
+import nl.ordina.jobcrawler.payload.SearchRequest;
 import nl.ordina.jobcrawler.payload.SearchResult;
 import nl.ordina.jobcrawler.service.VacancyService;
 import org.springframework.data.domain.Page;
@@ -20,6 +21,8 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -28,6 +31,8 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/vacancies")
 public class VacancyController {
+
+    private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     private final VacancyService vacancyService;
     private final VacancyModelAssembler vacancyModelAssembler;
@@ -51,7 +56,8 @@ public class VacancyController {
                                                      @RequestParam(required = false) Optional<Set<String>> skills,
                                                      @RequestParam(required = false) Optional<String> location,
                                                      @RequestParam(required = false) Optional<Long> distance,
-                                                     @RequestParam(required = false, defaultValue = "true") Boolean emptylocs,
+                                                     @RequestParam(required = false) Optional<String> fromDate,
+                                                     @RequestParam(required = false) Optional<String> toDate,
                                                      @RequestParam(defaultValue = "desc") String dir,
                                                      @RequestParam(defaultValue = "postingDate") String sort,
                                                      @RequestParam(defaultValue = "1") int page,
@@ -61,10 +67,16 @@ public class VacancyController {
             Sort sorting = dir.equals("desc") ? Sort.by(Sort.Direction.DESC, sort) : Sort.by(Sort.Direction.ASC, sort);
             Pageable paging = PageRequest.of(page, size, sorting);
 
-            Page<Vacancy> vacancies = value.filter(v -> !v.isBlank()).map(v -> vacancyService.findByAnyValue(v, paging))
-                    .orElse(skills.filter(s -> !s.isEmpty()).map(s -> vacancyService.findBySkills(s, paging))
-                            .orElse(location.filter(l -> !l.isBlank()).map(l -> vacancyService.findByLocationAndDistance(l, distance, emptylocs, paging))
-                                    .orElse(vacancyService.findAll(emptylocs,paging))));
+            SearchRequest searchRequest = new SearchRequest();
+            value.ifPresent(searchRequest::setKeywords);
+            fromDate.ifPresent(fd -> searchRequest.setFromDate(LocalDateTime.parse(fd, formatter)));
+            toDate.ifPresent(td -> searchRequest.setToDate(LocalDateTime.parse(td, formatter)));
+            skills.ifPresent(searchRequest::setSkills);
+
+            location.ifPresent(searchRequest::setLocation);
+            distance.ifPresent(searchRequest::setDistance);
+
+            Page<Vacancy> vacancies = vacancyService.findByAnyValue(searchRequest, paging);
 
             if (vacancies.getContent().isEmpty()) {
                 return new ResponseEntity<>(HttpStatus.NO_CONTENT);

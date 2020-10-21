@@ -1,22 +1,25 @@
 package nl.ordina.jobcrawler.payload;
 
 import lombok.AllArgsConstructor;
-import lombok.Getter;
+import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.ArrayList;
+import java.time.LocalDateTime;
+import java.util.Set;
 
-// on the server jackson gives an error that this class does not have a default constructor, which cannot exist with a final variable
-//@Value  // makes getters and makes attributes private final
 @NoArgsConstructor
 @AllArgsConstructor
-@Getter
+@Data
 public class SearchRequest {
 
-    private String location;
-    private String distance;
     private String keywords;
-    private ArrayList<String> skills;
+    private Set<String> skills;
 
+    private LocalDateTime fromDate;
+    private LocalDateTime toDate;
+
+    private Long distance;
+    private String location;
+    private double[] coord;
 
 }
