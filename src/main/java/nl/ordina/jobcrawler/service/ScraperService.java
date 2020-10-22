@@ -13,7 +13,6 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.annotation.PostConstruct;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -47,8 +46,7 @@ public class ScraperService {
         this.jobBirdScraper = jobBirdScraper;
     }
 
-//    @PostConstruct
-    //@Scheduled(cron = "0 0 12,18 * * *")
+    @Scheduled(cron = "0 0 12,18 * * *")
     // Runs two times a day. At 12pm and 6pm
     @Transactional
     public void scrape() {

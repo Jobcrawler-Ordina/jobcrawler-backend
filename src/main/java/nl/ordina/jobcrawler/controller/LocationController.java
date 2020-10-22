@@ -12,7 +12,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @RestController
@@ -37,6 +39,15 @@ public class LocationController {
         } else {
             return getLocationByName(locationIdOrName);
         }
+    }
+
+    @GetMapping("/coordinates")
+    public ResponseEntity<Object> getLocationByCoordinates(@RequestParam double lat,
+                                                       @RequestParam double lon) throws IOException {
+        String location = locationService.getLocation(lat, lon);
+        return ResponseEntity.status(HttpStatus.OK).body(Map.of(
+                "success", true,
+                "location", location));
     }
 
     private EntityModel<Location> getLocationById(UUID id) {
