@@ -5,6 +5,7 @@ import nl.ordina.jobcrawler.model.Location;
 import nl.ordina.jobcrawler.model.Skill;
 import nl.ordina.jobcrawler.model.Vacancy;
 import nl.ordina.jobcrawler.repo.LocationRepository;
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.springframework.stereotype.Service;
@@ -22,8 +23,9 @@ import java.util.UUID;
 @Service
 public class LocationService {
 
+    private static final String API_KEY = "Xd5hXSuQvqUJJbJh3iacOXZAcskvP7gI";
     private static final String EMPTY_API_RESPONSE = "[]";
-
+    
     private final LocationRepository locationRepository;
 
     public LocationService(LocationRepository locationRepository) {
@@ -52,11 +54,10 @@ public class LocationService {
     }
 
     public static double[] getCoordinates(String location) throws IOException, JSONException {
-        final String apiKey = "Xd5hXSuQvqUJJbJh3iacOXZAcskvP7gI";
         double[] coord = new double[2];
         String location2 = location.concat(", Nederland");
         location2 = location2.replace(" ","%20");
-        final String url = "http://open.mapquestapi.com/nominatim/v1/search.php?key=" + apiKey + "&format=json&q=" + location2 + "&addressdetails=1&limit=1";
+        final String url = "http://open.mapquestapi.com/nominatim/v1/search.php?key=" + API_KEY + "&format=json&q=" + location2 + "&addressdetails=1&limit=1";
 
         URL obj = new URL(url);
         HttpURLConnection connection = (HttpURLConnection) obj.openConnection();
@@ -80,6 +81,29 @@ public class LocationService {
             return coord;
         }
         return coord;
+    }
+
+    public String getLocation(double lat, double lon) throws IOException, JSONException {
+        final String url = "http://open.mapquestapi.com/nominatim/v1/reverse.php?key=" + API_KEY + "&format=json&lat=" + lat + "&lon=" + lon;
+        URL obj = new URL(url);
+        HttpURLConnection connection = (HttpURLConnection) obj.openConnection();
+        // optional default is GET
+        connection.setRequestMethod("GET");
+        //add request header
+        connection.setRequestProperty("User-Agent", "Mozilla/5.0");
+        if (connection.getResponseCode() == 200) {
+            BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+            String response = in.readLine();
+            if (!EMPTY_API_RESPONSE.equals(response)) {            
+                log.debug(response);
+                in.close();
+                //Read JSON response and return
+                JSONObject jsonResponse = new JSONObject(response);
+                JSONObject jsonAddress = jsonResponse.getJSONObject("address");
+                return jsonAddress.getString("town");
+            }
+        }
+        return "";
     }
 
     public static double getDistance(double[] coord1, double[] coord2) {
