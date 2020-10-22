@@ -53,7 +53,7 @@ public class ScraperService {
         log.info("CRON Scheduled -- Scrape vacancies");
 
         List<VacancyDTO> allVacancyDTOs = startScraping();
-        Vacancy vacancy = new Vacancy();
+        Vacancy vacancy;
         int existVacancy = 0;
         int newVacancy = 0;
 
@@ -79,9 +79,9 @@ public class ScraperService {
                     if(vacancyLocation.endsWith(", Netherlands")) {vacancyLocation = vacancyLocation.substring(0,vacancyLocation.length()-13);}
                     if(vacancyLocation.endsWith(", the Netherlands")) {vacancyLocation = vacancyLocation.substring(0,vacancyLocation.length()-16);}
                     if(vacancyLocation.equals("'s-Hertogenbosch")) {vacancyLocation = "Den Bosch";}
-                    if (vacancyLocation!="") {
+                    if (!vacancyLocation.equals("")) {
                         Optional<Location> existCheckLocation = locationService.findByLocationName(vacancyLocation);
-                        if (!existCheckLocation.isPresent()) {
+                        if (existCheckLocation.isEmpty()) {
                             Location location = new Location(vacancyLocation,LocationService.getCoordinates(vacancyLocation));
                             locationService.save(location);
                             vacancy.setLocation(location);
