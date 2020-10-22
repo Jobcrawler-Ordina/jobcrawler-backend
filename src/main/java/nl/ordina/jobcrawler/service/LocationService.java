@@ -24,7 +24,8 @@ import java.util.UUID;
 public class LocationService {
 
     private static final String API_KEY = "Xd5hXSuQvqUJJbJh3iacOXZAcskvP7gI";
-
+    private static final String EMPTY_API_RESPONSE = "[]";
+    
     private final LocationRepository locationRepository;
 
     public LocationService(LocationRepository locationRepository) {
@@ -67,14 +68,16 @@ public class LocationService {
         if (connection.getResponseCode() == 200) {
             BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
             String response = in.readLine();
-            response = response.substring(1, response.length() - 1);
-            log.debug(response);
-            in.close();
-            //Read JSON response and return
-            JSONObject jsonResponse = new JSONObject(response);
+            if (!EMPTY_API_RESPONSE.equals(response)) {
+                response = response.substring(1, response.length() - 1);
+                log.debug(response);
+                in.close();
+                //Read JSON response and return
+                JSONObject jsonResponse = new JSONObject(response);
 
-            coord[0] = jsonResponse.getDouble("lon");
-            coord[1] = jsonResponse.getDouble("lat");
+                coord[0] = jsonResponse.getDouble("lon");
+                coord[1] = jsonResponse.getDouble("lat");
+            }
             return coord;
         }
         return coord;
@@ -91,12 +94,14 @@ public class LocationService {
         if (connection.getResponseCode() == 200) {
             BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
             String response = in.readLine();
-            log.debug(response);
-            in.close();
-            //Read JSON response and return
-            JSONObject jsonResponse = new JSONObject(response);
-            JSONObject jsonAddress = jsonResponse.getJSONObject("address");
-            return jsonAddress.getString("town");
+            if (!EMPTY_API_RESPONSE.equals(response)) {            
+                log.debug(response);
+                in.close();
+                //Read JSON response and return
+                JSONObject jsonResponse = new JSONObject(response);
+                JSONObject jsonAddress = jsonResponse.getJSONObject("address");
+                return jsonAddress.getString("town");
+            }
         }
         return "";
     }
