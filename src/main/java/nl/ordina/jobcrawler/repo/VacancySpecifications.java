@@ -30,7 +30,8 @@ public final class VacancySpecifications {
             List<Predicate> allPredicates = new ArrayList<>();
             Optional<SearchRequest> optionalProperties = Optional.of(searchRequest);
 
-            optionalProperties.map(SearchRequest::getLocation).filter(l -> !l.isBlank())
+            optionalProperties.map(SearchRequest::getLocation)
+                    .filter(l -> !l.isBlank() && optionalProperties.map(SearchRequest::getDistance).isEmpty())
                     .ifPresent(location -> allPredicates.add(cb.like(cb.lower(root.get("location").get("name")), String
                             .format(LIKE_QUERY_FORMAT, location.toLowerCase()))));
 

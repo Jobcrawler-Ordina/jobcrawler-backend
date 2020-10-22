@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+Using logback-spring.xml Spring automatically loads it over the default configuration.
+it enables extensions (not here?) and gives Spring better control (than with logback.xml) over log initialization.
+
+Definitions of ${FILE_LOG_PATTERN} and ${CONSOLE_LOG_PATTERN} can be found in file defaults.xml
+
+The arguments to configure the rolling policy e.q. LOG_FILE_MAX_SIZE, LOG_FILE_MAX_HISTORY and LOG_TOTAL_SIZE_CAP
+are defined in file-appender.xml We can set them here
+-->
+<configuration>
+    <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
+    <property name="LOG_FILE" value="logs/jabcrawler-backend.log"/>
+    <!-- The maximum size we want each single log file to be -->
+    <property name="LOG_FILE_MAX_SIZE" value="5MB" />
+    <!-- How much space we are going to dedicate to keep those files,
+         if Logback reaches the <totalSizeCap> limit, the component is going to drop oldest files. -->
+    <property name="LOG_TOTAL_SIZE_CAP" value="50MB" />
+    <!-- how many days (or months) we want to keep the files before deleting them  -->
+    <property name="LOG_FILE_MAX_HISTORY" value="20" />
+
+    <include resource="org/springframework/boot/logging/logback/file-appender.xml" />
+
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <Pattern>${CONSOLE_LOG_PATTERN}
+            </Pattern>
+        </encoder>
+    </appender>
+
+    <root level="INFO">
+        <appender-ref ref="CONSOLE"/>
+        <appender-ref ref="FILE"/>
+    </root>
+</configuration>
