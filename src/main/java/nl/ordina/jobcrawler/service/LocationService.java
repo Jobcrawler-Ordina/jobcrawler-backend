@@ -100,7 +100,7 @@ public class LocationService {
                 //Read JSON response and return
                 JSONObject jsonResponse = new JSONObject(response);
                 JSONObject jsonAddress = jsonResponse.getJSONObject("address");
-                return jsonAddress.getString("town");
+                return jsonAddress.has("town") ? jsonAddress.getString("town") : jsonAddress.has("city") ? jsonAddress.getString("city") : "";
             }
         }
         return "";
