@@ -1,85 +1,89 @@
 package nl.ordina.jobcrawler.controller;
 
-import nl.ordina.jobcrawler.SearchResult;
-import nl.ordina.jobcrawler.controller.exception.VacancyNotFoundException;
+import nl.ordina.jobcrawler.exception.VacancyNotFoundException;
 import nl.ordina.jobcrawler.model.Skill;
 import nl.ordina.jobcrawler.model.Vacancy;
 import nl.ordina.jobcrawler.model.assembler.SkillModelAssembler;
 import nl.ordina.jobcrawler.model.assembler.VacancyModelAssembler;
+import nl.ordina.jobcrawler.payload.SearchRequest;
+import nl.ordina.jobcrawler.payload.SearchResult;
 import nl.ordina.jobcrawler.service.VacancyService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.IanaLinkRelations;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
-import java.util.ArrayList;
-import java.util.List;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
-import java.util.stream.Collectors;
-
-import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
-import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 
 @CrossOrigin
 @RestController
 @RequestMapping("/vacancies")
 public class VacancyController {
 
+    private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
     private final VacancyService vacancyService;
     private final VacancyModelAssembler vacancyModelAssembler;
 
-    @Autowired
     public VacancyController(VacancyService vacancyService, VacancyModelAssembler vacancyModelAssembler) {
         this.vacancyService = vacancyService;
         this.vacancyModelAssembler = vacancyModelAssembler;
     }
 
     /**
-     * Returns all vacancies in the database.
      *
-     * @return All vacancies in the database.
+     * @param value when entered vacancy results are filtered by this value and the skills are ignored
+     * @param skills when entered vacancy results are filtered by the skills
+     * @param page the current page number
+     * @param size the size of te page
+     *
+     * @return vacancies from the database.
      */
     @GetMapping
-    public ResponseEntity<SearchResult> getVacancies(
-            @RequestParam(required = false) String value,
-            @RequestParam(required = false) Set<String> skills,
-            @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "10") int size) {
+    public ResponseEntity<SearchResult> getVacancies(@RequestParam(required = false) Optional<String> value,
+                                                     @RequestParam(required = false) Optional<Set<String>> skills,
+                                                     @RequestParam(required = false) Optional<String> location,
+                                                     @RequestParam(required = false) Optional<Long> distance,
+                                                     @RequestParam(required = false) Optional<String> fromDate,
+                                                     @RequestParam(required = false) Optional<String> toDate,
+                                                     @RequestParam(defaultValue = "desc") String dir,
+                                                     @RequestParam(defaultValue = "postingDate") String sort,
+                                                     @RequestParam(defaultValue = "1") int page,
+                                                     @RequestParam(defaultValue = "10") int size) {
         try {
-            List<Vacancy> vacancyList = new ArrayList<>();
-            Pageable paging = PageRequest.of(page, size);
 
-            Page<Vacancy> vacancies;
+            Sort sorting = dir.equals("desc") ? Sort.by(Sort.Direction.DESC, sort) : Sort.by(Sort.Direction.ASC, sort);
+            Pageable paging = PageRequest.of(page, size, sorting);
 
-            if (value != null && !value.isBlank())
-                vacancies = vacancyService.findByAnyValue(value, paging);
-            else if(skills != null && !skills.isEmpty())
-                vacancies = vacancyService.findBySkills(skills, paging);
-            else
-                vacancies = vacancyService.findAll(paging);
-            vacancyList = vacancies.getContent();
+            SearchRequest searchRequest = new SearchRequest();
+            value.ifPresent(searchRequest::setKeywords);
+            fromDate.ifPresent(fd -> searchRequest.setFromDate(LocalDateTime.parse(fd, formatter)));
+            toDate.ifPresent(td -> searchRequest.setToDate(LocalDateTime.parse(td, formatter)));
+            skills.ifPresent(searchRequest::setSkills);
 
-            if (vacancyList.isEmpty()) {
+            location.ifPresent(searchRequest::setLocation);
+            distance.ifPresent(searchRequest::setDistance);
+
+            Page<Vacancy> vacancies = vacancyService.findByAnyValue(searchRequest, paging);
+
+            if (vacancies.getContent().isEmpty()) {
                 return new ResponseEntity<>(HttpStatus.NO_CONTENT);
             }
+
             SearchResult searchResult = new SearchResult();
-            searchResult.setVacancies(vacancyList);
+            searchResult.setVacancies(vacancies.getContent());
             searchResult.setCurrentPage(vacancies.getNumber());
             searchResult.setTotalItems(vacancies.getTotalElements());
             searchResult.setTotalPages(vacancies.getTotalPages());
@@ -103,6 +107,7 @@ public class VacancyController {
      * Code 400 Bad Request if the given body is invalid
      */
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<EntityModel<Vacancy>> createVacancy(@Valid @RequestBody Vacancy vacancy) {
         EntityModel<Vacancy> returnedVacancy = vacancyModelAssembler.toModel(vacancyService.save(vacancy));
         return ResponseEntity
@@ -148,7 +153,8 @@ public class VacancyController {
      * 404 Not Found if a vacancy with the specified ID is not found
      */
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> deleteVacancy(@PathVariable UUID id) {
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Object> deleteVacancy(@PathVariable UUID id) {
         vacancyService.findById(id).orElseThrow(() -> new VacancyNotFoundException(id));
         vacancyService.delete(id);
         return ResponseEntity.noContent().build();

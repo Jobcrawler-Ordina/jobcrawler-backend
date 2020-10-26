@@ -1,4 +1,4 @@
-package nl.ordina.jobcrawler;
+package nl.ordina.jobcrawler.payload;
 
 import lombok.Data;
 import nl.ordina.jobcrawler.model.Vacancy;

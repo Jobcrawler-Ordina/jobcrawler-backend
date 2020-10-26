@@ -16,7 +16,7 @@ public class YachtVacancyResponse {
     private Integer pages;
     private ArrayList<Map<String, Object>> vacancies;
 
-    /*
+    /**
      * We don't need anything else beside some variables and lombok annotations.
      * Everything will bind because the json response from the get request is at the lowest level possible.
      * Example:

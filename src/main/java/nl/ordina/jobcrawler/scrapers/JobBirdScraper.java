@@ -1,18 +1,26 @@
 package nl.ordina.jobcrawler.scrapers;
 
 import lombok.extern.slf4j.Slf4j;
-import nl.ordina.jobcrawler.controller.exception.HTMLStructureException;
+import nl.ordina.jobcrawler.exception.HTMLStructureException;
 import nl.ordina.jobcrawler.model.Vacancy;
+import nl.ordina.jobcrawler.payload.VacancyDTO;
+import nl.ordina.jobcrawler.repo.LocationRepository;
 import nl.ordina.jobcrawler.service.DocumentService;
 import nl.ordina.jobcrawler.service.LogService;
+import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
+import org.jsoup.safety.Whitelist;
 import org.jsoup.select.Elements;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.regex.Pattern;
 
 /*  Search is limited to URLs for ICT jobs with search term "java"
  *       Search URL will be completed later:a page number is added to the url
@@ -39,16 +47,21 @@ import java.util.concurrent.CopyOnWriteArrayList;
 @Slf4j
 @Component
 public class JobBirdScraper extends VacancyScraper {
+
+    private final Pattern ymdPattern = Pattern.compile("^[0-9]{4}-(1[0-2]|0[1-9])-(3[01]|[12][0-9]|0[1-9])$");
+    private final DateTimeFormatter ymdFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+
     public void setLogService(LogService logService) {
         this.logService = logService;
     }
 
+    LocationRepository locationRepository;
     public void setDocumentService(DocumentService documentService) {
         this.documentService = documentService;
     }
 
     private LogService logService = new LogService();
-    private DocumentService documentService  = new DocumentService();
+    private DocumentService documentService = new DocumentService();
 
     private static final int MAX_NR_OF_PAGES = 25;  // 25 seems enough for demo purposes, can be up to approx 60
     // at a certain point the vacancy date will be missing
@@ -66,35 +79,34 @@ public class JobBirdScraper extends VacancyScraper {
     }
 
 
-
     protected List<String> retrieveURLs() {
-        logService.logInfo(String.format("%s -- Start scraping", getBROKER().toUpperCase()));
-        List<String> vacancyURLs = getVacancyURLs();
-        return vacancyURLs;
+        logService.logInfo(String.format("%s -- Start scraping", getBroker().toUpperCase()));
+        return getVacancyURLs();
     }
 
-    protected List<Vacancy> retrieveVacancies(List<String> vacancyURLs) {
-        List<Vacancy> vacancies = new CopyOnWriteArrayList<>();
+    protected List<VacancyDTO> retrieveVacancies(List<String> vacancyURLs) {
+        List<VacancyDTO> vacancies = new CopyOnWriteArrayList<>();
 
         vacancyURLs.parallelStream().forEach(vacancyURL -> {
             Document doc = documentService.getDocument(vacancyURL);
             if (doc != null) {
-                Vacancy vacancy = Vacancy.builder()
+                VacancyDTO vacancyDTO = VacancyDTO.builder()
                         .vacancyURL(vacancyURL)
                         .title(getVacancyTitle(doc))
-                        .hours(getHoursFromPage(doc))
-                        .broker(getBROKER())
-                        .location(getLocation(doc))
+                        .hours(retrieveWorkHours(doc.select("div.card-body").text()))
+                        .broker(getBroker())
+                        .locationString(getLocation(doc))
                         .postingDate(getPublishDate(doc))
                         .about(getVacancyAbout(doc))
+                        .company(getCompanyName(doc))
                         .build();
 
-                vacancies.add(vacancy);
+                vacancies.add(vacancyDTO);
 
-                log.info(String.format("%s - Vacancy found: %s", getBROKER(), vacancy.getTitle()));
+                log.info(String.format("%s - Vacancy found: %s", getBroker(), vacancyDTO.getTitle()));
             }
         });
-        log.info(String.format("%s -- Returning scraped vacancies", getBROKER()));
+        log.info(String.format("%s -- Returning scraped vacancies", getBroker()));
 
 
         return vacancies;
@@ -106,7 +118,7 @@ public class JobBirdScraper extends VacancyScraper {
      * @return List with vacancies.
      */
     @Override
-    public List<Vacancy> getVacancies() {
+    public List<VacancyDTO> getVacancies() {
 
         List<String> vacancyURLs = retrieveURLs();
         return retrieveVacancies(vacancyURLs);
@@ -123,7 +135,7 @@ public class JobBirdScraper extends VacancyScraper {
         if (pageNumber < 1) {
             throw new Exception("JobBirdScraper:createSearchURL: pagenr must be 1 or greater");
         }
-        return String.format("%s%d&ot=date&c[]=ict", getSEARCH_URL(), pageNumber);
+        return String.format("%s%d&ot=date&c[]=ict", getSearchUrl(), pageNumber);
     }
 
 
@@ -182,7 +194,7 @@ public class JobBirdScraper extends VacancyScraper {
      * @param doc The HTML document containing the URLs to the vacancies
      * @return the index of the last page to scrape
      */
-    protected int getLastPageToScrape(Document doc)  {
+    protected int getLastPageToScrape(Document doc) {
         int totalNumberOfPages = getTotalNumberOfPages(doc);
         // TODO: we could get more sophisticated logic in place to limit the number of pages.
         // For example, we could look at the posting date of each vacancy, and limit it to thirty days.
@@ -200,7 +212,7 @@ public class JobBirdScraper extends VacancyScraper {
      * these are <li elements with as attribute value the number of the page
      * continue until the page link with the text "next"
      */
-    protected int getTotalNumberOfPages(Document doc) throws HTMLStructureException {
+    protected int getTotalNumberOfPages(Document doc) {
 
         try {
             Elements elements = doc.select("span.page-link");
@@ -212,7 +224,7 @@ public class JobBirdScraper extends VacancyScraper {
                 if (!text.equalsIgnoreCase("volgende"))
                     count++;
             }
-            log.info(String.format("%s -- Total number of pages: %d", getBROKER(), count));
+            log.info(String.format("%s -- Total number of pages: %d", getBroker(), count));
             return count;
         } catch (Exception e) {
             throw new HTMLStructureException(e.getLocalizedMessage());
@@ -246,7 +258,7 @@ public class JobBirdScraper extends VacancyScraper {
      * @param doc Document which is needed to retrieve vacancy title
      * @return String vacancy title
      */
-    protected String getVacancyTitle(Document doc)  {
+    protected String getVacancyTitle(Document doc) {
         Element vacancyHeader = doc.select("h1.no-margin").first();
 
         if (vacancyHeader != null) {
@@ -280,8 +292,8 @@ public class JobBirdScraper extends VacancyScraper {
      * @param doc Document which is needed to retrieve publishing date
      * @return String publish date
      */
-    protected String getPublishDate(Document doc) {
-        String result = "";
+    protected LocalDateTime getPublishDate(Document doc) {
+        LocalDateTime result = null;
         Elements elements = doc.select("span.job-result__place");
         if (!elements.isEmpty()) {
             Element parent = elements.get(0).parent().parent();
@@ -291,83 +303,39 @@ public class JobBirdScraper extends VacancyScraper {
 
             if (!timeElements.isEmpty()) {
                 Element timeElement = timeElements.get(0);
-                result = timeElement.attr("datetime");
+                String date = timeElement.attr("datetime");
+                result = checkDatePattern(date) ? LocalDate.parse(date, ymdFormatter).atStartOfDay() : null;
             }
+        }
+        if (result == null) {
+            return LocalDate.now().atStartOfDay();
         }
         return result;
     }
 
-    /**
-     * Retrieve the hours respectively the minimum allowed hours frm the relevant part of the page.
-     *
-     * @param doc Document which is needed to retrieve hours
-     * @return String hours
-     */
-    protected String getHoursFromPage(Document doc) {
-        try {
-            Elements elements = doc.select("div.card-body");
-            // Search the childnodes for the tag "<strong>Uren per week:</strong>
-            // in principle, the text is free format with a few common headings
-            for (Element e : elements) {
-                for (Element child : e.children()) {
-                    String minString = "<strong>Minimum aantal uren per week</strong>";
-                    if (child.toString().contains("Uren per week")) {
-                        String uren = child.text();
-                        String[] urenArr = uren.split(":");
-                        if (urenArr.length > 1) {
-                            uren = urenArr[1];
-                            return uren.trim();
-                        }
-                    } else if (child.toString().contains(minString)) {
-                        String sElement = child.toString();
-                        int index = child.toString().indexOf(minString);
-                        index += minString.length();
-                        String sRest = sElement.substring(index);
-                        index = sRest.indexOf("<");
-                        String sUren = sRest.substring(0, index);
-                        return sUren.trim();
-                    }
-                }
-            }
-        } catch (Exception e) {
-            // nothing, it will not always parse.
-            return "0";
-        }
-        return "0"; // catch all when working hours not mentioned on the page
+    private boolean checkDatePattern(String s) {
+        return s != null && ymdPattern.matcher(s).matches();
     }
-
-    /*
-     *   The job bird vacancy page structure is quite loose.
-     *   A number of vacancy page are in Dutch and quite often, the "About" can be found between
-     *   a line (div) "Functieomschrijving" just after  <div id="jobContent"  class = "card-body>
-     *  and a heading <h3>Vaardigheden</h3>
-     *
-     *   A number of vacancy pages have the about section
-     *
-     *  we cannot be sure about the exact layout, so it would be possible to extract the portion just
-     *  after the jobContent when the first line contains Functieomschrijving, read until Vaardigheden.
-     *
-     *
-     *  In other cases it is not so simple. When aforementioned receipt does not work we can
-     *  we can do the following:
-     *
-     * gather all elements until one of the following occurs:
-     *  - english offer: A sentence containing skills
-     *
-     *
-     * For the time being, the About contains all text contained within the jobcontainer card div element
-     *   <div class="jobContainer card">
-     *
-     * */
 
     /**
      * Retrieve the vacancy body to store in postgres database
+     *
      * @param doc Document which is needed to retrieve the body
      * @return String vacancy body
      */
     protected String getVacancyAbout(Document doc) {
-        Elements aboutElements = doc.select("div.jobContainer");
-        return aboutElements.text();
+        Elements aboutElements = doc.select("div#jobContent");
+        return Jsoup.clean(aboutElements.html(), Whitelist.basic());
+    }
+
+    /**
+     * Retrieves company name
+     * @param doc Document which is needed to retrieve the company name
+     * @return String company name
+     */
+    private String getCompanyName(Document doc) {
+        Elements itemListElements = doc.select("span.dashed-list__item");
+        return itemListElements.last().text();
     }
 
 
