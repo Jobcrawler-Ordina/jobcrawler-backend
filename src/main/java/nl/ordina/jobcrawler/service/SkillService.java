@@ -94,13 +94,8 @@ public class SkillService {
         }
     }
 
-
     public void deleteReferencesToSkills() {
         skillRepository.deleteReferencesToSkills();
-    }
-
-    public void deleteReferencesToSkill(String name) {
-        skillRepository.deleteReferencesToSkill(name);
     }
 
     // Given a list of skills from the database, add the links to the vacancy-skills table
