@@ -1,14 +1,19 @@
 package nl.ordina.jobcrawler.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import nl.ordina.jobcrawler.model.Location;
-import nl.ordina.jobcrawler.model.Skill;
 import nl.ordina.jobcrawler.model.Vacancy;
+import nl.ordina.jobcrawler.payload.opensearch.Address;
+import nl.ordina.jobcrawler.payload.opensearch.Coordinates;
+import nl.ordina.jobcrawler.payload.opensearch.Place;
 import nl.ordina.jobcrawler.repo.LocationRepository;
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
+import org.springframework.web.client.RestTemplate;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -25,11 +30,19 @@ public class LocationService {
 
     private static final String API_KEY = "Xd5hXSuQvqUJJbJh3iacOXZAcskvP7gI";
     private static final String EMPTY_API_RESPONSE = "[]";
-    
+    private static final String ERROR_API_RESPONSE = "{\"error\":\"Unable to geocode\"}";
+
+    private static final String GET_COORD_URL = "http://open.mapquestapi.com/nominatim/v1/search.php?format=json&key={key}&q={location}&addressdetails=0&limit=1&countrycodes=NL";
+    private static final String GET_LOCNAME_URL = "http://open.mapquestapi.com/nominatim/v1/reverse.php?format=json&key={key}&lat={lat}&lon={lon}";
+
+    private final RestTemplate restTemplate;
+    private final ObjectMapper objectMapper;
     private final LocationRepository locationRepository;
 
-    public LocationService(LocationRepository locationRepository) {
+    public LocationService(LocationRepository locationRepository, RestTemplate restTemplate, ObjectMapper objectMapper) {
         this.locationRepository = locationRepository;
+        this.restTemplate = restTemplate;
+        this.objectMapper = objectMapper;
     }
 
     public List<Location> findByOrderByNameAsc() {
@@ -53,57 +66,26 @@ public class LocationService {
         return Optional.empty();
     }
 
-    public static double[] getCoordinates(String location) throws IOException, JSONException {
-        double[] coord = new double[2];
-        String location2 = location.concat(", Nederland");
-        location2 = location2.replace(" ","%20");
-        final String url = "http://open.mapquestapi.com/nominatim/v1/search.php?key=" + API_KEY + "&format=json&q=" + location2 + "&addressdetails=1&limit=1";
-
-        URL obj = new URL(url);
-        HttpURLConnection connection = (HttpURLConnection) obj.openConnection();
-        // optional default is GET
-        connection.setRequestMethod("GET");
-        //add request header
-        connection.setRequestProperty("User-Agent", "Mozilla/5.0");
-        if (connection.getResponseCode() == 200) {
-            BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-            String response = in.readLine();
-            if (!EMPTY_API_RESPONSE.equals(response)) {
-                response = response.substring(1, response.length() - 1);
-                log.debug(response);
-                in.close();
-                //Read JSON response and return
-                JSONObject jsonResponse = new JSONObject(response);
-
-                coord[0] = jsonResponse.getDouble("lon");
-                coord[1] = jsonResponse.getDouble("lat");
-            }
-            return coord;
-        }
-        return coord;
-    }
-
     public String getLocation(double lat, double lon) throws IOException, JSONException {
-        final String url = "http://open.mapquestapi.com/nominatim/v1/reverse.php?key=" + API_KEY + "&format=json&lat=" + lat + "&lon=" + lon;
-        URL obj = new URL(url);
-        HttpURLConnection connection = (HttpURLConnection) obj.openConnection();
-        // optional default is GET
-        connection.setRequestMethod("GET");
-        //add request header
-        connection.setRequestProperty("User-Agent", "Mozilla/5.0");
-        if (connection.getResponseCode() == 200) {
-            BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-            String response = in.readLine();
-            if (!EMPTY_API_RESPONSE.equals(response)) {            
-                log.debug(response);
-                in.close();
-                //Read JSON response and return
-                JSONObject jsonResponse = new JSONObject(response);
-                JSONObject jsonAddress = jsonResponse.getJSONObject("address");
-                return jsonAddress.has("town") ? jsonAddress.getString("town") : jsonAddress.has("city") ? jsonAddress.getString("city") : "";
-            }
+        String jsonResponse = restTemplate.getForObject(GET_LOCNAME_URL, String.class, API_KEY, lat, lon);
+        if (!ERROR_API_RESPONSE.equals(jsonResponse)) {
+            Place place = objectMapper.readValue(jsonResponse, Place.class);
+            return !StringUtils.isEmpty(place.getAddress().getTown()) ? place.getAddress().getTown() : !StringUtils
+                    .isEmpty(place.getAddress().getCity()) ? place.getAddress().getCity() : "";
         }
         return "";
+    }
+
+    public double[] getCoordinates(String location) throws IOException {
+        double[] coord = new double[2];
+        String jsonResponse = restTemplate.getForObject(GET_COORD_URL, String.class, API_KEY, location);
+        if (!StringUtils.isEmpty(jsonResponse) && !EMPTY_API_RESPONSE.equals(jsonResponse)) {
+            jsonResponse = jsonResponse.substring(1, jsonResponse.length() - 1);
+            Coordinates openSearchCoordinates = objectMapper.readValue(jsonResponse, Coordinates.class);
+            coord[0] = openSearchCoordinates.getLon();
+            coord[1] = openSearchCoordinates.getLat();
+        }
+        return coord;
     }
 
     public static double getDistance(double[] coord1, double[] coord2) {
