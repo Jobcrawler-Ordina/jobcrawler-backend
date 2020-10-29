@@ -4,7 +4,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
+import org.hibernate.annotations.Formula;
 import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.annotations.NamedNativeQuery;
 import org.hibernate.annotations.Type;
 
 import javax.persistence.Entity;
@@ -17,6 +19,11 @@ import java.util.UUID;
 @Setter
 @Entity
 @NoArgsConstructor
+//@NamedNativeQuery(
+//        name = "getDistance",
+//        callable = true,
+//        query = "{call GETDISANCE(?, ?, ?, ?)}",
+//        resultClass = Review.class)
 public class Location {
 
     @Id
@@ -27,6 +34,9 @@ public class Location {
     private String name;
     private double lon;
     private double lat;
+
+    @Formula(value = "getDistance(lat,lon,51.7832704,4.908646399999999)")
+    private int distToLoc;
 
     public Location(String name) {
         this.name = name;

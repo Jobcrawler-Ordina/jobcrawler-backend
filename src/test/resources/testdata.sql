@@ -2,6 +2,8 @@
 -- PostgreSQL database dump
 --
 
+CREATE ALIAS GETDISTANCE FOR "nl.ordina.jobcrawler.repo.TestLocationService.getDistance";
+
 INSERT INTO public.location (id,lat,name,lon) VALUES
 ('a741ae35-267f-4bac-85ca-11a488246231',52.3350493,'Diemen',4.98428432770381)
 ,('014600ed-428e-4cac-a6e8-087156bc80e8',53.19968475,'Leeuwarden',5.80069089560234)

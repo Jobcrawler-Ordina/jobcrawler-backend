@@ -73,4 +73,15 @@ class PersistenceTests {
         assertEquals(104, vacancyRepository.findAll(vacancySearch(searchRequest), paging).getTotalElements());
     }
 
+    @Test
+    void testFindByDistance() {
+        Pageable paging = PageRequest.of(1, 10);
+        SearchRequest searchRequest = new SearchRequest();
+        double[] coord = { 5.24900804050379, 52.08653175 };
+        searchRequest.setCoord(coord);
+        searchRequest.setLocation("Zeist");
+        searchRequest.setDistance(10L);
+        assertEquals(20, vacancyRepository.findAll(vacancySearch(searchRequest), paging).getTotalElements());
+    }
+
 }
