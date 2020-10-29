@@ -8,7 +8,7 @@ import nl.ordina.jobcrawler.util.RoleName;
 import nl.ordina.jobcrawler.model.User;
 import nl.ordina.jobcrawler.payload.UserRequest;
 import nl.ordina.jobcrawler.security.jwt.JwtProvider;
-import nl.ordina.jobcrawler.security.services.UserPrinciple;
+import nl.ordina.jobcrawler.security.services.UserPrincipal;
 import nl.ordina.jobcrawler.service.RoleService;
 import nl.ordina.jobcrawler.service.UserService;
 import org.junit.jupiter.api.BeforeEach;
@@ -88,7 +88,7 @@ class AuthControllerTest {
 
     private User user;
 
-    private UserPrinciple userPrinciple;
+    private UserPrincipal userPrinciple;
 
     private List<GrantedAuthority> authorityList;
 
@@ -114,7 +114,7 @@ class AuthControllerTest {
         when(roleService.findByName(RoleName.ROLE_ADMIN)).thenReturn(Optional.of(adminRole));
         authorityList = new ArrayList<>();
         authorityList.add(new SimpleGrantedAuthority("ROLE_ADMIN"));
-        userPrinciple = new UserPrinciple(1L, userForm.getUsername(), userForm.getPassword(), authorityList);
+        userPrinciple = new UserPrincipal(1L, userForm.getUsername(), userForm.getPassword(), authorityList);
         when(authenticationManager.authenticate(any())).thenReturn(new UsernamePasswordAuthenticationToken(userPrinciple, null, authorityList));
         when(jwtProvider.generateJwtToken(any())).thenCallRealMethod();
         when(userService.save(any())).thenReturn(null);
