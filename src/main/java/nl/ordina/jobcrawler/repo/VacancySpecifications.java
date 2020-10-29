@@ -39,8 +39,8 @@ public final class VacancySpecifications {
                     .ifPresent(dist -> optionalProperties.map(SearchRequest::getCoord).ifPresent(coord -> allPredicates
                             .add(cb.le(cb
                                     .function("getDistance", Double.class, cb.literal(searchRequest.getCoord()[0]), cb
-                                            .literal(searchRequest.getCoord()[1]), root.get("location").get("lon"), root
-                                            .get("location").get("lat")), dist))));
+                                            .literal(searchRequest.getCoord()[1]), root.get("location").get("lat"), root
+                                            .get("location").get("lon")), dist))));
 
             optionalProperties.map(SearchRequest::getKeywords).filter(t -> !t.isEmpty())
                     .ifPresent(keywords -> allPredicates.add(cb.or(cb.like(cb.lower(root.get("about")), String

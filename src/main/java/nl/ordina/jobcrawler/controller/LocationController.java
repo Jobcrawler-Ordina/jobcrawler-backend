@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 @RestController
@@ -31,23 +32,31 @@ public class LocationController {
         this.locationModelAssembler = locationModelAssembler;
     }
 
-    @GetMapping("/{locationIdOrName}")
-    public EntityModel<Location> getLocationByIdOrName(@PathVariable String locationIdOrName) {
-        if(locationIdOrName.matches(".*\\d.*")) {
-            UUID id = UUID.fromString(locationIdOrName);
-            return getLocationById(id);
+    @GetMapping
+    public Object getLocationByCoordinates(@RequestParam(required = false) Optional<Double> lat,
+                                           @RequestParam(required = false) Optional<Double> lon) throws IOException {
+        if(lat.isEmpty()&&lon.isEmpty()) {
+            return getLocations();
         } else {
-            return getLocationByName(locationIdOrName);
+            String location = locationService.getLocation(lat.get(), lon.get());
+            return ResponseEntity.status(HttpStatus.OK).body(Map.of(
+                    "success", true,
+                    "location", location));
         }
     }
 
-    @GetMapping("/coordinates")
-    public ResponseEntity<Object> getLocationByCoordinates(@RequestParam double lat,
-                                                       @RequestParam double lon) throws IOException {
-        String location = locationService.getLocation(lat, lon);
-        return ResponseEntity.status(HttpStatus.OK).body(Map.of(
-                "success", true,
-                "location", location));
+    public ResponseEntity<List<Location>> getLocations() {
+        return new ResponseEntity<>(locationService.findByOrderByNameAsc(), HttpStatus.OK);
+    }
+
+    @GetMapping("/{locIdOrName}")
+    public EntityModel<Location> getLocationByIdOrName(@PathVariable String locIdOrName) {
+        if(locIdOrName.matches(".*\\d.*")) {
+            UUID id = UUID.fromString(locIdOrName);
+            return getLocationById(id);
+        } else {
+            return getLocationByName(locIdOrName);
+        }
     }
 
     private EntityModel<Location> getLocationById(UUID id) {
@@ -62,9 +71,26 @@ public class LocationController {
         return locationModelAssembler.toModel(location);
     }
 
-    @GetMapping
-    public ResponseEntity<List<Location>> getLocations() {
-        return new ResponseEntity<>(locationService.findByOrderByNameAsc(), HttpStatus.OK);
+    @GetMapping("coordinates/{location}")
+    public double[] getCoordinates(@PathVariable String location) throws IOException {
+        return locationService.getCoordinates(location);
     }
 
+    @GetMapping("/distance")
+    public double getDistance(@RequestParam(required = true) String from, @RequestParam(required = true) String to) {
+        return locationService.getDistance(parseCoordinates(from),parseCoordinates(to));
+    }
+
+    public double[] parseCoordinates(String loc) {
+        double[] coord = new double[2];
+        if (loc.matches("\\d+(\\.\\d+)?,\\d+(\\.\\d+)?")) {
+            coord[0] = Double.valueOf(loc.substring(0,loc.indexOf(',')));
+            coord[1] = Double.valueOf(loc.substring(loc.indexOf(',')+1,loc.length()-1));
+        } else {
+            Location location = locationService.findByLocationName(loc).get();
+            coord[0] = location.getLat();
+            coord[1] = location.getLon();
+        }
+        return coord;
+    }
 }
