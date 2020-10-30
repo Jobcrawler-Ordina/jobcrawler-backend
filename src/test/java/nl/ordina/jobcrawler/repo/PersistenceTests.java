@@ -77,7 +77,7 @@ class PersistenceTests {
     void testFindByDistance() {
         Pageable paging = PageRequest.of(1, 10);
         SearchRequest searchRequest = new SearchRequest();
-        double[] coord = { 5.24900804050379, 52.08653175 };
+        double[] coord = { 52.08653175, 5.24900804050379 };
         searchRequest.setCoord(coord);
         searchRequest.setLocation("Zeist");
         searchRequest.setDistance(10L);
