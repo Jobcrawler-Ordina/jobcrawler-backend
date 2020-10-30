@@ -111,7 +111,7 @@ public class ScraperService {
         log.info("CRON Scheduled -- Started deleting non-existing jobs");
         // Change this to find all with invalid url eg non-existing job
         List<Vacancy> vacanciesToDelete = vacancyService.findAll();
-        vacanciesToDelete.removeIf(Vacancy::hasValidURL);
+        vacanciesToDelete.removeIf(vacancyService::hasValidURL);
 
         log.info(vacanciesToDelete.size() + " vacancies to delete.");
 
