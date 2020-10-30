@@ -176,22 +176,4 @@ public class VacancyService {
         }
     }
 
-    public static List<Vacancy> convertVacancyDTOs(List<VacancyDTO> vacancyDTOs) {
-        return vacancyDTOs.stream().map(VacancyService::convertVacancyDTO).collect(Collectors.toList());
-    }
-
-    private static Vacancy convertVacancyDTO(VacancyDTO vacancyDTO) {
-        return Vacancy.builder()
-                .vacancyURL(vacancyDTO.getVacancyURL())
-                .title(vacancyDTO.getTitle())
-                .broker(vacancyDTO.getBroker())
-                .vacancyNumber(vacancyDTO.getVacancyNumber())
-                .hours(vacancyDTO.getHours())
-                .salary(vacancyDTO.getSalary())
-                .postingDate(vacancyDTO.getPostingDate())
-                .about(vacancyDTO.getAbout())
-                .company(vacancyDTO.getCompany())
-                .build();
-    }
-
 }
