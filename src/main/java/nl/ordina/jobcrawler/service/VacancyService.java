@@ -60,8 +60,8 @@ public class VacancyService {
                 log.error(e.getMessage());
             }
         }
-
-        return vacancyRepository.findAll(vacancySearch(searchRequest), paging);
+        Page<Vacancy> p = vacancyRepository.findAll(vacancySearch(searchRequest), paging);
+        return p;
     }
 
     /**

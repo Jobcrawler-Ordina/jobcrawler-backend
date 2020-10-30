@@ -23,8 +23,8 @@ public class Location {
     @GenericGenerator(name = "UUID", strategy = "org.hibernate.id.UUIDGenerator")
     private UUID id;
     private String name;
-    private double lon;
     private double lat;
+    private double lon;
 
     public Location(String name) {
         this.name = name;
@@ -34,11 +34,11 @@ public class Location {
         this(name, coord[0], coord[1]);
     }
 
-    public Location(String name, double lon, double lat) {
+    public Location(String name, double lat, double lon) {
         this.name = name;
-        this.lon = lon;
         this.lat = lat;
+        this.lon = lon;
     }
 
-    public double[] getCoord() {return new double[]{this.lon, this.lat}; }
+    public double[] getCoord() {return new double[]{this.lat, this.lon}; }
 }
