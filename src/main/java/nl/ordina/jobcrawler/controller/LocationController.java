@@ -73,7 +73,14 @@ public class LocationController {
 
     @GetMapping("coordinates/{location}")
     public double[] getCoordinates(@PathVariable String location) throws IOException {
-        return locationService.getCoordinates(location);
+        double[] coord;
+        coord = locationService.getCoordinates(location);
+        Optional<Location> existCheckLocation = locationService.findByLocationName(location);
+        if (existCheckLocation.isEmpty()) {
+            Location locationObj = new Location(location, coord);
+            locationService.save(locationObj);
+        }
+        return coord;
     }
 
     @GetMapping("/distance")
