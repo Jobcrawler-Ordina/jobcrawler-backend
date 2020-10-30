@@ -56,6 +56,7 @@ public class JobBirdScraper extends VacancyScraper {
     }
 
     LocationRepository locationRepository;
+
     public void setDocumentService(DocumentService documentService) {
         this.documentService = documentService;
     }
@@ -131,10 +132,7 @@ public class JobBirdScraper extends VacancyScraper {
      * @return String, full search url for specific page.
      * @throws Exception when pageNumber is below 1.
      */
-    protected String createSearchURL(int pageNumber) throws Exception {
-        if (pageNumber < 1) {
-            throw new Exception("JobBirdScraper:createSearchURL: pagenr must be 1 or greater");
-        }
+    protected String createSearchURL(int pageNumber) {
         return String.format("%s%d&ot=date&c[]=ict", getSearchUrl(), pageNumber);
     }
 
@@ -166,7 +164,7 @@ public class JobBirdScraper extends VacancyScraper {
                 }
             }
 
-        } catch (Exception e) {
+        } catch (HTMLStructureException e) {
             logService.logError(e.getMessage());
         }
         return vacancyURLs;
@@ -330,6 +328,7 @@ public class JobBirdScraper extends VacancyScraper {
 
     /**
      * Retrieves company name
+     *
      * @param doc Document which is needed to retrieve the company name
      * @return String company name
      */

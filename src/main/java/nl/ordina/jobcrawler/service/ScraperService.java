@@ -116,7 +116,7 @@ public class ScraperService {
     }
 
     @Scheduled(cron = "0 30 11,17 * * *") // Runs two times a day. At 11.30am and 5.30pm.
-    public void deleteNonExistingVacancies() {
+    public void deleteNoMoreExistingVacancies() {
         log.info("CRON Scheduled -- Started deleting non-existing jobs");
         // Change this to find all with invalid url eg non-existing job
         List<Vacancy> vacanciesToDelete = vacancyService.findAll();
