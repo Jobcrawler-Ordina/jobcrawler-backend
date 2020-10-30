@@ -14,8 +14,11 @@ import org.jsoup.select.Elements;
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
+import org.springframework.web.client.RestClientException;
+import org.springframework.web.client.RestTemplate;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;
@@ -96,7 +99,7 @@ public class VacancyService {
      */
     public Vacancy save(Vacancy vacancy) {
 
-        if (hasValidURL(vacancy)) {    //checking the url, if it is malformed it will throw a VacancyURLMalformedException
+        if (hasExistingURL(vacancy)) {    //checking the url, if it is malformed it will throw a VacancyURLMalformedException
             return vacancyRepository.save(vacancy);
         } else {
             throw new VacancyURLMalformedException(vacancy.getVacancyURL());
@@ -135,17 +138,15 @@ public class VacancyService {
     }
 
 
-    public boolean hasValidURL(final Vacancy vacancy) {
-        if (!vacancy.getVacancyURL().startsWith("http"))
-            vacancy.setVacancyURL("https://" + vacancy.getVacancyURL());
+    public boolean hasExistingURL(final Vacancy vacancy) {
 
-        URL url;
-        HttpURLConnection huc;
-        int responseCode;
+        if (!vacancy.getVacancyURL().startsWith("http")) {
+            vacancy.setVacancyURL("https://" + vacancy.getVacancyURL());
+        }
 
         try {
-            url = new URL(vacancy.getVacancyURL());
-            huc = (HttpURLConnection) url.openConnection();
+            URL url = new URL(vacancy.getVacancyURL());
+            HttpURLConnection huc = (HttpURLConnection) url.openConnection();
             huc.setRequestProperty("User-Agent", "Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10.4; en-US; rv:1.9.2.2) Gecko/20100316 Firefox/3.6.2");
             huc.setRequestMethod("HEAD");   // faster because it doesn't download the response body
             /*
@@ -168,8 +169,7 @@ public class VacancyService {
                 }
                 return true;
             } else {
-                responseCode = huc.getResponseCode();
-                return responseCode == 200; //returns true if the website has a 200 OK response
+                return huc.getResponseCode() == 200; //returns true if the website has a 200 OK response
             }
         } catch (IOException e) {
             throw new VacancyURLMalformedException(vacancy.getVacancyURL());
