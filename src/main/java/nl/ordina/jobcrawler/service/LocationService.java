@@ -82,8 +82,8 @@ public class LocationService {
         if (!StringUtils.isEmpty(jsonResponse) && !EMPTY_API_RESPONSE.equals(jsonResponse)) {
             jsonResponse = jsonResponse.substring(1, jsonResponse.length() - 1);
             Coordinates openSearchCoordinates = objectMapper.readValue(jsonResponse, Coordinates.class);
-            coord[0] = openSearchCoordinates.getLon();
-            coord[1] = openSearchCoordinates.getLat();
+            coord[0] = openSearchCoordinates.getLat();
+            coord[1] = openSearchCoordinates.getLon();
         }
         return coord;
     }
@@ -91,23 +91,23 @@ public class LocationService {
     public static double getDistance(double[] coord1, double[] coord2) {
         return getDistance(coord1[0], coord1[1], coord2[0], coord2[1]);
     }
-    public static double getDistance(double[] coord1, double lon2, double lat2) {
-        return getDistance(coord1[0], coord1[1], lon2, lat2);
+    public static double getDistance(double[] coord1, double lat2, double lon2) {
+        return getDistance(coord1[0], coord1[1], lat2, lon2);
     }
-    public static double getDistance(double lon1, double lat1, double[] coord2) {
-        return getDistance(lon1, lat1, coord2[0], coord2[1]);
+    public static double getDistance(double lat1, double lon1, double[] coord2) {
+        return getDistance(lat1, lon1, coord2[0], coord2[1]);
     }
 
-    public static double getDistance(double lon1, double lat1, double lon2, double lat2) {
+    public static double getDistance(double lat1, double lon1, double lat2, double lon2) {
         // Convert degrees to radians
-        double dlon1 = Math.toRadians(lon1);
         double dlat1 = Math.toRadians(lat1);
-        double dlon2 = Math.toRadians(lon2);
+        double dlon1 = Math.toRadians(lon1);
         double dlat2 = Math.toRadians(lat2);
+        double dlon2 = Math.toRadians(lon2);
 
         // Haversine formula
-        double dlon = dlon2 - dlon1;
         double dlat = dlat2 - dlat1;
+        double dlon = dlon2 - dlon1;
         double a = Math.pow(Math.sin(dlat / 2), 2)
                 + Math.cos(dlat1) * Math.cos(dlat2)
                 * Math.pow(Math.sin(dlon / 2), 2);

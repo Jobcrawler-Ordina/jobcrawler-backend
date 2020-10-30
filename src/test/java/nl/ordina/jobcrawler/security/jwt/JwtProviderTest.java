@@ -3,7 +3,7 @@ package nl.ordina.jobcrawler.security.jwt;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.MalformedJwtException;
-import nl.ordina.jobcrawler.security.services.UserPrinciple;
+import nl.ordina.jobcrawler.security.services.UserPrincipal;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -30,7 +30,7 @@ class JwtProviderTest {
     public void init() {
         List<GrantedAuthority> authorityList = new ArrayList<>();
         authorityList.add(new SimpleGrantedAuthority("ROLE_ADMIN"));
-        UserPrinciple userPrinciple = new UserPrinciple(1L, "admin", "password", authorityList);
+        UserPrincipal userPrinciple = new UserPrincipal(1L, "admin", "password", authorityList);
         authentication = new UsernamePasswordAuthenticationToken(userPrinciple, null, authorityList);
         token = jwtProvider.generateJwtToken(authentication).get(0);
     }
