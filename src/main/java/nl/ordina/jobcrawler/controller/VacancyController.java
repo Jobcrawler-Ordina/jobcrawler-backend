@@ -139,9 +139,7 @@ public class VacancyController {
      */
     @GetMapping("/{id}/skills")
     public CollectionModel<EntityModel<Skill>> getSkillsById(@PathVariable UUID id) {
-        Vacancy vacancy = vacancyService.findById(id)
-                .orElseThrow(() -> new VacancyNotFoundException(id));
-        return new SkillModelAssembler().toCollectionModel(vacancy.getSkills());
+        return new SkillModelAssembler().toCollectionModel(vacancyService.findSkillsByVacancyId(id));
     }
 
     /**

@@ -2,6 +2,7 @@ package nl.ordina.jobcrawler.service;
 
 import lombok.extern.slf4j.Slf4j;
 import nl.ordina.jobcrawler.exception.VacancyURLMalformedException;
+import nl.ordina.jobcrawler.model.Skill;
 import nl.ordina.jobcrawler.model.Vacancy;
 import nl.ordina.jobcrawler.payload.SearchRequest;
 import nl.ordina.jobcrawler.payload.VacancyDTO;
@@ -13,9 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import java.io.IOException;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static nl.ordina.jobcrawler.repo.VacancySpecifications.vacancySearch;
@@ -26,10 +25,12 @@ public class VacancyService {
 
     private final VacancyRepository vacancyRepository;
     private final LocationService locationService;
+    private final SkillService skillService;
 
-    public VacancyService(VacancyRepository vacancyRepository, LocationService locationService) {
+    public VacancyService(VacancyRepository vacancyRepository, LocationService locationService, SkillService skillService) {
         this.vacancyRepository = vacancyRepository;
         this.locationService = locationService;
+        this.skillService = skillService;
     }
 
     /**
@@ -40,6 +41,20 @@ public class VacancyService {
      */
     public Optional<Vacancy> findById(UUID id) {
         return vacancyRepository.findById(id);
+    }
+
+    /**
+     * Returns a set of skills matched to the vacancy with the specified id.
+     *
+     * @param id ID of the vacancy to retrieve.
+     * @return An set skills matching the vacancy.
+     */
+    public Set<Skill> findSkillsByVacancyId(UUID id) {
+        Set<Skill> matchedSkills = new HashSet<>();
+        vacancyRepository.findById(id).map(v -> matchedSkills.addAll(skillService.findAll().stream()
+                .filter(s -> v.getAbout().toLowerCase().contains(s.getName().toLowerCase()))
+                .collect(Collectors.toSet())));
+        return matchedSkills;
     }
 
     public List<Vacancy> findAll() {
@@ -118,7 +133,7 @@ public class VacancyService {
         return vacancyDTOs.stream().map(VacancyService::convertVacancyDTO).collect(Collectors.toList());
     }
 
-    public static Vacancy convertVacancyDTO(VacancyDTO vacancyDTO) {
+    private static Vacancy convertVacancyDTO(VacancyDTO vacancyDTO) {
         return Vacancy.builder()
                 .vacancyURL(vacancyDTO.getVacancyURL())
                 .title(vacancyDTO.getTitle())
@@ -131,4 +146,5 @@ public class VacancyService {
                 .company(vacancyDTO.getCompany())
                 .build();
     }
+
 }

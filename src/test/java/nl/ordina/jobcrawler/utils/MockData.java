@@ -20,7 +20,6 @@ public final class MockData {
                 .hours(30)
                 .postingDate(LocalDateTime.parse("2020-04-14 00:00", formatter))
                 .about("this is a description of the example job")
-                .skills(Sets.newHashSet())
                 .build();
     }
 

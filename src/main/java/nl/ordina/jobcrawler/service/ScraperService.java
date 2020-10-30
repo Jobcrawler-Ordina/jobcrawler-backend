@@ -30,17 +30,15 @@ public class ScraperService {
 
     private final VacancyService vacancyService;
     private final LocationService locationService;
-    private final SkillMatcherService skillMatcherService;
     private final YachtVacancyScraper yachtVacancyScraper;
     private final HuxleyITVacancyScraper huxleyITVacancyScraper;
     private final JobBirdScraper jobBirdScraper;
 
-    public ScraperService(VacancyService vacancyService, LocationService locationService, SkillMatcherService skillMatcherService,
+    public ScraperService(VacancyService vacancyService, LocationService locationService,
                           YachtVacancyScraper yachtVacancyScraper, HuxleyITVacancyScraper huxleyITVacancyScraper,
                           JobBirdScraper jobBirdScraper) {
         this.vacancyService = vacancyService;
         this.locationService = locationService;
-        this.skillMatcherService = skillMatcherService;
         this.yachtVacancyScraper = yachtVacancyScraper;
         this.huxleyITVacancyScraper = huxleyITVacancyScraper;
         this.jobBirdScraper = jobBirdScraper;
@@ -85,19 +83,13 @@ public class ScraperService {
                             Location location = new Location(vacancyLocation, locationService.getCoordinates(vacancyLocation));
                             locationService.save(location);
                             vacancy.setLocation(location);
-                            Set<Skill> skills = skillMatcherService.findMatchingSkills(vacancy);
-                            vacancy.setSkills(skills);
                             vacancyService.save(vacancy);
                         } else {
                             Location location = existCheckLocation.get();
                             vacancy.setLocation(location);
-                            Set<Skill> skills = skillMatcherService.findMatchingSkills(vacancy);
-                            vacancy.setSkills(skills);
                             vacancyService.save(vacancy);
                         }
                     } else {
-                        Set<Skill> skills = skillMatcherService.findMatchingSkills(vacancy);
-                        vacancy.setSkills(skills);
                         vacancyService.save(vacancy);
                     }
                     newVacancy++;

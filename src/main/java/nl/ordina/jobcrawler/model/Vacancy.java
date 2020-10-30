@@ -49,14 +49,6 @@ public class Vacancy {
     private String about;
     private String company;
 
-    @ManyToMany
-    @JoinTable(
-            name = "vacancy_skills",
-            joinColumns = @JoinColumn(name = "vacancy_id"),
-            inverseJoinColumns = @JoinColumn(name = "skill_id"))
-    @JsonIgnore
-    Set<Skill> skills;  //a set is a collection that has no duplicates
-
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "location_id")
     Location location;
@@ -120,7 +112,6 @@ public class Vacancy {
                 ", postingDate='" + postingDate + '\'' +
                 ", about='" + about + '\'' +
                 ", company='" + company + '\'' +
-                ", skills=" + skills +
                 ", location_filled=" + !(location==null);
             if(!(location==null)) {
                 message = message + ", location_name=" + location.getName();
