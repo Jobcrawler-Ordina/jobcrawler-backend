@@ -1,6 +1,8 @@
 package nl.ordina.jobcrawler.repo;
 
+import nl.ordina.jobcrawler.model.Location_;
 import nl.ordina.jobcrawler.model.Vacancy;
+import nl.ordina.jobcrawler.model.Vacancy_;
 import nl.ordina.jobcrawler.payload.SearchRequest;
 import org.springframework.data.jpa.domain.Specification;
 
@@ -32,34 +34,36 @@ public final class VacancySpecifications {
 
             optionalProperties.map(SearchRequest::getLocation)
                     .filter(l -> !l.isBlank() && optionalProperties.map(SearchRequest::getDistance).isEmpty())
-                    .ifPresent(location -> allPredicates.add(cb.like(cb.lower(root.get("location").get("name")), String
-                            .format(LIKE_QUERY_FORMAT, location.toLowerCase()))));
+                    .ifPresent(location -> allPredicates
+                            .add(cb.like(cb.lower(root.get(Vacancy_.location).get(Location_.name)), String
+                                    .format(LIKE_QUERY_FORMAT, location.toLowerCase()))));
 
             optionalProperties.map(SearchRequest::getDistance).filter(dist -> !(dist == 0))
                     .ifPresent(dist -> optionalProperties.map(SearchRequest::getCoord).ifPresent(coord -> allPredicates
                             .add(cb.le(cb
                                     .function("getDistance", Double.class, cb.literal(searchRequest.getCoord()[0]), cb
-                                            .literal(searchRequest.getCoord()[1]), root.get("location").get("lat"), root
-                                            .get("location").get("lon")), dist))));
+                                            .literal(searchRequest.getCoord()[1]), root.get(Vacancy_.location)
+                                            .get(Location_.lat), root.get(Vacancy_.location)
+                                            .get(Location_.lon)), dist))));
 
             optionalProperties.map(SearchRequest::getKeywords).filter(t -> !t.isEmpty())
-                    .ifPresent(keywords -> allPredicates.add(cb.or(cb.like(cb.lower(root.get("about")), String
+                    .ifPresent(keywords -> allPredicates.add(cb.or(cb.like(cb.lower(root.get(Vacancy_.about)), String
                             .format(LIKE_QUERY_FORMAT, keywords.toLowerCase())), cb
-                            .like(cb.lower(root.get("title")), String
+                            .like(cb.lower(root.get(Vacancy_.title)), String
                                     .format(LIKE_QUERY_FORMAT, keywords.toLowerCase())), cb
-                            .like(cb.lower(root.get("company")), String
+                            .like(cb.lower(root.get(Vacancy_.company)), String
                                     .format(LIKE_QUERY_FORMAT, keywords.toLowerCase())))));
 
             optionalProperties.map(SearchRequest::getSkills).filter(t -> !t.isEmpty()).ifPresent(skills -> allPredicates
                     .add(cb.and(skills.stream()
-                            .map(s -> cb.like(root.get("about"), String.format(LIKE_QUERY_FORMAT, s)))
+                            .map(s -> cb.like(root.get(Vacancy_.about), String.format(LIKE_QUERY_FORMAT, s)))
                             .toArray(Predicate[]::new))));
 
             optionalProperties.map(SearchRequest::getFromDate).ifPresent(fromDate -> allPredicates
-                    .add(cb.greaterThanOrEqualTo(root.get("postingDate"), cb.literal(fromDate))));
+                    .add(cb.greaterThanOrEqualTo(root.get(Vacancy_.postingDate), cb.literal(fromDate))));
 
             optionalProperties.map(SearchRequest::getToDate).ifPresent(toDate -> allPredicates
-                    .add(cb.lessThanOrEqualTo(root.get("postingDate"), cb.literal(toDate))));
+                    .add(cb.lessThanOrEqualTo(root.get(Vacancy_.postingDate), cb.literal(toDate))));
 
 
             return cb.and(allPredicates.toArray(new Predicate[0]));

@@ -28,8 +28,11 @@ are defined in file-appender.xml We can set them here
         </encoder>
     </appender>
 
+    <logger name="nl.ordina.jobcrawler" level="DEBUG" />
+
     <root level="INFO">
         <appender-ref ref="CONSOLE"/>
         <appender-ref ref="FILE"/>
     </root>
+
 </configuration>

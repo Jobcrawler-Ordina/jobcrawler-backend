@@ -25,9 +25,11 @@ import static nl.ordina.jobcrawler.repo.VacancySpecifications.vacancySearch;
 public class VacancyService {
 
     private final VacancyRepository vacancyRepository;
+    private final LocationService locationService;
 
-    public VacancyService(VacancyRepository vacancyRepository) {
+    public VacancyService(VacancyRepository vacancyRepository, LocationService locationService) {
         this.vacancyRepository = vacancyRepository;
+        this.locationService = locationService;
     }
 
     /**
@@ -55,7 +57,7 @@ public class VacancyService {
 
         if (!StringUtils.isEmpty(searchRequest.getLocation())) {
             try {
-                searchRequest.setCoord(LocationService.getCoordinates(searchRequest.getLocation()));
+                searchRequest.setCoord(locationService.getCoordinates(searchRequest.getLocation()));
             } catch (IOException e) {
                 log.error(e.getMessage());
             }

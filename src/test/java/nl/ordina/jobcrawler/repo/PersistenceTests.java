@@ -39,7 +39,7 @@ class PersistenceTests {
 
     @Test
     void testRepoFindById() {
-        String sUuid = "e547d370-e5c2-4ed4-8f08-43d5a8f8d355";
+        String sUuid = "30324ab8-29fd-4f23-a4da-bc445396e79a";
         assertEquals(sUuid, vacancyRepository.findById(UUID.fromString(sUuid)).orElse(new Vacancy()).getId().toString());
     }
 
@@ -48,13 +48,13 @@ class PersistenceTests {
         Pageable paging = PageRequest.of(1, 10);
         SearchRequest searchRequest = new SearchRequest();
         searchRequest.setSkills(Sets.newSet("JAVA"));
-        assertEquals(9, vacancyRepository.findAll(vacancySearch(searchRequest), paging).getTotalElements());
+        assertEquals(10, vacancyRepository.findAll(vacancySearch(searchRequest), paging).getTotalElements());
         searchRequest.setSkills(Sets.newSet("Maven"));
-        assertEquals(19, vacancyRepository.findAll(vacancySearch(searchRequest), paging).getTotalElements());
+        assertEquals(29, vacancyRepository.findAll(vacancySearch(searchRequest), paging).getTotalElements());
         searchRequest.setSkills(Sets.newSet("Angular"));
-        assertEquals(32, vacancyRepository.findAll(vacancySearch(searchRequest), paging).getTotalElements());
+        assertEquals(31, vacancyRepository.findAll(vacancySearch(searchRequest), paging).getTotalElements());
         searchRequest.setSkills(Sets.newSet("Maven", "Angular"));
-        assertEquals(4, vacancyRepository.findAll(vacancySearch(searchRequest), paging)
+        assertEquals(6, vacancyRepository.findAll(vacancySearch(searchRequest), paging)
                 .getTotalElements());
 
     }
@@ -70,7 +70,18 @@ class PersistenceTests {
         Pageable paging = PageRequest.of(1, 10);
         SearchRequest searchRequest = new SearchRequest();
         searchRequest.setKeywords("test");
-        assertEquals(104, vacancyRepository.findAll(vacancySearch(searchRequest), paging).getTotalElements());
+        assertEquals(112, vacancyRepository.findAll(vacancySearch(searchRequest), paging).getTotalElements());
+    }
+
+    @Test
+    void testFindByDistance() {
+        Pageable paging = PageRequest.of(1, 10);
+        SearchRequest searchRequest = new SearchRequest();
+        double[] coord = { 52.08653175, 5.24900804050379 };
+        searchRequest.setCoord(coord);
+        searchRequest.setLocation("Zeist");
+        searchRequest.setDistance(10L);
+        assertEquals(21, vacancyRepository.findAll(vacancySearch(searchRequest), paging).getTotalElements());
     }
 
 }

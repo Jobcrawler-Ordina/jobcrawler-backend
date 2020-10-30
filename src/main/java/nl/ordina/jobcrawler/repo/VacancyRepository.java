@@ -12,9 +12,7 @@ import java.util.UUID;
 @Repository
 public interface VacancyRepository extends JpaRepository<Vacancy, UUID>, JpaSpecificationExecutor<Vacancy> {
 
-
     Optional<Vacancy> findByVacancyURLEquals(String url);
-
 
     List<Vacancy> findByLocation_Id(UUID id);
 
