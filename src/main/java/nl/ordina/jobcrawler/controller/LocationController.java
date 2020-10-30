@@ -13,6 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -32,19 +33,20 @@ public class LocationController {
         this.locationModelAssembler = locationModelAssembler;
     }
 
-    @GetMapping
-    public Object getLocationByCoordinates(@RequestParam(required = false) Optional<Double> lat,
-                                           @RequestParam(required = false) Optional<Double> lon) throws IOException {
-        if(lat.isEmpty()&&lon.isEmpty()) {
-            return getLocations();
-        } else {
-            String location = locationService.getLocation(lat.get(), lon.get());
-            return ResponseEntity.status(HttpStatus.OK).body(Map.of(
-                    "success", true,
-                    "location", location));
+    @GetMapping("/coordinates")
+    public ResponseEntity<Map<String, Serializable>> getLocationByCoordinates(
+            @RequestParam Optional<Double> lat,
+            @RequestParam Optional<Double> lon) throws IOException {
+        String location = "";
+        boolean result = false;
+        if (lat.isPresent() && lon.isPresent()) {
+            location = locationService.getLocation(lat.get(), lon.get());
+            result = true;
         }
+        return ResponseEntity.status(HttpStatus.OK).body(Map.of("success", result, "location", location));
     }
 
+    @GetMapping
     public ResponseEntity<List<Location>> getLocations() {
         return new ResponseEntity<>(locationService.findByOrderByNameAsc(), HttpStatus.OK);
     }
