@@ -94,16 +94,4 @@ public class SkillService {
         }
     }
 
-    public void deleteReferencesToSkills() {
-        skillRepository.deleteReferencesToSkills();
-    }
-
-    // Given a list of skills from the database, add the links to the vacancy-skills table
-    // for the given vacancy
-    public  void createMatchingSkillLinks(Vacancy vacancy, Set<Skill> matchingSkills) {
-        for (Skill skill: matchingSkills) {
-            skillRepository.linkSkillToVacancy(vacancy.getId(), skill.getId());
-        }
-    }
-
 }

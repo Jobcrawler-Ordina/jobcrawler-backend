@@ -26,10 +26,6 @@ public class Skill {
     @Column(nullable = false, unique = true)
     private String name;
 
-    @ManyToMany(mappedBy = "skills", fetch = FetchType.LAZY, cascade = CascadeType.PERSIST)
-    @JsonIgnore
-    Set<Vacancy> vacancies = new HashSet<>();
-
     public Skill(String name) {
         this.name = name;
     }

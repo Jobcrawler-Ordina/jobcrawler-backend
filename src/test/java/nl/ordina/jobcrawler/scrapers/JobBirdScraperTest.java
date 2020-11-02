@@ -26,6 +26,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -248,7 +249,7 @@ class JobBirdScraperTest extends UseLocalSavedFiles {
         when(documentServiceMock.getDocument(anyString())).thenReturn(doc);
 
         List<VacancyDTO> vacancyDTOs = jobBirdScraperTestable.retrieveVacancies(urlList);
-        List<Vacancy> vacancies = VacancyService.convertVacancyDTOs(vacancyDTOs);
+        List<Vacancy> vacancies = convertVacancyDTOs(vacancyDTOs);
         assertEquals(1, vacancies.size());
         Vacancy vacancy = vacancies.get(0);
 
@@ -263,5 +264,23 @@ class JobBirdScraperTest extends UseLocalSavedFiles {
         when(documentServiceMock.getDocument(anyString())).thenReturn(doc);
         List<VacancyDTO> vacancyDTOs = jobBirdScraperTestable.retrieveVacancies(Collections.singletonList("dummy url"));
         assertNotNull(vacancyDTOs.get(0).getPostingDate());
+    }
+
+    private List<Vacancy> convertVacancyDTOs(List<VacancyDTO> vacancyDTOs) {
+        return vacancyDTOs.stream().map(this::convertVacancyDTO).collect(Collectors.toList());
+    }
+
+    private Vacancy convertVacancyDTO(VacancyDTO vacancyDTO) {
+        return Vacancy.builder()
+                .vacancyURL(vacancyDTO.getVacancyURL())
+                .title(vacancyDTO.getTitle())
+                .broker(vacancyDTO.getBroker())
+                .vacancyNumber(vacancyDTO.getVacancyNumber())
+                .hours(vacancyDTO.getHours())
+                .salary(vacancyDTO.getSalary())
+                .postingDate(vacancyDTO.getPostingDate())
+                .about(vacancyDTO.getAbout())
+                .company(vacancyDTO.getCompany())
+                .build();
     }
 }

@@ -2,7 +2,6 @@ package nl.ordina.jobcrawler.service;
 
 import lombok.extern.slf4j.Slf4j;
 import nl.ordina.jobcrawler.model.Location;
-import nl.ordina.jobcrawler.model.Skill;
 import nl.ordina.jobcrawler.model.Vacancy;
 import nl.ordina.jobcrawler.payload.VacancyDTO;
 import nl.ordina.jobcrawler.scrapers.HuxleyITVacancyScraper;
@@ -13,10 +12,10 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.annotation.PostConstruct;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 /*
@@ -30,17 +29,15 @@ public class ScraperService {
 
     private final VacancyService vacancyService;
     private final LocationService locationService;
-    private final SkillMatcherService skillMatcherService;
     private final YachtVacancyScraper yachtVacancyScraper;
     private final HuxleyITVacancyScraper huxleyITVacancyScraper;
     private final JobBirdScraper jobBirdScraper;
 
-    public ScraperService(VacancyService vacancyService, LocationService locationService, SkillMatcherService skillMatcherService,
+    public ScraperService(VacancyService vacancyService, LocationService locationService,
                           YachtVacancyScraper yachtVacancyScraper, HuxleyITVacancyScraper huxleyITVacancyScraper,
                           JobBirdScraper jobBirdScraper) {
         this.vacancyService = vacancyService;
         this.locationService = locationService;
-        this.skillMatcherService = skillMatcherService;
         this.yachtVacancyScraper = yachtVacancyScraper;
         this.huxleyITVacancyScraper = huxleyITVacancyScraper;
         this.jobBirdScraper = jobBirdScraper;
@@ -85,19 +82,13 @@ public class ScraperService {
                             Location location = new Location(vacancyLocation, locationService.getCoordinates(vacancyLocation));
                             locationService.save(location);
                             vacancy.setLocation(location);
-                            Set<Skill> skills = skillMatcherService.findMatchingSkills(vacancy);
-                            vacancy.setSkills(skills);
                             vacancyService.save(vacancy);
                         } else {
                             Location location = existCheckLocation.get();
                             vacancy.setLocation(location);
-                            Set<Skill> skills = skillMatcherService.findMatchingSkills(vacancy);
-                            vacancy.setSkills(skills);
                             vacancyService.save(vacancy);
                         }
                     } else {
-                        Set<Skill> skills = skillMatcherService.findMatchingSkills(vacancy);
-                        vacancy.setSkills(skills);
                         vacancyService.save(vacancy);
                     }
                     newVacancy++;
@@ -117,15 +108,10 @@ public class ScraperService {
     @Scheduled(cron = "0 30 11,17 * * *") // Runs two times a day. At 11.30am and 5.30pm.
     public void deleteNoMoreExistingVacancies() {
         log.info("CRON Scheduled -- Started deleting non-existing jobs");
-        // Change this to find all with invalid url eg non-existing job
-        List<Vacancy> vacanciesToDelete = vacancyService.findAll();
-        vacanciesToDelete.removeIf(Vacancy::hasValidURL);
 
-        log.info(vacanciesToDelete.size() + " vacancies to delete.");
+        vacancyService.findAll().stream().filter(v -> !vacancyService.hasExistingURL(v))
+                .forEach(v -> vacancyService.delete(v.getId()));
 
-        for (Vacancy vacancyToDelete : vacanciesToDelete) {
-            vacancyService.delete(vacancyToDelete.getId());
-        }
         log.info("Finished deleting non-existing jobs");
     }
 
