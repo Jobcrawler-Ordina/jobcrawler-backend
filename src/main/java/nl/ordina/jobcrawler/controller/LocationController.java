@@ -38,12 +38,14 @@ public class LocationController {
             @RequestParam Optional<Double> lat,
             @RequestParam Optional<Double> lon) throws IOException {
         String location = "";
+        HttpStatus httpStatus = HttpStatus.NOT_FOUND;
         boolean result = false;
         if (lat.isPresent() && lon.isPresent()) {
             location = locationService.getLocation(lat.get(), lon.get());
+            httpStatus = HttpStatus.OK;
             result = true;
         }
-        return ResponseEntity.status(HttpStatus.OK).body(Map.of("success", result, "location", location));
+        return ResponseEntity.status(httpStatus).body(Map.of("success", result, "location", location));
     }
 
     @GetMapping
