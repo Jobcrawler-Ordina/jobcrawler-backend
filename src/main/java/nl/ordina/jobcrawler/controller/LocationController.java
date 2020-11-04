@@ -38,7 +38,7 @@ public class LocationController {
             @RequestParam Optional<Double> lat,
             @RequestParam Optional<Double> lon) throws IOException {
         String location = "";
-        HttpStatus httpStatus = HttpStatus.NOT_FOUND;
+        HttpStatus httpStatus = HttpStatus.BAD_REQUEST;
         boolean result = false;
         if (lat.isPresent() && lon.isPresent()) {
             location = locationService.getLocation(lat.get(), lon.get());
