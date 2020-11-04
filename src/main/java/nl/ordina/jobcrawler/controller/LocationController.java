@@ -13,6 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -32,19 +33,22 @@ public class LocationController {
         this.locationModelAssembler = locationModelAssembler;
     }
 
-    @GetMapping
-    public Object getLocationByCoordinates(@RequestParam(required = false) Optional<Double> lat,
-                                           @RequestParam(required = false) Optional<Double> lon) throws IOException {
-        if(lat.isEmpty()&&lon.isEmpty()) {
-            return getLocations();
-        } else {
-            String location = locationService.getLocation(lat.get(), lon.get());
-            return ResponseEntity.status(HttpStatus.OK).body(Map.of(
-                    "success", true,
-                    "location", location));
+    @GetMapping("/coordinates")
+    public ResponseEntity<Map<String, Serializable>> getLocationByCoordinates(
+            @RequestParam Optional<Double> lat,
+            @RequestParam Optional<Double> lon) throws IOException {
+        String location = "";
+        HttpStatus httpStatus = HttpStatus.BAD_REQUEST;
+        boolean result = false;
+        if (lat.isPresent() && lon.isPresent()) {
+            location = locationService.getLocation(lat.get(), lon.get());
+            httpStatus = HttpStatus.OK;
+            result = true;
         }
+        return ResponseEntity.status(httpStatus).body(Map.of("success", result, "location", location));
     }
 
+    @GetMapping
     public ResponseEntity<List<Location>> getLocations() {
         return new ResponseEntity<>(locationService.findByOrderByNameAsc(), HttpStatus.OK);
     }
@@ -73,7 +77,14 @@ public class LocationController {
 
     @GetMapping("coordinates/{location}")
     public double[] getCoordinates(@PathVariable String location) throws IOException {
-        return locationService.getCoordinates(location);
+        double[] coord;
+        coord = locationService.getCoordinates(location);
+        Optional<Location> existCheckLocation = locationService.findByLocationName(location);
+        if (existCheckLocation.isEmpty()) {
+            Location locationObj = new Location(location, coord);
+            locationService.save(locationObj);
+        }
+        return coord;
     }
 
     @GetMapping("/distance")
