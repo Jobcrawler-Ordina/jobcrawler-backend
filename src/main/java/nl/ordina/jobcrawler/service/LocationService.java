@@ -2,6 +2,7 @@ package nl.ordina.jobcrawler.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
+import nl.ordina.jobcrawler.exception.LocationNotFoundException;
 import nl.ordina.jobcrawler.model.Location;
 import nl.ordina.jobcrawler.model.Vacancy;
 import nl.ordina.jobcrawler.payload.opensearch.Coordinates;
@@ -77,6 +78,8 @@ public class LocationService {
             Coordinates openSearchCoordinates = objectMapper.readValue(jsonResponse, Coordinates.class);
             coord[0] = openSearchCoordinates.getLat();
             coord[1] = openSearchCoordinates.getLon();
+        } else {
+            throw new LocationNotFoundException(location);
         }
         return coord;
     }
