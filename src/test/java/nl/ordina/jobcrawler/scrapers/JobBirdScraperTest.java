@@ -10,6 +10,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.io.File;
@@ -18,6 +19,8 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.when;
 
 @Slf4j
 @ExtendWith(MockitoExtension.class)
@@ -25,6 +28,9 @@ class JobBirdScraperTest extends UseLocalSavedFiles {
 
     @InjectMocks
     private JobBirdScraper jobBirdScraper;
+
+    @Mock
+    private DocumentService documentServiceMock;
 
     private Document getDocFromUrl(String aFilename) throws IOException {
         File inputFile = getFile(aFilename);
@@ -44,10 +50,13 @@ class JobBirdScraperTest extends UseLocalSavedFiles {
     }
 
     @Test
-    void testGetVacancies() {
+    void testGetVacancies() throws IOException {
+        jobBirdScraper.setDocumentService(documentServiceMock);
+        Document doc = getDocFromUrl("JobBird/jobbirdvacatures.htm");
+        when(documentServiceMock.getDocument(anyString())).thenReturn(doc);
         List<VacancyDTO> vacancyDTOList = jobBirdScraper.getVacancies();
         assert(vacancyDTOList.get(0).getVacancyURL()).contains("www.jobbird.com");
-        assertNotNull(jobBirdScraper.getVacancies());
+        assertNotNull(vacancyDTOList);
     }
 
     @Test
