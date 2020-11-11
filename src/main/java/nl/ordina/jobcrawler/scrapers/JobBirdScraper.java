@@ -2,7 +2,6 @@ package nl.ordina.jobcrawler.scrapers;
 
 import lombok.extern.slf4j.Slf4j;
 import nl.ordina.jobcrawler.exception.HTMLStructureException;
-import nl.ordina.jobcrawler.model.Vacancy;
 import nl.ordina.jobcrawler.payload.VacancyDTO;
 import nl.ordina.jobcrawler.repo.LocationRepository;
 import nl.ordina.jobcrawler.service.DocumentService;
@@ -79,13 +78,23 @@ public class JobBirdScraper extends VacancyScraper {
         );
     }
 
+    /**
+     * Default function to start scraping vacancies.
+     *
+     * @return List with vacancies.
+     */
+    @Override
+    public List<VacancyDTO> getVacancies() {
+        List<String> vacancyURLs = retrieveURLs();
+        return retrieveVacancies(vacancyURLs);
+    }
 
-    protected List<String> retrieveURLs() {
+    private List<String> retrieveURLs() {
         logService.logInfo(String.format("%s -- Start scraping", getBroker().toUpperCase()));
         return getVacancyURLs();
     }
 
-    protected List<VacancyDTO> retrieveVacancies(List<String> vacancyURLs) {
+    private List<VacancyDTO> retrieveVacancies(List<String> vacancyURLs) {
         List<VacancyDTO> vacancies = new CopyOnWriteArrayList<>();
 
         vacancyURLs.parallelStream().forEach(vacancyURL -> {
@@ -107,22 +116,10 @@ public class JobBirdScraper extends VacancyScraper {
                 log.info(String.format("%s - Vacancy found: %s", getBroker(), vacancyDTO.getTitle()));
             }
         });
+
         log.info(String.format("%s -- Returning scraped vacancies", getBroker()));
 
-
         return vacancies;
-    }
-
-    /**
-     * Default function to start scraping vacancies.
-     *
-     * @return List with vacancies.
-     */
-    @Override
-    public List<VacancyDTO> getVacancies() {
-
-        List<String> vacancyURLs = retrieveURLs();
-        return retrieveVacancies(vacancyURLs);
     }
 
     /**
@@ -130,9 +127,8 @@ public class JobBirdScraper extends VacancyScraper {
      *
      * @param pageNumber number that's needed to create search url.
      * @return String, full search url for specific page.
-     * @throws Exception when pageNumber is below 1.
      */
-    protected String createSearchURL(int pageNumber) {
+    private String createSearchURL(int pageNumber) {
         return String.format("%s%d&ot=date&c[]=ict", getSearchUrl(), pageNumber);
     }
 
@@ -142,12 +138,11 @@ public class JobBirdScraper extends VacancyScraper {
      *
      * @return A list of Strings containing the urls to the vacancies.
      */
-    protected List<String> getVacancyURLs() {
+    private List<String> getVacancyURLs() {
         //  Returns a List with VacancyURLs
         ArrayList<String> vacancyURLs = new ArrayList<>();
 
         try {
-
             Document doc = documentService.getDocument(createSearchURL(1));
 
             boolean continueSearching = true;
@@ -163,10 +158,10 @@ public class JobBirdScraper extends VacancyScraper {
                     vacancyURLs.addAll(vacancyUrlsOnPage);
                 }
             }
-
         } catch (HTMLStructureException e) {
             logService.logError(e.getMessage());
         }
+
         return vacancyURLs;
     }
 
@@ -177,12 +172,13 @@ public class JobBirdScraper extends VacancyScraper {
      * @param vacancyUrlsOnPage VanacyURLS on the current page
      * @return true if none of the vacancies on this page has been encountered before in this scraping session
      */
-    protected boolean continueSearching(ArrayList<String> vacancyURLs, ArrayList<String> vacancyUrlsOnPage) {
+    private boolean continueSearching(ArrayList<String> vacancyURLs, ArrayList<String> vacancyUrlsOnPage) {
         for (String vacancyUrlOnPage : vacancyUrlsOnPage) {
             if (vacancyURLs.contains(vacancyUrlOnPage)) {
                 return false;
             }
         }
+
         return true;
     }
 
@@ -192,7 +188,7 @@ public class JobBirdScraper extends VacancyScraper {
      * @param doc The HTML document containing the URLs to the vacancies
      * @return the index of the last page to scrape
      */
-    protected int getLastPageToScrape(Document doc) {
+    private int getLastPageToScrape(Document doc) {
         int totalNumberOfPages = getTotalNumberOfPages(doc);
         // TODO: we could get more sophisticated logic in place to limit the number of pages.
         // For example, we could look at the posting date of each vacancy, and limit it to thirty days.
@@ -210,8 +206,7 @@ public class JobBirdScraper extends VacancyScraper {
      * these are <li elements with as attribute value the number of the page
      * continue until the page link with the text "next"
      */
-    protected int getTotalNumberOfPages(Document doc) {
-
+    private int getTotalNumberOfPages(Document doc) {
         try {
             Elements elements = doc.select("span.page-link");
             Element parent = elements.first().parent().parent();
@@ -222,18 +217,18 @@ public class JobBirdScraper extends VacancyScraper {
                 if (!text.equalsIgnoreCase("volgende"))
                     count++;
             }
+
             log.info(String.format("%s -- Total number of pages: %d", getBroker(), count));
             return count;
         } catch (Exception e) {
             throw new HTMLStructureException(e.getLocalizedMessage());
         }
-
     }
 
     /*
      *    Retrieve the links to the individual pages for each assignment
      */
-    protected ArrayList<String> retrieveVacancyURLsFromDoc(Document doc) {
+    private ArrayList<String> retrieveVacancyURLsFromDoc(Document doc) {
         ArrayList<String> result = new ArrayList<>();
         Elements elements = doc.select("div.jobResults");
         Element element = elements.first();
@@ -256,7 +251,7 @@ public class JobBirdScraper extends VacancyScraper {
      * @param doc Document which is needed to retrieve vacancy title
      * @return String vacancy title
      */
-    protected String getVacancyTitle(Document doc) {
+    private String getVacancyTitle(Document doc) {
         Element vacancyHeader = doc.select("h1.no-margin").first();
 
         if (vacancyHeader != null) {
@@ -272,7 +267,7 @@ public class JobBirdScraper extends VacancyScraper {
      * @param doc Document which is needed to retrieve vacancy location
      * @return String vacancy location
      */
-    protected String getLocation(Document doc) {
+    private String getLocation(Document doc) {
         Elements elements = doc.select("span.job-result__place");
         if (!elements.isEmpty()) {
             Element jobPlace = elements.get(0);
@@ -290,7 +285,7 @@ public class JobBirdScraper extends VacancyScraper {
      * @param doc Document which is needed to retrieve publishing date
      * @return String publish date
      */
-    protected LocalDateTime getPublishDate(Document doc) {
+    private LocalDateTime getPublishDate(Document doc) {
         LocalDateTime result = null;
         Elements elements = doc.select("span.job-result__place");
         if (!elements.isEmpty()) {
@@ -305,9 +300,11 @@ public class JobBirdScraper extends VacancyScraper {
                 result = checkDatePattern(date) ? LocalDate.parse(date, ymdFormatter).atStartOfDay() : null;
             }
         }
+
         if (result == null) {
             return LocalDate.now().atStartOfDay();
         }
+
         return result;
     }
 
@@ -321,7 +318,7 @@ public class JobBirdScraper extends VacancyScraper {
      * @param doc Document which is needed to retrieve the body
      * @return String vacancy body
      */
-    protected String getVacancyAbout(Document doc) {
+    private String getVacancyAbout(Document doc) {
         Elements aboutElements = doc.select("div#jobContent");
         return Jsoup.clean(aboutElements.html(), Whitelist.basic());
     }
@@ -336,6 +333,4 @@ public class JobBirdScraper extends VacancyScraper {
         Elements itemListElements = doc.select("span.dashed-list__item");
         return itemListElements.last().text();
     }
-
-
 }
