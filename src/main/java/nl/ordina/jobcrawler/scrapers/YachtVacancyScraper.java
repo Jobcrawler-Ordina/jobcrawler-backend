@@ -1,7 +1,6 @@
 package nl.ordina.jobcrawler.scrapers;
 
 import lombok.extern.slf4j.Slf4j;
-import nl.ordina.jobcrawler.model.Vacancy;
 import nl.ordina.jobcrawler.payload.VacancyDTO;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -52,7 +51,7 @@ public class YachtVacancyScraper extends VacancyScraper {
 
     @Override
     public List<VacancyDTO> getVacancies() {
-        log.info(String.format("%s -- Start scraping", getBroker().toUpperCase()));
+        log.info("{} -- Start scraping", getBroker().toUpperCase());
         List<VacancyDTO> vacancyDTOs = new CopyOnWriteArrayList<>();
 
         int totalnumberOfPages = 1;
@@ -61,10 +60,10 @@ public class YachtVacancyScraper extends VacancyScraper {
 
             if (pageNumber == 1) {
                 totalnumberOfPages = yachtVacancyResponse.getPages();
-                log.info(String.format("%s -- Total number of pages: %s", getBroker(), totalnumberOfPages));
+                log.info("{} -- Total number of pages: {}", getBroker(), totalnumberOfPages);
             }
 
-            log.info(String.format("%s -- Retrieving vacancy urls from page: %d of %d", getBroker(), yachtVacancyResponse.getCurrentPage(), yachtVacancyResponse.getPages()));
+            log.info("{} -- Retrieving vacancy urls from page: {} of {}", getBroker(), yachtVacancyResponse.getCurrentPage(), yachtVacancyResponse.getPages());
 
             yachtVacancyResponse.getVacancies().parallelStream().forEach((Map<String, Object> vacancyData) -> {
                 Map<String, Object> vacancyMetaData = (Map<String, Object>) vacancyData.get("meta");
@@ -86,11 +85,11 @@ public class YachtVacancyScraper extends VacancyScraper {
                         .build();
 
                 vacancyDTOs.add(vacancyDTO);
-                log.info(String.format("%s - Vacancy found: %s", getBroker(), vacancyDTO.getTitle()));
+                log.info("{} - Vacancy found: {}", getBroker(), vacancyDTO.getTitle());
             });
 
         }
-        log.info(String.format("%s -- Returning scraped vacancies", getBroker()));
+        log.info("{} -- Returning scraped vacancies", getBroker());
         return vacancyDTOs;
     }
 
