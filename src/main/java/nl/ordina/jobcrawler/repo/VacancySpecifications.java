@@ -7,6 +7,7 @@ import nl.ordina.jobcrawler.model.Vacancy_;
 import nl.ordina.jobcrawler.payload.SearchRequest;
 import nl.ordina.jobcrawler.payload.VacancyDTO;
 import org.modelmapper.ModelMapper;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Component;
 
 import javax.persistence.EntityManager;
@@ -14,6 +15,7 @@ import javax.persistence.Tuple;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Join;
+import javax.persistence.criteria.Order;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 import java.util.ArrayList;
@@ -36,7 +38,7 @@ public class VacancySpecifications {
         this.modelMapper = modelMapper;
     }
 
-    public List<VacancyDTO> getMatchingVacancies(final SearchRequest searchRequest) {
+    public List<VacancyDTO> getMatchingVacancies(final SearchRequest searchRequest, String[] sort) {
         CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
         CriteriaQuery<Tuple> query = criteriaBuilder.createTupleQuery();
         Root<Vacancy> root = query.from(Vacancy.class);
@@ -52,10 +54,23 @@ public class VacancySpecifications {
         }
 
         List<VacancyDTO> vacancyDTOList = new ArrayList<>();
-
         List<Predicate> predicateList = getPredicates(searchRequest, root, criteriaBuilder);
 
         query.where(criteriaBuilder.and(predicateList.toArray(new Predicate[0])));
+
+        if (sort[0].equals("distance") && sort[1].equals("asc")) {
+            query.orderBy(criteriaBuilder.asc(criteriaBuilder.literal(1)));
+        } else if (sort[0].equals("distance") && sort[1].equals("desc")) {
+            query.orderBy(criteriaBuilder.desc(criteriaBuilder.literal(1)));
+        } else if (sort[0].equals("location.name") && sort[1].equals("asc")) {
+            query.orderBy(criteriaBuilder.asc(locationJoin.get("name")));
+        } else if (sort[0].equals("location.name") && sort[1].equals("desc")) {
+            query.orderBy(criteriaBuilder.desc(locationJoin.get("name")));
+        } else if (sort[1].equals("asc")) {
+            query.orderBy(criteriaBuilder.asc(root.get(sort[0])));
+        } else {
+            query.orderBy(criteriaBuilder.desc(root.get(sort[0])));
+        }
 
         try {
             List<Tuple> list = entityManager.createQuery(query).getResultList();

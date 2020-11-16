@@ -79,7 +79,7 @@ public class VacancyService {
      * @param paging - used for pagination
      * @return All vacancies in the database filter by any value.
      */
-    public Page<VacancyDTO> findByAnyValue(SearchRequest searchRequest, Pageable paging) {
+    public Page<VacancyDTO> findByAnyValue(SearchRequest searchRequest, Pageable paging, String[] sort) {
 
         if (!StringUtils.isEmpty(searchRequest.getLocation())) {
             try {
@@ -89,7 +89,7 @@ public class VacancyService {
             }
         }
 
-        List<VacancyDTO> vacancyDTOS = vacancySpecifications.getMatchingVacancies(searchRequest);
+        List<VacancyDTO> vacancyDTOS = vacancySpecifications.getMatchingVacancies(searchRequest, sort);
         PageRequest pageable = PageRequest.of(paging.getPageNumber(), paging.getPageSize(), paging.getSort());
         int max = Math.min(paging.getPageSize() * (paging.getPageNumber() + 1), vacancyDTOS.size());
 

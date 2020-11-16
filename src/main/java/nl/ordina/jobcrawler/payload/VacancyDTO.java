@@ -1,5 +1,6 @@
 package nl.ordina.jobcrawler.payload;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.*;
 import nl.ordina.jobcrawler.model.Location;
 
@@ -22,6 +23,7 @@ public class VacancyDTO {
     private String locationString;
     private Integer hours;
     private String salary;
+    @JsonFormat(timezone = "Europe/Amsterdam", pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime postingDate;
     private String about;
     private String company;

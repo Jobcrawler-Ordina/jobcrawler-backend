@@ -65,8 +65,7 @@ public class VacancyController {
                                                      @RequestParam(defaultValue = "10") int size) {
         try {
 
-            Sort sorting = dir.equals("desc") ? Sort.by(Sort.Direction.DESC, sort) : Sort.by(Sort.Direction.ASC, sort);
-            Pageable paging = PageRequest.of(page, size, sorting);
+            Pageable paging = PageRequest.of(page, size);
 
             SearchRequest searchRequest = new SearchRequest();
             value.ifPresent(searchRequest::setKeywords);
@@ -77,7 +76,11 @@ public class VacancyController {
             location.ifPresent(searchRequest::setLocation);
             distance.ifPresent(searchRequest::setDistance);
 
-            Page<VacancyDTO> vacancyDTOList = vacancyService.findByAnyValue(searchRequest, paging);
+            String[] sortingArray = new String[2];
+            sortingArray[0] = sort;
+            sortingArray[1] = dir;
+
+            Page<VacancyDTO> vacancyDTOList = vacancyService.findByAnyValue(searchRequest, paging, sortingArray);
 
             if (vacancyDTOList.getContent().isEmpty()) {
                 return new ResponseEntity<>(HttpStatus.NO_CONTENT);
