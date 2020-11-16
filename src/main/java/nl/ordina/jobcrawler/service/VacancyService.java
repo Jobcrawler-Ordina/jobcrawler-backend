@@ -5,13 +5,17 @@ import nl.ordina.jobcrawler.exception.VacancyURLMalformedException;
 import nl.ordina.jobcrawler.model.Skill;
 import nl.ordina.jobcrawler.model.Vacancy;
 import nl.ordina.jobcrawler.payload.SearchRequest;
+import nl.ordina.jobcrawler.payload.VacancyDTO;
 import nl.ordina.jobcrawler.repo.VacancyRepository;
+import nl.ordina.jobcrawler.repo.VacancySpecifications;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -22,7 +26,6 @@ import java.net.URL;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static nl.ordina.jobcrawler.repo.VacancySpecifications.vacancySearch;
 
 @Slf4j
 @Service
@@ -31,11 +34,14 @@ public class VacancyService {
     private final VacancyRepository vacancyRepository;
     private final LocationService locationService;
     private final SkillService skillService;
+    private final VacancySpecifications vacancySpecifications;
 
-    public VacancyService(VacancyRepository vacancyRepository, LocationService locationService, SkillService skillService) {
+    public VacancyService(VacancyRepository vacancyRepository, LocationService locationService,
+                          SkillService skillService, VacancySpecifications vacancySpecifications) {
         this.vacancyRepository = vacancyRepository;
         this.locationService = locationService;
         this.skillService = skillService;
+        this.vacancySpecifications = vacancySpecifications;
     }
 
     /**
@@ -73,7 +79,7 @@ public class VacancyService {
      * @param paging - used for pagination
      * @return All vacancies in the database filter by any value.
      */
-    public Page<Vacancy> findByAnyValue(SearchRequest searchRequest, Pageable paging) {
+    public Page<VacancyDTO> findByAnyValue(SearchRequest searchRequest, Pageable paging) {
 
         if (!StringUtils.isEmpty(searchRequest.getLocation())) {
             try {
@@ -82,8 +88,12 @@ public class VacancyService {
                 log.error(e.getMessage());
             }
         }
-        Page<Vacancy> p = vacancyRepository.findAll(vacancySearch(searchRequest), paging);
-        return p;
+
+        List<VacancyDTO> vacancyDTOS = vacancySpecifications.getMatchingVacancies(searchRequest);
+        PageRequest pageable = PageRequest.of(paging.getPageNumber(), paging.getPageSize(), paging.getSort());
+        int max = Math.min(paging.getPageSize() * (paging.getPageNumber() + 1), vacancyDTOS.size());
+
+        return new PageImpl<>(vacancyDTOS.subList(paging.getPageNumber() * paging.getPageSize(), max), pageable, vacancyDTOS.size());
     }
 
     /**

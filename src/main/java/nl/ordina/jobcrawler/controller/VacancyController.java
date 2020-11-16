@@ -7,6 +7,7 @@ import nl.ordina.jobcrawler.model.assembler.SkillModelAssembler;
 import nl.ordina.jobcrawler.model.assembler.VacancyModelAssembler;
 import nl.ordina.jobcrawler.payload.SearchRequest;
 import nl.ordina.jobcrawler.payload.SearchResult;
+import nl.ordina.jobcrawler.payload.VacancyDTO;
 import nl.ordina.jobcrawler.service.VacancyService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -55,7 +56,7 @@ public class VacancyController {
     public ResponseEntity<SearchResult> getVacancies(@RequestParam(required = false) Optional<String> value,
                                                      @RequestParam(required = false) Optional<Set<String>> skills,
                                                      @RequestParam(required = false) Optional<String> location,
-                                                     @RequestParam(required = false) Optional<Long> distance,
+                                                     @RequestParam(required = false) Optional<Double> distance,
                                                      @RequestParam(required = false) Optional<String> fromDate,
                                                      @RequestParam(required = false) Optional<String> toDate,
                                                      @RequestParam(defaultValue = "desc") String dir,
@@ -76,17 +77,17 @@ public class VacancyController {
             location.ifPresent(searchRequest::setLocation);
             distance.ifPresent(searchRequest::setDistance);
 
-            Page<Vacancy> vacancies = vacancyService.findByAnyValue(searchRequest, paging);
+            Page<VacancyDTO> vacancyDTOList = vacancyService.findByAnyValue(searchRequest, paging);
 
-            if (vacancies.getContent().isEmpty()) {
+            if (vacancyDTOList.getContent().isEmpty()) {
                 return new ResponseEntity<>(HttpStatus.NO_CONTENT);
             }
 
             SearchResult searchResult = new SearchResult();
-            searchResult.setVacancies(vacancies.getContent());
-            searchResult.setCurrentPage(vacancies.getNumber());
-            searchResult.setTotalItems(vacancies.getTotalElements());
-            searchResult.setTotalPages(vacancies.getTotalPages());
+            searchResult.setVacancies(vacancyDTOList.getContent());
+            searchResult.setCurrentPage(vacancyDTOList.getNumber());
+            searchResult.setTotalItems(vacancyDTOList.getTotalElements());
+            searchResult.setTotalPages(vacancyDTOList.getTotalPages());
             return new ResponseEntity<>(searchResult, HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
