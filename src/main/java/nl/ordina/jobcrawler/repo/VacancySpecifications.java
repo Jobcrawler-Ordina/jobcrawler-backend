@@ -42,15 +42,15 @@ public class VacancySpecifications {
         CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
         CriteriaQuery<Tuple> query = criteriaBuilder.createTupleQuery();
         Root<Vacancy> root = query.from(Vacancy.class);
-        Join<Vacancy, Location> locationJoin = root.join("location");
+        Join<Vacancy, Location> locationJoin = root.join(Vacancy_.location);
 
         if (searchRequest.getDistance() != null) {
             query.multiselect(criteriaBuilder.function(
                     "getDistance", Double.class, criteriaBuilder.literal(searchRequest.getCoord()[0]), criteriaBuilder.literal(searchRequest.getCoord()[1]),
                     locationJoin.get(Location_.lat), locationJoin.get(Location_.lon)
-            ).alias("dist"), root.alias("vacancy"));
+            ).alias("dist"), root);
         } else {
-            query.multiselect(root.alias("vacancy"));
+            query.multiselect(root);
         }
 
         List<VacancyDTO> vacancyDTOList = new ArrayList<>();
@@ -75,7 +75,7 @@ public class VacancySpecifications {
         try {
             List<Tuple> list = entityManager.createQuery(query).getResultList();
             for (Tuple t : list) {
-                VacancyDTO vacancy = modelMapper.map(t.get("vacancy"), VacancyDTO.class);
+                VacancyDTO vacancy = modelMapper.map(t.get(root), VacancyDTO.class);
                 if (searchRequest.getDistance() != null) {
                     vacancy.setDistance((Double) t.get("dist"));
                 }
