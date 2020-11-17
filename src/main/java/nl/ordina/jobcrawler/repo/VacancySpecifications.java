@@ -15,6 +15,7 @@ import javax.persistence.Tuple;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Join;
+import javax.persistence.criteria.JoinType;
 import javax.persistence.criteria.Order;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
@@ -42,7 +43,7 @@ public class VacancySpecifications {
         CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
         CriteriaQuery<Tuple> query = criteriaBuilder.createTupleQuery();
         Root<Vacancy> root = query.from(Vacancy.class);
-        Join<Vacancy, Location> locationJoin = root.join(Vacancy_.location);
+        Join<Vacancy, Location> locationJoin = root.join(Vacancy_.location, JoinType.LEFT);
 
         if (searchRequest.getDistance() != null) {
             query.multiselect(criteriaBuilder.function(
@@ -54,7 +55,7 @@ public class VacancySpecifications {
         }
 
         List<VacancyDTO> vacancyDTOList = new ArrayList<>();
-        List<Predicate> predicateList = getPredicates(searchRequest, root, criteriaBuilder);
+        List<Predicate> predicateList = getPredicates(searchRequest, root, locationJoin, criteriaBuilder);
 
         query.where(criteriaBuilder.and(predicateList.toArray(new Predicate[0])));
 
@@ -87,22 +88,22 @@ public class VacancySpecifications {
         return vacancyDTOList;
     }
 
-    private List<Predicate> getPredicates(SearchRequest searchRequest, Root<Vacancy> root, CriteriaBuilder cb) {
+    private List<Predicate> getPredicates(SearchRequest searchRequest, Root<Vacancy> root, Join<Vacancy, Location> locationJoin, CriteriaBuilder cb) {
         List<Predicate> allPredicates = new ArrayList<>();
         Optional<SearchRequest> optionalProperties = Optional.of(searchRequest);
 
         optionalProperties.map(SearchRequest::getLocation)
                 .filter(l -> !l.isBlank() && optionalProperties.map(SearchRequest::getDistance).isEmpty())
                 .ifPresent(location -> allPredicates
-                        .add(cb.like(cb.lower(root.get(Vacancy_.location).get(Location_.name)), String
+                        .add(cb.like(cb.lower(locationJoin.get(Location_.name)), String
                                 .format(LIKE_QUERY_FORMAT, location.toLowerCase()))));
 
         optionalProperties.map(SearchRequest::getDistance).filter(dist -> (dist != 0))
                 .ifPresent(dist -> optionalProperties.map(SearchRequest::getCoord).ifPresent(coord -> allPredicates
                         .add(cb.le(cb
                                 .function("getDistance", Double.class, cb.literal(searchRequest.getCoord()[0]), cb
-                                        .literal(searchRequest.getCoord()[1]), root.get(Vacancy_.location)
-                                        .get(Location_.lat), root.get(Vacancy_.location)
+                                        .literal(searchRequest.getCoord()[1]), locationJoin
+                                        .get(Location_.lat), locationJoin
                                         .get(Location_.lon)), dist))));
 
         optionalProperties.map(SearchRequest::getKeywords).filter(t -> !t.isEmpty())
