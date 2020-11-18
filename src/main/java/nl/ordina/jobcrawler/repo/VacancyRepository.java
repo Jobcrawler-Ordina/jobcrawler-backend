@@ -10,7 +10,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Repository
-public interface VacancyRepository extends JpaRepository<Vacancy, UUID>, JpaSpecificationExecutor<Vacancy> {
+public interface VacancyRepository extends JpaRepository<Vacancy, UUID> {
 
     Optional<Vacancy> findByVacancyURLEquals(String url);
 

@@ -8,13 +8,13 @@ import nl.ordina.jobcrawler.payload.SearchRequest;
 import nl.ordina.jobcrawler.payload.VacancyDTO;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Component;
 
 import javax.persistence.EntityManager;
 import javax.persistence.Tuple;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Join;
 import javax.persistence.criteria.JoinType;
 import javax.persistence.criteria.Order;
@@ -73,19 +73,21 @@ public class VacancySpecifications {
 
         query.where(criteriaBuilder.and(predicateList.toArray(new Predicate[0])));
 
-        if (sort[0].equals("distance") && sort[1].equals("asc")) {
-            query.orderBy(criteriaBuilder.asc(criteriaBuilder.literal(1)));
-        } else if (sort[0].equals("distance") && sort[1].equals("desc")) {
-            query.orderBy(criteriaBuilder.desc(criteriaBuilder.literal(1)));
-        } else if (sort[0].equals("location.name") && sort[1].equals("asc")) {
-            query.orderBy(criteriaBuilder.asc(locationJoin.get("name")));
-        } else if (sort[0].equals("location.name") && sort[1].equals("desc")) {
-            query.orderBy(criteriaBuilder.desc(locationJoin.get("name")));
-        } else if (sort[1].equals("asc")) {
-            query.orderBy(criteriaBuilder.asc(root.get(sort[0])));
-        } else {
-            query.orderBy(criteriaBuilder.desc(root.get(sort[0])));
+        Expression expression;
+        switch (sort[0]) {
+            case "distance":
+                expression = criteriaBuilder.literal(1);
+                break;
+            case "location.name":
+                expression = locationJoin.get("name");
+                break;
+            default:
+                expression = root.get(sort[0]);
+                break;
         }
+
+        Order order = sort[1].equals("asc") ? criteriaBuilder.asc(expression) : criteriaBuilder.desc(expression);
+        query.orderBy(order);
 
         try {
             List<Tuple> list = entityManager.createQuery(query)
