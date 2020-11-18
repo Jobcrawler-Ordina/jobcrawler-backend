@@ -6,8 +6,8 @@ import nl.ordina.jobcrawler.model.Skill;
 import nl.ordina.jobcrawler.model.Vacancy;
 import nl.ordina.jobcrawler.payload.SearchRequest;
 import nl.ordina.jobcrawler.payload.VacancyDTO;
+import nl.ordina.jobcrawler.repo.VacancyCriteriaQuery;
 import nl.ordina.jobcrawler.repo.VacancyRepository;
-import nl.ordina.jobcrawler.repo.VacancySpecifications;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -15,7 +15,6 @@ import org.jsoup.select.Elements;
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -34,14 +33,14 @@ public class VacancyService {
     private final VacancyRepository vacancyRepository;
     private final LocationService locationService;
     private final SkillService skillService;
-    private final VacancySpecifications vacancySpecifications;
+    private final VacancyCriteriaQuery vacancyCriteriaQuery;
 
     public VacancyService(VacancyRepository vacancyRepository, LocationService locationService,
-                          SkillService skillService, VacancySpecifications vacancySpecifications) {
+                          SkillService skillService, VacancyCriteriaQuery vacancyCriteriaQuery) {
         this.vacancyRepository = vacancyRepository;
         this.locationService = locationService;
         this.skillService = skillService;
-        this.vacancySpecifications = vacancySpecifications;
+        this.vacancyCriteriaQuery = vacancyCriteriaQuery;
     }
 
     /**
@@ -89,8 +88,8 @@ public class VacancyService {
             }
         }
 
-        List<VacancyDTO> vacancyDTOS = vacancySpecifications.getMatchingVacancies(searchRequest, paging, sort);
-        Long totalMatchingVacancies = vacancySpecifications.totalMatchingVacancies(searchRequest);
+        List<VacancyDTO> vacancyDTOS = vacancyCriteriaQuery.getMatchingVacancies(searchRequest, paging, sort);
+        Long totalMatchingVacancies = vacancyCriteriaQuery.totalMatchingVacancies(searchRequest);
 
         return new PageImpl<>(vacancyDTOS, paging, totalMatchingVacancies);
     }

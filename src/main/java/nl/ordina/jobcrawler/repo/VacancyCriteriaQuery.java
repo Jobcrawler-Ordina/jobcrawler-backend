@@ -28,14 +28,14 @@ import java.util.Optional;
  * Vacancy specification to query the database with JpaSpecificationExecutor.
  */
 @Component
-public class VacancySpecifications {
+public class VacancyCriteriaQuery {
 
     private static final String LIKE_QUERY_FORMAT = "%%%s%%";
 
     private final EntityManager entityManager;
     private final ModelMapper modelMapper;
 
-    public VacancySpecifications(EntityManager entityManager, ModelMapper modelMapper) {
+    public VacancyCriteriaQuery(EntityManager entityManager, ModelMapper modelMapper) {
         this.entityManager = entityManager;
         this.modelMapper = modelMapper;
     }
