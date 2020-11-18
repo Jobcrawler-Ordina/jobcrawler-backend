@@ -89,11 +89,10 @@ public class VacancyService {
             }
         }
 
-        List<VacancyDTO> vacancyDTOS = vacancySpecifications.getMatchingVacancies(searchRequest, sort);
-        PageRequest pageable = PageRequest.of(paging.getPageNumber(), paging.getPageSize(), paging.getSort());
-        int max = Math.min(paging.getPageSize() * (paging.getPageNumber() + 1), vacancyDTOS.size());
+        List<VacancyDTO> vacancyDTOS = vacancySpecifications.getMatchingVacancies(searchRequest, paging, sort);
+        Long totalMatchingVacancies = vacancySpecifications.totalMatchingVacancies(searchRequest);
 
-        return new PageImpl<>(vacancyDTOS.subList(paging.getPageNumber() * paging.getPageSize(), max), pageable, vacancyDTOS.size());
+        return new PageImpl<>(vacancyDTOS, paging, totalMatchingVacancies);
     }
 
     /**

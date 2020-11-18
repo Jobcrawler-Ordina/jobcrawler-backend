@@ -7,6 +7,7 @@ import nl.ordina.jobcrawler.model.Vacancy_;
 import nl.ordina.jobcrawler.payload.SearchRequest;
 import nl.ordina.jobcrawler.payload.VacancyDTO;
 import org.modelmapper.ModelMapper;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Component;
 
@@ -39,7 +40,20 @@ public class VacancySpecifications {
         this.modelMapper = modelMapper;
     }
 
-    public List<VacancyDTO> getMatchingVacancies(final SearchRequest searchRequest, String[] sort) {
+    public Long totalMatchingVacancies(final SearchRequest searchRequest) {
+        CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
+        CriteriaQuery<Long> countQuery = criteriaBuilder.createQuery(Long.class);
+        Root<Vacancy> rootCount = countQuery.from(Vacancy.class);
+        Join<Vacancy, Location> locationJoinRoot = rootCount.join(Vacancy_.location, JoinType.LEFT);
+
+        List<Predicate> allPredicates = getPredicates(searchRequest, rootCount, locationJoinRoot, criteriaBuilder);
+
+        countQuery.select(criteriaBuilder.count(rootCount));
+        countQuery.where(criteriaBuilder.and(allPredicates.toArray(new Predicate[0])));
+        return entityManager.createQuery(countQuery).getSingleResult();
+    }
+
+    public List<VacancyDTO> getMatchingVacancies(final SearchRequest searchRequest, Pageable paging, String[] sort) {
         CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
         CriteriaQuery<Tuple> query = criteriaBuilder.createTupleQuery();
         Root<Vacancy> root = query.from(Vacancy.class);
@@ -74,7 +88,10 @@ public class VacancySpecifications {
         }
 
         try {
-            List<Tuple> list = entityManager.createQuery(query).getResultList();
+            List<Tuple> list = entityManager.createQuery(query)
+                    .setFirstResult(paging.getPageNumber() * paging.getPageSize())
+                    .setMaxResults(paging.getPageSize())
+                    .getResultList();
             for (Tuple t : list) {
                 VacancyDTO vacancy = modelMapper.map(t.get(root), VacancyDTO.class);
                 if (searchRequest.getDistance() != null) {
