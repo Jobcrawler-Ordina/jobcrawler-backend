@@ -5,7 +5,7 @@ INSERT INTO skill(id, name) VALUES(uuid_in((md5((random())::text))::cstring), 'A
 INSERT INTO skill(id, name) VALUES(uuid_in((md5((random())::text))::cstring), 'Python') ON CONFLICT DO NOTHING;
 INSERT INTO skill(id, name) VALUES(uuid_in((md5((random())::text))::cstring), 'Azure') ON CONFLICT DO NOTHING;
 INSERT INTO skill(id, name) VALUES(uuid_in((md5((random())::text))::cstring), 'AWS') ON CONFLICT DO NOTHING;
-CREATE OR REPLACE FUNCTION getDistance(lon1 double precision, lat1 double precision, lon2 double precision, lat2 double precision)
+CREATE OR REPLACE FUNCTION getDistance(lat1 double precision, lon1 double precision, lat2 double precision, lon2 double precision)
     RETURNS double precision
     LANGUAGE plpgsql
 AS '

@@ -2,21 +2,21 @@ package nl.ordina.jobcrawler.service;
 
 import lombok.extern.slf4j.Slf4j;
 import nl.ordina.jobcrawler.model.Location;
-import nl.ordina.jobcrawler.model.Skill;
 import nl.ordina.jobcrawler.model.Vacancy;
 import nl.ordina.jobcrawler.payload.VacancyDTO;
 import nl.ordina.jobcrawler.scrapers.HuxleyITVacancyScraper;
 import nl.ordina.jobcrawler.scrapers.JobBirdScraper;
 import nl.ordina.jobcrawler.scrapers.YachtVacancyScraper;
+import org.modelmapper.ModelMapper;
 import org.springframework.dao.IncorrectResultSizeDataAccessException;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.annotation.PostConstruct;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 /*
@@ -30,20 +30,20 @@ public class ScraperService {
 
     private final VacancyService vacancyService;
     private final LocationService locationService;
-    private final SkillMatcherService skillMatcherService;
     private final YachtVacancyScraper yachtVacancyScraper;
     private final HuxleyITVacancyScraper huxleyITVacancyScraper;
     private final JobBirdScraper jobBirdScraper;
+    private final ModelMapper modelMapper;
 
-    public ScraperService(VacancyService vacancyService, LocationService locationService, SkillMatcherService skillMatcherService,
+    public ScraperService(VacancyService vacancyService, LocationService locationService,
                           YachtVacancyScraper yachtVacancyScraper, HuxleyITVacancyScraper huxleyITVacancyScraper,
-                          JobBirdScraper jobBirdScraper) {
+                          JobBirdScraper jobBirdScraper, ModelMapper modelMapper) {
         this.vacancyService = vacancyService;
         this.locationService = locationService;
-        this.skillMatcherService = skillMatcherService;
         this.yachtVacancyScraper = yachtVacancyScraper;
         this.huxleyITVacancyScraper = huxleyITVacancyScraper;
         this.jobBirdScraper = jobBirdScraper;
+        this.modelMapper = modelMapper;
     }
 
     @Scheduled(cron = "0 0 12,18 * * *")
@@ -63,41 +63,33 @@ public class ScraperService {
                 if (existCheck.isPresent()) {
                     existVacancy++;
                 } else {
-                    vacancy = Vacancy.builder()
-                            .vacancyURL(vacancyDTO.getVacancyURL())
-                            .title(vacancyDTO.getTitle())
-                            .broker(vacancyDTO.getBroker())
-                            .vacancyNumber(vacancyDTO.getVacancyNumber())
-                            .hours(vacancyDTO.getHours())
-                            .salary(vacancyDTO.getSalary())
-                            .postingDate(vacancyDTO.getPostingDate())
-                            .about(vacancyDTO.getAbout())
-                            .company(vacancyDTO.getCompany())
-                            .build();
+                    vacancy = modelMapper.map(vacancyDTO, Vacancy.class);
                     String vacancyLocation = vacancyDTO.getLocationString();
-                    if(vacancyLocation.endsWith(", Nederland")) {vacancyLocation = vacancyLocation.substring(0,vacancyLocation.length()-11);}
-                    if(vacancyLocation.endsWith(", Netherlands")) {vacancyLocation = vacancyLocation.substring(0,vacancyLocation.length()-13);}
-                    if(vacancyLocation.endsWith(", the Netherlands")) {vacancyLocation = vacancyLocation.substring(0,vacancyLocation.length()-16);}
-                    if(vacancyLocation.equals("'s-Hertogenbosch")) {vacancyLocation = "Den Bosch";}
+                    if (vacancyLocation.endsWith(", Nederland")) {
+                        vacancyLocation = vacancyLocation.substring(0, vacancyLocation.length() - 11);
+                    }
+                    if (vacancyLocation.endsWith(", Netherlands")) {
+                        vacancyLocation = vacancyLocation.substring(0, vacancyLocation.length() - 13);
+                    }
+                    if (vacancyLocation.endsWith(", the Netherlands")) {
+                        vacancyLocation = vacancyLocation.substring(0, vacancyLocation.length() - 16);
+                    }
+                    if (vacancyLocation.equals("'s-Hertogenbosch")) {
+                        vacancyLocation = "Den Bosch";
+                    }
                     if (!vacancyLocation.equals("")) {
                         Optional<Location> existCheckLocation = locationService.findByLocationName(vacancyLocation);
                         if (existCheckLocation.isEmpty()) {
-                            Location location = new Location(vacancyLocation,LocationService.getCoordinates(vacancyLocation));
+                            Location location = new Location(vacancyLocation, locationService.getCoordinates(vacancyLocation));
                             locationService.save(location);
                             vacancy.setLocation(location);
-                            Set<Skill> skills = skillMatcherService.findMatchingSkills(vacancy);
-                            vacancy.setSkills(skills);
                             vacancyService.save(vacancy);
                         } else {
                             Location location = existCheckLocation.get();
                             vacancy.setLocation(location);
-                            Set<Skill> skills = skillMatcherService.findMatchingSkills(vacancy);
-                            vacancy.setSkills(skills);
                             vacancyService.save(vacancy);
                         }
                     } else {
-                        Set<Skill> skills = skillMatcherService.findMatchingSkills(vacancy);
-                        vacancy.setSkills(skills);
                         vacancyService.save(vacancy);
                     }
                     newVacancy++;
@@ -115,17 +107,12 @@ public class ScraperService {
     }
 
     @Scheduled(cron = "0 30 11,17 * * *") // Runs two times a day. At 11.30am and 5.30pm.
-    public void deleteNonExistingVacancies() {
+    public void deleteNoMoreExistingVacancies() {
         log.info("CRON Scheduled -- Started deleting non-existing jobs");
-        // Change this to find all with invalid url eg non-existing job
-        List<Vacancy> vacanciesToDelete = vacancyService.findAll();
-        vacanciesToDelete.removeIf(Vacancy::hasValidURL);
 
-        log.info(vacanciesToDelete.size() + " vacancies to delete.");
+        vacancyService.findAll().stream().filter(v -> !vacancyService.hasExistingURL(v))
+                .forEach(v -> vacancyService.delete(v.getId()));
 
-        for (Vacancy vacancyToDelete : vacanciesToDelete) {
-            vacancyService.delete(vacancyToDelete.getId());
-        }
         log.info("Finished deleting non-existing jobs");
     }
 

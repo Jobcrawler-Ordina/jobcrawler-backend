@@ -2,7 +2,7 @@ package nl.ordina.jobcrawler.security.jwt;
 
 import io.jsonwebtoken.*;
 import lombok.extern.slf4j.Slf4j;
-import nl.ordina.jobcrawler.security.services.UserPrinciple;
+import nl.ordina.jobcrawler.security.services.UserPrincipal;
 import org.springframework.security.access.AuthorizationServiceException;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
@@ -26,7 +26,7 @@ public class JwtProvider {
      * @return List including jwt Token and jwt expiration information
      */
     public List<String> generateJwtToken(Authentication authentication) {
-        UserPrinciple userPrincipal = (UserPrinciple) authentication.getPrincipal();
+        UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
 
         List<String> jwtToken = new ArrayList<>();
         jwtToken.add(Jwts.builder()

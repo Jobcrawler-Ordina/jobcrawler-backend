@@ -2,19 +2,19 @@ package nl.ordina.jobcrawler.controller;
 
 import nl.ordina.jobcrawler.exception.LocationNotFoundException;
 import nl.ordina.jobcrawler.model.Location;
-import nl.ordina.jobcrawler.model.Skill;
 import nl.ordina.jobcrawler.model.assembler.LocationModelAssembler;
 import nl.ordina.jobcrawler.service.LocationService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 @RestController
@@ -31,23 +31,34 @@ public class LocationController {
         this.locationModelAssembler = locationModelAssembler;
     }
 
-    @GetMapping("/{locationIdOrName}")
-    public EntityModel<Location> getLocationByIdOrName(@PathVariable String locationIdOrName) {
-        if(locationIdOrName.matches(".*\\d.*")) {
-            UUID id = UUID.fromString(locationIdOrName);
-            return getLocationById(id);
-        } else {
-            return getLocationByName(locationIdOrName);
+    @GetMapping("/coordinates")
+    public ResponseEntity<Map<String, Serializable>> getLocationByCoordinates(
+            @RequestParam Optional<Double> lat,
+            @RequestParam Optional<Double> lon) throws IOException {
+        String location = "";
+        HttpStatus httpStatus = HttpStatus.BAD_REQUEST;
+        boolean result = false;
+        if (lat.isPresent() && lon.isPresent()) {
+            location = locationService.getLocation(lat.get(), lon.get());
+            httpStatus = HttpStatus.OK;
+            result = true;
         }
+        return ResponseEntity.status(httpStatus).body(Map.of("success", result, "location", location));
     }
 
-    @GetMapping("/coordinates")
-    public ResponseEntity<Object> getLocationByCoordinates(@RequestParam double lat,
-                                                       @RequestParam double lon) throws IOException {
-        String location = locationService.getLocation(lat, lon);
-        return ResponseEntity.status(HttpStatus.OK).body(Map.of(
-                "success", true,
-                "location", location));
+    @GetMapping
+    public ResponseEntity<List<Location>> getLocations() {
+        return new ResponseEntity<>(locationService.findByOrderByNameAsc(), HttpStatus.OK);
+    }
+
+    @GetMapping("/{locIdOrName}")
+    public EntityModel<Location> getLocationByIdOrName(@PathVariable String locIdOrName) {
+        if(locIdOrName.matches(".*\\d.*")) {
+            UUID id = UUID.fromString(locIdOrName);
+            return getLocationById(id);
+        } else {
+            return getLocationByName(locIdOrName);
+        }
     }
 
     private EntityModel<Location> getLocationById(UUID id) {
@@ -62,9 +73,16 @@ public class LocationController {
         return locationModelAssembler.toModel(location);
     }
 
-    @GetMapping
-    public ResponseEntity<List<Location>> getLocations() {
-        return new ResponseEntity<>(locationService.findByOrderByNameAsc(), HttpStatus.OK);
+    @GetMapping("coordinates/{location}")
+    public double[] getCoordinates(@PathVariable String location) throws IOException {
+        double[] coord;
+        coord = locationService.getCoordinates(location);
+        Optional<Location> existCheckLocation = locationService.findByLocationName(location);
+        if (existCheckLocation.isEmpty()) {
+            Location locationObj = new Location(location, coord);
+            locationService.save(locationObj);
+        }
+        return coord;
     }
 
 }

@@ -13,27 +13,6 @@ import java.util.UUID;
 @Repository
 public interface SkillRepository extends JpaRepository<Skill, UUID> {
 
-
-    @Query(value = "delete from vacancy_skills where skill_id in (select id from skill where name = ?1)",
-            nativeQuery = true)
-    @Transactional
-    @Modifying
-    void deleteReferencesToSkill(String name);
-
-    @Transactional
-    void deleteSkillByName(String name);
-
-    @Query(value = "delete from vacancy_skills",
-            nativeQuery = true)
-    @Transactional
-    @Modifying
-    void deleteReferencesToSkills();
-
     List<Skill> findByOrderByNameAsc();
 
-    @Query(value = "insert into vacancy_skills(vacancy_id, skill_id) values (?1, ?2)",
-            nativeQuery = true)
-    @Transactional
-    @Modifying
-    void linkSkillToVacancy(UUID vacancyId, UUID skillID);
 }
