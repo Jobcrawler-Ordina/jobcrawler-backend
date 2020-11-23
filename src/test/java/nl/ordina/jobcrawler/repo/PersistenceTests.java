@@ -3,16 +3,14 @@ package nl.ordina.jobcrawler.repo;
 import nl.ordina.jobcrawler.model.Skill;
 import nl.ordina.jobcrawler.model.Vacancy;
 import nl.ordina.jobcrawler.payload.SearchRequest;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.internal.util.collections.Sets;
-import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
-import javax.persistence.EntityManager;
 import java.util.List;
 import java.util.UUID;
 
@@ -28,6 +26,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  *
  */
 @ExtendWith(SpringExtension.class)
+@Import(VacancyCriteriaQuery.class)
 @DataJpaTest
 class PersistenceTests {
 
@@ -38,17 +37,7 @@ class PersistenceTests {
     private SkillRepository skillRepository;
 
     @Autowired
-    private EntityManager entityManager;
-
-    @Autowired
-    private ModelMapper modelMapper;
-
     private VacancyCriteriaQuery vacancyCriteriaQuery;
-
-    @BeforeEach
-    private void setUp() {
-        vacancyCriteriaQuery = new VacancyCriteriaQuery(entityManager, modelMapper);
-    }
 
     @Test
     void testRepoFindById() {
