@@ -3,15 +3,19 @@ package nl.ordina.jobcrawler.repo;
 import nl.ordina.jobcrawler.model.Skill;
 import nl.ordina.jobcrawler.model.Vacancy;
 import nl.ordina.jobcrawler.payload.SearchRequest;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.internal.util.collections.Sets;
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
+import javax.persistence.EntityManager;
 import java.util.List;
 import java.util.UUID;
 
@@ -36,6 +40,19 @@ class PersistenceTests {
     @Autowired
     private SkillRepository skillRepository;
 
+    @Autowired
+    private EntityManager entityManager;
+
+    @Autowired
+    private ModelMapper modelMapper;
+
+    private VacancyCriteriaQuery vacancyCriteriaQuery;
+
+    @BeforeEach
+    private void setUp() {
+        vacancyCriteriaQuery = new VacancyCriteriaQuery(entityManager, modelMapper);
+    }
+
     @Test
     void testRepoFindById() {
         String sUuid = "30324ab8-29fd-4f23-a4da-bc445396e79a";
@@ -44,18 +61,15 @@ class PersistenceTests {
 
     @Test
     void findBySkills() {
-        Pageable paging = PageRequest.of(1, 10);
         SearchRequest searchRequest = new SearchRequest();
         searchRequest.setSkills(Sets.newSet("JAVA"));
-//        assertEquals(10, vacancyRepository.findAll(vacancySearch(searchRequest), paging).getTotalElements());
+        assertEquals(10, vacancyCriteriaQuery.totalMatchingVacancies(searchRequest));
         searchRequest.setSkills(Sets.newSet("Maven"));
-//        assertEquals(29, vacancyRepository.findAll(vacancySearch(searchRequest), paging).getTotalElements());
+        assertEquals(29, vacancyCriteriaQuery.totalMatchingVacancies(searchRequest));
         searchRequest.setSkills(Sets.newSet("Angular"));
-//        assertEquals(31, vacancyRepository.findAll(vacancySearch(searchRequest), paging).getTotalElements());
+        assertEquals(31, vacancyCriteriaQuery.totalMatchingVacancies(searchRequest));
         searchRequest.setSkills(Sets.newSet("Maven", "Angular"));
-//        assertEquals(6, vacancyRepository.findAll(vacancySearch(searchRequest), paging)
-//                .getTotalElements());
-
+        assertEquals(6, vacancyCriteriaQuery.totalMatchingVacancies(searchRequest));
     }
 
     @Test
@@ -65,22 +79,20 @@ class PersistenceTests {
     }
 
     @Test
-    void testFindByValue() {
-        Pageable paging = PageRequest.of(1, 10);
+    void testFindTotalMatchingVacanciesByValue() {
         SearchRequest searchRequest = new SearchRequest();
         searchRequest.setKeywords("test");
-//        assertEquals(112, vacancyRepository.findAll(vacancySearch(searchRequest), paging).getTotalElements());
-    }
+        assertEquals(112, vacancyCriteriaQuery.totalMatchingVacancies(searchRequest));
+   }
 
     @Test
-    void testFindByDistance() {
-        Pageable paging = PageRequest.of(1, 10);
+    void testFindTotalMatchingVacanciesByDistance() {
         SearchRequest searchRequest = new SearchRequest();
         double[] coord = { 52.08653175, 5.24900804050379 };
         searchRequest.setCoord(coord);
         searchRequest.setLocation("Zeist");
         searchRequest.setDistance(10.0);
-//        assertEquals(21, vacancyRepository.findAll(vacancySearch(searchRequest), paging).getTotalElements());
+        assertEquals(21, vacancyCriteriaQuery.totalMatchingVacancies(searchRequest));
     }
 
 }
