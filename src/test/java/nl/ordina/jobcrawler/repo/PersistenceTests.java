@@ -23,6 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  * scan for @Entity classes and configure Spring Data JPA repositories.
  *
  * Regular @Component beans will not be loaded into the ApplicationContext.
+ * We can add them to the test by using the @Import annotation
  *
  */
 @ExtendWith(SpringExtension.class)
