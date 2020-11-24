@@ -57,7 +57,7 @@ public class JobBirdScraper extends VacancyScraper {
 
     private DocumentService documentService = new DocumentService();
 
-    private static final int MAX_NR_OF_PAGES = 25;  // 25 seems enough for demo purposes, can be up to approx 60
+    private static final int MAX_NR_OF_PAGES = 100;  // 25 seems enough for demo purposes, can be up to approx 60
     // at a certain point the vacancy date will be missing
 
 
@@ -138,9 +138,10 @@ public class JobBirdScraper extends VacancyScraper {
 
         try {
             Document doc = documentService.getDocument(createSearchURL(1));
-
             boolean continueSearching = true;
-            for (int i = 1; continueSearching && i <= getLastPageToScrape(doc); i++) {
+            int nrLastPage = getLastPageToScrape(doc);
+
+            for (int i = 1; continueSearching && i <= nrLastPage; i++) {
                 String searchURL = createSearchURL(i);
                 doc = documentService.getDocument(searchURL);
 
@@ -163,7 +164,7 @@ public class JobBirdScraper extends VacancyScraper {
      * Continue searching if this page only contains new vacancies. If any of the vacancies is already know, stop searching.
      *
      * @param vacancyURLs       known vacancyURLs for this scraping session
-     * @param vacancyUrlsOnPage VanacyURLS on the current page
+     * @param vacancyUrlsOnPage VacancyURLS on the current page
      * @return true if none of the vacancies on this page has been encountered before in this scraping session
      */
     private boolean continueSearching(ArrayList<String> vacancyURLs, ArrayList<String> vacancyUrlsOnPage) {
@@ -183,7 +184,15 @@ public class JobBirdScraper extends VacancyScraper {
      * @return the index of the last page to scrape
      */
     private int getLastPageToScrape(Document doc) {
-        int totalNumberOfPages = getTotalNumberOfPages(doc);
+        String oldURL = doc.location();
+        int i_o = oldURL.indexOf("page=") + 5;
+        String searchURLlastPage = oldURL.substring(0,i_o) + "1000" + oldURL.substring(i_o+1,oldURL.length());
+        Document docLastPage = documentService.getDocument(searchURLlastPage);
+        String newURL = docLastPage.location();
+        int i_n1 = newURL.indexOf("page=") + 5;
+        int i_n2 = newURL.indexOf("&",i_n1);
+        int totalNumberOfPages = Integer.parseInt(newURL.substring(i_n1,i_n2));
+        //int totalNumberOfPages = getTotalNumberOfPages(doc);
         // TODO: we could get more sophisticated logic in place to limit the number of pages.
         // For example, we could look at the posting date of each vacancy, and limit it to thirty days.
         return Math.min(totalNumberOfPages, MAX_NR_OF_PAGES);
