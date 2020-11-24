@@ -74,8 +74,9 @@ public class VacancyService {
     /**
      * Returns all vacancies in the database filter by any values that user enters in the search field.
      *
-     * @param searchRequest  - values that need to be filtered
-     * @param paging - used for pagination
+     * @param searchRequest - values that need to be filtered
+     * @param paging        - used for pagination
+     * @param sort          - string array for sorting by field and direction
      * @return All vacancies in the database filter by any value.
      */
     public Page<VacancyDTO> findByAnyValue(SearchRequest searchRequest, Pageable paging, String[] sort) {
@@ -109,6 +110,7 @@ public class VacancyService {
             throw new VacancyURLMalformedException(vacancy.getVacancyURL());
         }
     }
+
     public void saveAll(List<Vacancy> vacancies) {
         vacancyRepository.saveAll(vacancies);
     }

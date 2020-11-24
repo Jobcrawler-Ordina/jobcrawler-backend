@@ -25,7 +25,7 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * Vacancy specification to query the database with JpaSpecificationExecutor.
+ * Querying the database using a CriteriaQuery
  */
 @Component
 public class VacancyCriteriaQuery {
@@ -40,6 +40,12 @@ public class VacancyCriteriaQuery {
         this.modelMapper = modelMapper;
     }
 
+    /**
+     * This method is used to calculate the total amount of pages using PageImpl in the VacancyService class
+     *
+     * @param searchRequest - request as entered by a user
+     * @return the amount of vacancies that match the searchRequest
+     */
     public Long totalMatchingVacancies(final SearchRequest searchRequest) {
         CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
         CriteriaQuery<Long> countQuery = criteriaBuilder.createQuery(Long.class);
@@ -53,6 +59,14 @@ public class VacancyCriteriaQuery {
         return entityManager.createQuery(countQuery).getSingleResult();
     }
 
+    /**
+     * Method queries the database based on certain conditions and returns the requested vacancies
+     *
+     * @param searchRequest - request as entered by a user
+     * @param paging        - condition of which page that needs to be returned
+     * @param sort          - sorting by field and direction
+     * @return Small list (based on paging) of VacancyDTO with matching vacancies
+     */
     public List<VacancyDTO> getMatchingVacancies(final SearchRequest searchRequest, Pageable paging, String[] sort) {
         CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
         CriteriaQuery<Tuple> query = criteriaBuilder.createTupleQuery();
@@ -107,7 +121,17 @@ public class VacancyCriteriaQuery {
         return vacancyDTOList;
     }
 
-    private List<Predicate> getPredicates(SearchRequest searchRequest, Root<Vacancy> root, Join<Vacancy, Location> locationJoin, CriteriaBuilder cb) {
+    /**
+     * Creates a list with predicates for the WHERE clause in the query
+     *
+     * @param searchRequest - request as entered by a user
+     * @param root          - the entity (root) type in the from clause
+     * @param locationJoin  - join to an entity
+     * @param cb            - CriteriaBuilder used to construct predicates
+     * @return List with predicates
+     */
+    private List<Predicate> getPredicates(SearchRequest searchRequest, Root<Vacancy> root,
+                                          Join<Vacancy, Location> locationJoin, CriteriaBuilder cb) {
         List<Predicate> allPredicates = new ArrayList<>();
         Optional<SearchRequest> optionalProperties = Optional.of(searchRequest);
 
