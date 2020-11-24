@@ -67,7 +67,7 @@ public class JobBirdScraper extends VacancyScraper {
 
     public JobBirdScraper() {
         super(
-                "https://www.jobbird.com/nl/vacature?s=java&rad=30&page=", // Required search URL. Can be retrieved using getSEARCH_URL()
+                "https://www.jobbird.com/nl/vacature?s=&rad=30&page=", // Required search URL. Can be retrieved using getSEARCH_URL()
                 "Jobbird" // Required broker. Can be retrieved using getBROKER()
         );
     }
@@ -173,7 +173,6 @@ public class JobBirdScraper extends VacancyScraper {
                 return false;
             }
         }
-
         return true;
     }
 
@@ -184,14 +183,7 @@ public class JobBirdScraper extends VacancyScraper {
      * @return the index of the last page to scrape
      */
     private int getLastPageToScrape(Document doc) {
-        String oldURL = doc.location();
-        int i_o = oldURL.indexOf("page=") + 5;
-        String searchURLlastPage = oldURL.substring(0,i_o) + "1000" + oldURL.substring(i_o+1,oldURL.length());
-        Document docLastPage = documentService.getDocument(searchURLlastPage);
-        String newURL = docLastPage.location();
-        int i_n1 = newURL.indexOf("page=") + 5;
-        int i_n2 = newURL.indexOf("&",i_n1);
-        int totalNumberOfPages = Integer.parseInt(newURL.substring(i_n1,i_n2));
+        int totalNumberOfPages = getTotalNumberOfPages(doc);
         //int totalNumberOfPages = getTotalNumberOfPages(doc);
         // TODO: we could get more sophisticated logic in place to limit the number of pages.
         // For example, we could look at the posting date of each vacancy, and limit it to thirty days.
@@ -210,22 +202,14 @@ public class JobBirdScraper extends VacancyScraper {
      * continue until the page link with the text "next"
      */
     private int getTotalNumberOfPages(Document doc) {
-        try {
-            Elements elements = doc.select("span.page-link");
-            Element parent = elements.first().parent().parent();
-            Elements children = parent.children();
-            int count = 0;
-            for (Element child : children) {
-                String text = child.text();
-                if (!text.equalsIgnoreCase("volgende"))
-                    count++;
-            }
-
-            log.info("{} -- Total number of pages: {}", getBroker(), count);
-            return count;
-        } catch (Exception e) {
-            throw new HTMLStructureException(e.getLocalizedMessage());
-        }
+        String oldURL = doc.location();
+        int i_o = oldURL.indexOf("page=") + 5;
+        String searchURLlastPage = oldURL.substring(0,i_o) + "1000" + oldURL.substring(i_o+1,oldURL.length());
+        Document docLastPage = documentService.getDocument(searchURLlastPage);
+        String newURL = docLastPage.location();
+        int i_n1 = newURL.indexOf("page=") + 5;
+        int i_n2 = newURL.indexOf("&",i_n1);
+        return Integer.parseInt(newURL.substring(i_n1,i_n2));
     }
 
     /*
