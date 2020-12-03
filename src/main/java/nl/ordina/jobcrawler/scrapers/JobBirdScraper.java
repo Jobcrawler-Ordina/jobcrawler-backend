@@ -5,7 +5,6 @@ import nl.ordina.jobcrawler.exception.HTMLStructureException;
 import nl.ordina.jobcrawler.payload.VacancyDTO;
 import nl.ordina.jobcrawler.repo.LocationRepository;
 import nl.ordina.jobcrawler.service.DocumentService;
-import nl.ordina.jobcrawler.service.LogService;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -50,17 +49,12 @@ public class JobBirdScraper extends VacancyScraper {
     private final Pattern ymdPattern = Pattern.compile("^[0-9]{4}-(1[0-2]|0[1-9])-(3[01]|[12][0-9]|0[1-9])$");
     private final DateTimeFormatter ymdFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
-    public void setLogService(LogService logService) {
-        this.logService = logService;
-    }
-
     LocationRepository locationRepository;
 
     public void setDocumentService(DocumentService documentService) {
         this.documentService = documentService;
     }
 
-    private LogService logService = new LogService();
     private DocumentService documentService = new DocumentService();
 
     private static final int MAX_NR_OF_PAGES = 25;  // 25 seems enough for demo purposes, can be up to approx 60
@@ -90,7 +84,7 @@ public class JobBirdScraper extends VacancyScraper {
     }
 
     private List<String> retrieveURLs() {
-        logService.logInfo(String.format("%s -- Start scraping", getBroker().toUpperCase()));
+        log.info("{} -- Start scraping", getBroker().toUpperCase());
         return getVacancyURLs();
     }
 
@@ -113,11 +107,11 @@ public class JobBirdScraper extends VacancyScraper {
 
                 vacancies.add(vacancyDTO);
 
-                log.info(String.format("%s - Vacancy found: %s", getBroker(), vacancyDTO.getTitle()));
+                log.info("{} - Vacancy found: {}", getBroker(), vacancyDTO.getTitle());
             }
         });
 
-        log.info(String.format("%s -- Returning scraped vacancies", getBroker()));
+        log.info("{} -- Returning scraped vacancies", getBroker());
 
         return vacancies;
     }
@@ -159,7 +153,7 @@ public class JobBirdScraper extends VacancyScraper {
                 }
             }
         } catch (HTMLStructureException e) {
-            logService.logError(e.getMessage());
+            log.error(e.getMessage());
         }
 
         return vacancyURLs;
@@ -218,7 +212,7 @@ public class JobBirdScraper extends VacancyScraper {
                     count++;
             }
 
-            log.info(String.format("%s -- Total number of pages: %d", getBroker(), count));
+            log.info("{} -- Total number of pages: {}", getBroker(), count);
             return count;
         } catch (Exception e) {
             throw new HTMLStructureException(e.getLocalizedMessage());

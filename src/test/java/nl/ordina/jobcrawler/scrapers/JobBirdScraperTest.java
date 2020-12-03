@@ -3,7 +3,6 @@ package nl.ordina.jobcrawler.scrapers;
 import lombok.extern.slf4j.Slf4j;
 import nl.ordina.jobcrawler.payload.VacancyDTO;
 import nl.ordina.jobcrawler.service.DocumentService;
-import nl.ordina.jobcrawler.service.LogService;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.junit.jupiter.api.BeforeEach;
@@ -42,10 +41,8 @@ class JobBirdScraperTest extends UseLocalSavedFiles {
         // in several tests, the logService and the documentService of the testable is mocked.
         // Reset to the real logService and the real documentService
         // in case it concerns a different test case
-        LogService logService = new LogService();
         DocumentService documentService = new DocumentService();
         jobBirdScraper = new JobBirdScraper();
-        jobBirdScraper.setLogService(logService);
         jobBirdScraper.setDocumentService(documentService);
     }
 
