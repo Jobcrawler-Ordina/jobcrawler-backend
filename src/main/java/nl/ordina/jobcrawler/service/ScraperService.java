@@ -4,9 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import nl.ordina.jobcrawler.model.Location;
 import nl.ordina.jobcrawler.model.Vacancy;
 import nl.ordina.jobcrawler.payload.VacancyDTO;
-import nl.ordina.jobcrawler.scrapers.HuxleyITVacancyScraper;
-import nl.ordina.jobcrawler.scrapers.JobBirdScraper;
-import nl.ordina.jobcrawler.scrapers.YachtVacancyScraper;
+import nl.ordina.jobcrawler.scrapers.*;
 import org.modelmapper.ModelMapper;
 import org.springframework.dao.IncorrectResultSizeDataAccessException;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -34,22 +32,28 @@ public class ScraperService {
     private final YachtVacancyScraper yachtVacancyScraper;
     private final HuxleyITVacancyScraper huxleyITVacancyScraper;
     private final JobBirdScraper jobBirdScraper;
+    private final HeadfirstScraper headfirstScraper;
+    private final StaffingGroupScraper staffingGroupScraper;
+    private final JobCatcherScraper jobCatcherScraper;
     private final ModelMapper modelMapper;
 
     public ScraperService(VacancyService vacancyService, LocationService locationService,
                           YachtVacancyScraper yachtVacancyScraper, HuxleyITVacancyScraper huxleyITVacancyScraper,
-                          JobBirdScraper jobBirdScraper, ModelMapper modelMapper) {
+                          JobBirdScraper jobBirdScraper, HeadfirstScraper headfirstScraper, JobCatcherScraper jobCatcherScraper, StaffingGroupScraper staffingGroupScraper, ModelMapper modelMapper) {
         this.vacancyService = vacancyService;
         this.locationService = locationService;
         this.yachtVacancyScraper = yachtVacancyScraper;
         this.huxleyITVacancyScraper = huxleyITVacancyScraper;
         this.jobBirdScraper = jobBirdScraper;
+        this.headfirstScraper = headfirstScraper;
+        this.jobCatcherScraper = jobCatcherScraper;
+        this.staffingGroupScraper = staffingGroupScraper;
         this.modelMapper = modelMapper;
     }
 
-    //@Scheduled(cron = "0 0 12,18 * * *")
+    //@PostConstruct
+    @Scheduled(cron = "0 0 12,18 * * *")
     // Runs two times a day. At 12pm and 6pm
-    @PostConstruct
     @Transactional
     public void scrape() {
         log.info("CRON Scheduled -- Scrape vacancies");
@@ -82,7 +86,7 @@ public class ScraperService {
     }
 
     private void processVacancyLocation(Vacancy vacancy, VacancyDTO vacancyDTO) throws IOException {
-        String vacancyLocation = vacancyDTO.getLocationString();
+        String vacancyLocation = LocationService.normalizeName(vacancyDTO.getLocationString());
         if (vacancyLocation.endsWith(", Nederland")) {
             vacancyLocation = vacancyLocation.substring(0, vacancyLocation.length() - 11);
         }
@@ -124,7 +128,7 @@ public class ScraperService {
 
     private List<VacancyDTO> startScraping() {
         List<VacancyDTO> vacancyDTOsList = new CopyOnWriteArrayList<>();
-        Arrays.asList(yachtVacancyScraper, huxleyITVacancyScraper, jobBirdScraper)
+        Arrays.asList(yachtVacancyScraper, huxleyITVacancyScraper, jobBirdScraper, headfirstScraper, staffingGroupScraper, jobCatcherScraper)
                 .parallelStream().forEach(vacancyScraper -> vacancyDTOsList
                 .addAll(vacancyScraper.getVacancies()));
         return vacancyDTOsList;
