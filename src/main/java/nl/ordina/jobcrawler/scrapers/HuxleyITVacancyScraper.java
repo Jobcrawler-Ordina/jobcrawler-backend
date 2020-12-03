@@ -66,7 +66,7 @@ public class HuxleyITVacancyScraper extends VacancyScraper {
             - The first time to read how many vacancies are stored.
             - The second time to get ALL stored vacancies by supplying this number as wanted number of results.
          */
-        log.info(String.format("%s -- Start scraping", getBroker().toUpperCase()));
+        log.info("{} -- Start scraping", getBroker().toUpperCase());
 
         int totalVacancies = scrapeVacancies(0).getHits();
         List<Map<String, Object>> vacanciesData = scrapeVacancies(totalVacancies).getVacanciesData();
@@ -87,9 +87,9 @@ public class HuxleyITVacancyScraper extends VacancyScraper {
                     .build();
 
             vacancyDTOs.add(vacancyDTO);
-            log.info(String.format("%s - Vacancy found: %s", getBroker(), vacancyDTO.getTitle()));
+            log.info("{} - Vacancy found: {}", getBroker(), vacancyDTO.getTitle());
         }
-        log.info(String.format("%s -- Returning scraped vacancies", getBroker()));
+        log.info("{} -- Returning scraped vacancies", getBroker());
         return vacancyDTOs;
     }
 
