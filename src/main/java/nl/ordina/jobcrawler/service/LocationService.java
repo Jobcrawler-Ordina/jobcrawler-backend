@@ -9,7 +9,6 @@ import nl.ordina.jobcrawler.payload.opensearch.Coordinates;
 import nl.ordina.jobcrawler.payload.opensearch.Place;
 import nl.ordina.jobcrawler.repo.LocationRepository;
 import org.springframework.stereotype.Service;
-import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestTemplate;
 
@@ -32,32 +31,6 @@ public class LocationService {
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
     private final LocationRepository locationRepository;
-
-    public static String normalizeName(String name) {
-        if (name.equals("Diverse locaties")) {
-            name = "";
-        }
-        else if (name.endsWith(", Nederland")) {
-            name = name.substring(0, name.length() - 11);
-        }
-        else if (name.endsWith(", Netherlands")) {
-            name = name.substring(0, name.length() - 13);
-        }
-        else if (name.endsWith(", the Netherlands")) {
-            name = name.substring(0, name.length() - 16);
-        }
-        if (name.equals("'s-Hertogenbosch")) {
-            name = "Den Bosch";
-        }
-        name = name.toLowerCase();
-        name = name.substring(0,1).toUpperCase() + name.substring(1,name.length());
-        for(int i = 1; i<name.length(); i++) {
-            if(name.charAt(i-1)==' '||name.charAt(i-1)=='-') {
-                name = name.substring(0,i) + name.substring(i,i+1).toUpperCase() + name.substring(i+1,name.length());
-            }
-        }
-        return name;
-    }
 
     public LocationService(LocationRepository locationRepository, RestTemplate restTemplate, ObjectMapper objectMapper) {
         this.locationRepository = locationRepository;
@@ -88,10 +61,10 @@ public class LocationService {
         String jsonResponse = restTemplate.getForObject(GET_LOCNAME_URL, String.class, API_KEY, lat, lon);
         if (!ERROR_API_RESPONSE.equals(jsonResponse)) {
             Place place = objectMapper.readValue(jsonResponse, Place.class);
-            if (!ObjectUtils.isEmpty(place.getAddress().getTown()) ) {
+            if (!StringUtils.isEmpty(place.getAddress().getTown()) ) {
                 return place.getAddress().getTown();
             }
-            else if (!ObjectUtils.isEmpty(place.getAddress().getCity())) {
+            else if (!StringUtils.isEmpty(place.getAddress().getCity())) {
                 return place.getAddress().getCity();
             }
             return "";
@@ -102,14 +75,13 @@ public class LocationService {
     public double[] getCoordinates(String location) throws IOException {
         double[] coord = new double[2];
         String jsonResponse = restTemplate.getForObject(GET_COORD_URL, String.class, API_KEY, location);
-        if (!ObjectUtils.isEmpty(jsonResponse) && !EMPTY_API_RESPONSE.equals(jsonResponse) && StringUtils.hasText(jsonResponse)) {
+        if (!StringUtils.isEmpty(jsonResponse) && !EMPTY_API_RESPONSE.equals(jsonResponse) && StringUtils.hasText(jsonResponse)) {
             jsonResponse = jsonResponse.substring(1, jsonResponse.length() - 1);
             Coordinates openSearchCoordinates = objectMapper.readValue(jsonResponse, Coordinates.class);
             coord[0] = openSearchCoordinates.getLat();
             coord[1] = openSearchCoordinates.getLon();
         } else {
-            return null;
-//            throw new LocationNotFoundException(location);
+            throw new LocationNotFoundException(location);
         }
         return coord;
     }
