@@ -6,15 +6,12 @@ import nl.ordina.jobcrawler.exception.VacancyURLMalformedException;
 import nl.ordina.jobcrawler.model.Skill;
 import nl.ordina.jobcrawler.model.Vacancy;
 import nl.ordina.jobcrawler.payload.SearchRequest;
-import nl.ordina.jobcrawler.payload.VacancyDTO;
-import nl.ordina.jobcrawler.repo.VacancyCriteriaQuery;
 import nl.ordina.jobcrawler.repo.VacancyRepository;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.util.ObjectUtils;
@@ -25,6 +22,7 @@ import java.net.URL;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static nl.ordina.jobcrawler.repo.VacancySpecifications.vacancySearch;
 
 @Slf4j
 @Service
@@ -33,14 +31,11 @@ public class VacancyService {
     private final VacancyRepository vacancyRepository;
     private final LocationService locationService;
     private final SkillService skillService;
-    private final VacancyCriteriaQuery vacancyCriteriaQuery;
 
-    public VacancyService(VacancyRepository vacancyRepository, LocationService locationService,
-                          SkillService skillService, VacancyCriteriaQuery vacancyCriteriaQuery) {
+    public VacancyService(VacancyRepository vacancyRepository, LocationService locationService, SkillService skillService) {
         this.vacancyRepository = vacancyRepository;
         this.locationService = locationService;
         this.skillService = skillService;
-        this.vacancyCriteriaQuery = vacancyCriteriaQuery;
     }
 
     /**
@@ -74,12 +69,11 @@ public class VacancyService {
     /**
      * Returns all vacancies in the database filter by any values that user enters in the search field.
      *
-     * @param searchRequest - values that need to be filtered
-     * @param paging        - used for pagination
-     * @param sort          - string array for sorting by field and direction
+     * @param searchRequest  - values that need to be filtered
+     * @param paging - used for pagination
      * @return All vacancies in the database filter by any value.
      */
-    public Page<VacancyDTO> findByAnyValue(SearchRequest searchRequest, Pageable paging, String[] sort) {
+    public Page<Vacancy> findByAnyValue(SearchRequest searchRequest, Pageable paging) {
 
         if (!ObjectUtils.isEmpty(searchRequest.getLocation())) {
             try {
@@ -88,11 +82,7 @@ public class VacancyService {
                 log.error(e.getMessage());
             }
         }
-
-        List<VacancyDTO> vacancyDTOS = vacancyCriteriaQuery.getMatchingVacancies(searchRequest, paging, sort);
-        Long totalMatchingVacancies = vacancyCriteriaQuery.totalMatchingVacancies(searchRequest);
-
-        return new PageImpl<>(vacancyDTOS, paging, totalMatchingVacancies);
+        return vacancyRepository.findAll(vacancySearch(searchRequest), paging);
     }
 
     /**
@@ -110,7 +100,6 @@ public class VacancyService {
             throw new VacancyURLMalformedException(vacancy.getVacancyURL());
         }
     }
-
     public void saveAll(List<Vacancy> vacancies) {
         vacancyRepository.saveAll(vacancies);
     }
