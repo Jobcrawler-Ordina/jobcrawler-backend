@@ -1,14 +1,11 @@
 package nl.ordina.jobcrawler.scrapers;
 
 import lombok.extern.slf4j.Slf4j;
-import nl.ordina.jobcrawler.exception.HTMLStructureException;
 import nl.ordina.jobcrawler.payload.VacancyDTO;
-import nl.ordina.jobcrawler.service.DocumentService;
-import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
-import org.jsoup.safety.Whitelist;
 import org.jsoup.select.Elements;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
@@ -17,8 +14,6 @@ import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.time.Period;
 import java.time.format.DateTimeFormatter;
 import java.time.format.FormatStyle;
 import java.util.*;
@@ -27,7 +22,7 @@ import java.util.regex.Pattern;
 
 @Slf4j
 @Component
-public class JobCatcherScraper extends VacancyScraper {
+public class HeadfirstScraper extends VacancyScraper {
 
     private final Pattern dmyPattern = Pattern.compile("^(3[01]|[12][0-9]|0[1-9]) [a-z]+ [0-9]{4}$");
     private final DateTimeFormatter dmyFormatter = DateTimeFormatter.ofLocalizedDate(FormatStyle.LONG)
@@ -35,7 +30,7 @@ public class JobCatcherScraper extends VacancyScraper {
 
     RestTemplate restTemplate = new RestTemplate();
 
-    public JobCatcherScraper() {
+    public HeadfirstScraper() {
         super(
                 "https://jobcatcher.nl/api2/v1/requestsearch/search?", // Required search URL. Can be retrieved using getSEARCH_URL()
                 "JobCatcher" // Required broker. Can be retrieved using getBROKER()
@@ -51,6 +46,42 @@ public class JobCatcherScraper extends VacancyScraper {
     @Override
     public List<VacancyDTO> getVacancies() {
         log.info("{} -- Start scraping", getBroker().toUpperCase());
+
+        // Configure headers for request
+        HttpHeaders headers = new HttpHeaders();
+
+/*        headers.add("authority","portal.select.hr");
+        headers.add("method","POST");
+        headers.add("path","/login");
+        headers.add("scheme","https");*/
+        headers.add("accept","application/json, text/plain, */*");
+        headers.add("accept-encoding","gzip, deflate, br");
+        headers.add("accept-language","en-US,en;q=0.9");
+        headers.add("content-length","75");
+//        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+        headers.add("content-type","application/x-www-form-urlencoded; charset=UTF-8");
+        headers.add("cookie","_ga=GA1.2.301182803.1606140276; _gid=GA1.2.1677578532.1606985551; SELECT-AUTH-TOKEN=YmU3ZDJiYTMtYjU4NS00MGE3LWExNTYtYWQ2YThiMmJkYjY3; SELECT-ORIGIN=/nl/nl/login; _gat=1");
+        headers.add("origin","https://portal.select.hr");
+        headers.add("referer","https://portal.select.hr/nl/nl/login");
+        headers.add("sec-fetch-dest","empty");
+        headers.add("sec-fetch-mode","cors");
+        headers.add("sec-fetch-site","same-origin");
+        headers.add("user-agent","Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.88 Safari/537.36");
+
+        // Configure request body parameters
+        Map<String, Object> body = new HashMap<>();
+        body.put("username","kees.hannema@ordina.nl");
+        body.put("password","JC0112Jt*");
+        body.put("country", "nl");
+        body.put("language", "nl");
+
+        // Build and trigger the request
+        HttpEntity<Map<String, Object>> entity = new HttpEntity<>(body, headers);
+
+        Object reponse = restTemplate.postForObject("https://portal.select.hr/login", entity, Object.class);
+
+
+
         List<VacancyDTO> vacancyDTOs = new CopyOnWriteArrayList<>();
 
         int nrVacancies = scrapeVacancies(0).getData().get(0).getAmount();
@@ -64,9 +95,8 @@ public class JobCatcherScraper extends VacancyScraper {
                 vacancyURL = vacancyURL.replace(" ","-");
                 vacancyURL = vacancyURL.replace("(","%28");
                 vacancyURL = vacancyURL.replace(")","%29");
-                vacancyURL = vacancyURL.replace("\"","%22");
                 Document vacancyDoc = getDocument(vacancyURL);
-                String vacancySalary = !(vacancyData.get("maximumpurchaseprice")==null)?((String) vacancyData.get("maximumpurchaseprice")) + ",- p/u":"";
+                String vacancySalary = !(vacancyData.get("maximumpurchaseprice")==null)?((String) vacancyData.get("maximumpurchaseprice")) + " per uur":"";
 
                 VacancyDTO vacancyDTO = VacancyDTO.builder()
                         .vacancyURL(vacancyURL)
@@ -74,7 +104,7 @@ public class JobCatcherScraper extends VacancyScraper {
                         .hours((int) Double.parseDouble(((String) vacancyData.get("availability")).replace(',','.')))
                         .broker(getBroker())
                         .vacancyNumber(vacancyData.get("requestid").toString())
-                        .locationString((String) vacancyData.get("locationname"))
+                        .locationString(toTitleCase((String) vacancyData.get("locationname")))
                         .postingDate(LocalDateTime.parse((String) vacancyData.get("publishdate"), DateTimeFormatter.ofPattern("yyyy-MM-dd[ ]['T']HH:mm:ss['Z']")))
                         .about(getVacancyAbout(vacancyDoc))
                         .salary(vacancySalary)
@@ -118,12 +148,11 @@ public class JobCatcherScraper extends VacancyScraper {
         String about = "";
         Elements els1 = doc.select("h3");
         for (int i = 0; i < els1.size(); i++) {
-            about = about + "<u>" + els1.get(i).text() + ":</u><br>";
             Elements els2 = els1.get(i).parent().nextElementSiblings();
             for (int j = 0; j < els2.size(); j++) {
-                about = about + els2.get(j).text() + "<br>";
+                about = about + els2.get(j).text() + "\n";
             }
-            about = about + "<br>";
+            about = about + "\n";
         }
         return about;
     }
@@ -149,7 +178,7 @@ public class JobCatcherScraper extends VacancyScraper {
         }
     }
 
-    private String toTitleCase(String orig) {
+    public String toTitleCase(String orig) {
         orig = orig.toLowerCase();
         orig = orig.substring(0,1).toUpperCase() + orig.substring(1,orig.length());
         for(int i = 1; i<orig.length(); i++) {

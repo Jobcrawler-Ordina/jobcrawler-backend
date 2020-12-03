@@ -33,6 +33,29 @@ public class LocationService {
     private final ObjectMapper objectMapper;
     private final LocationRepository locationRepository;
 
+    public static String normalizeName(String name) {
+        if (name.endsWith(", Nederland")) {
+            name = name.substring(0, name.length() - 11);
+        }
+        if (name.endsWith(", Netherlands")) {
+            name = name.substring(0, name.length() - 13);
+        }
+        if (name.endsWith(", the Netherlands")) {
+            name = name.substring(0, name.length() - 16);
+        }
+        if (name.equals("'s-Hertogenbosch")) {
+            name = "Den Bosch";
+        }
+        name = name.toLowerCase();
+        name = name.substring(0,1).toUpperCase() + name.substring(1,name.length());
+        for(int i = 1; i<name.length(); i++) {
+            if(name.charAt(i-1)==' '||name.charAt(i-1)=='-') {
+                name = name.substring(0,i) + name.substring(i,i+1).toUpperCase() + name.substring(i+1,name.length());
+            }
+        }
+        return name;
+    }
+
     public LocationService(LocationRepository locationRepository, RestTemplate restTemplate, ObjectMapper objectMapper) {
         this.locationRepository = locationRepository;
         this.restTemplate = restTemplate;
@@ -79,7 +102,8 @@ public class LocationService {
             coord[0] = openSearchCoordinates.getLat();
             coord[1] = openSearchCoordinates.getLon();
         } else {
-            throw new LocationNotFoundException(location);
+            return null;
+//            throw new LocationNotFoundException(location);
         }
         return coord;
     }

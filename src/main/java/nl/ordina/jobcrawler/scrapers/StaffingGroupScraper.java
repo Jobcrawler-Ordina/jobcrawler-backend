@@ -50,6 +50,7 @@ public class StaffingGroupScraper extends VacancyScraper {
             Elements elements1 = doc.select("p.assignment-card__age-label");
             for (int i = 0; i<elements.size(); i++) {
                 String sLink = elements.get(i).attr("abs:href");
+                sLink = sLink.substring(0,sLink.indexOf("opdracht/")+9) + sLink.substring(sLink.length()-6,sLink.length());
                 LocalDate date = null;
                 String dateString = elements1.get(i).children().text();
                 if(dateString.contains("Nieuw")) {
@@ -79,8 +80,8 @@ public class StaffingGroupScraper extends VacancyScraper {
 
     private List<VacancyDTO> retrieveVacancies(Map<String, LocalDate> vacancyURLsAndPubDates) {
         List<VacancyDTO> vacancies = new CopyOnWriteArrayList<>();
-
         vacancyURLsAndPubDates.keySet().parallelStream().forEach(u -> {
+            System.out.println("retrieveVacancies-method: " + u);
             Document doc = documentService.getDocument(u);
             if (doc != null) {
                 VacancyDTO vacancyDTO = VacancyDTO.builder()
@@ -149,12 +150,11 @@ public class StaffingGroupScraper extends VacancyScraper {
     private String getVacancyAbout(Document doc) {
         String about = "Organisatie:\n";
         Elements elements = doc.select("h2");
-/*        Map<Integer, String> aboutCats = new HashMap<>() {};
-        aboutCats.put(0, "Organisatie");
-        aboutCats.put(1, "Achtergrond opdracht");
-        aboutCats.put(2, "Functie eisen");
-        aboutCats.put(3, "Opdracht informatie");*/
         elements.removeIf(e -> !(e.tag().getName().equals("h2")&&e.text().contains("Organisatie")));
+        System.out.println("getVacancyAbout-method: " + doc.location());
+        if(elements.size()==0) {
+            System.out.println("test");
+        }
         Elements els1 = elements.get(0).nextElementSiblings();
         for (int i=0; i<els1.size(); i++) {
             Element el = els1.get(i);
