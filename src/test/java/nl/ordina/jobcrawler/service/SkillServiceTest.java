@@ -21,12 +21,11 @@ import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class SkillServiceTest {
+    @Mock
+    SkillRepository mockSkillRepository;
 
     @InjectMocks
     SkillService skillService;
-
-    @Mock
-    SkillRepository mockSkillRepository;
 
     private List<Skill> skillList;
 
@@ -47,24 +46,23 @@ class SkillServiceTest {
     @Test
     void testFindById() {
         Skill skill = skillList.get(5);
-        when(mockSkillRepository.findById(skill.getId())).thenReturn(Optional.of(skill));
+        UUID uuid = skill.getId();
+        when(mockSkillRepository.findById(uuid))
+                .thenReturn(Optional.of(skill))
+                .thenReturn(Optional.empty());
 
+        // 1. test with Skill result
         Optional<Skill> foundSkill = skillService.findById(skill.getId());
 
         assertTrue(foundSkill.isPresent());
         assertEquals(skill, foundSkill.get());
-        verify(mockSkillRepository, times(1)).findById(any(UUID.class));
-    }
 
-    @Test
-    void testFindByIdNotFound() {
-        UUID uuid = UUID.randomUUID();
-        when(mockSkillRepository.findById(uuid)).thenReturn(Optional.empty());
-
-        Optional<Skill> foundSkill = skillService.findById(uuid);
+        // 2. test with empty result
+        foundSkill = skillService.findById(uuid);
 
         assertTrue(foundSkill.isEmpty());
-        verify(mockSkillRepository, times(1)).findById(uuid);
+
+        verify(mockSkillRepository, times(2)).findById(uuid);
     }
 
     @Test
