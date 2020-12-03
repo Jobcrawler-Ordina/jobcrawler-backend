@@ -8,10 +8,15 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.*;
+import org.springframework.http.converter.FormHttpMessageConverter;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.stereotype.Component;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
+import javax.ws.rs.core.Form;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -69,18 +74,22 @@ public class HeadfirstScraper extends VacancyScraper {
         headers.add("user-agent","Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.88 Safari/537.36");
 
         // Configure request body parameters
-        Map<String, Object> body = new HashMap<>();
-        body.put("username","kees.hannema@ordina.nl");
-        body.put("password","JC0112Jt*");
-        body.put("country", "nl");
-        body.put("language", "nl");
+        MultiValueMap<String, String> body= new LinkedMultiValueMap<String, String>();
+        body.add("username","kees.hannema@ordina.nl");
+        body.add("password","JC0112Jt*");
+        body.add("country", "nl");
+        body.add("language", "nl");
 
         // Build and trigger the request
-        HttpEntity<Map<String, Object>> entity = new HttpEntity<>(body, headers);
+        HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<MultiValueMap<String, String>>(body, headers);
 
-        Object reponse = restTemplate.postForObject("https://portal.select.hr/login", entity, Object.class);
+        restTemplate.getMessageConverters().add(new FormHttpMessageConverter());
 
+//        restTemplate.exchange("https://portal.select.hr/login",entity,Object.class)
 
+        //HeadfirstLoginResponse response = restTemplate.postForObject("https://portal.select.hr/login", request, HeadfirstLoginResponse.class);
+
+        String response = restTemplate.postForObject("https://portal.select.hr/login", request, String.class);
 
         List<VacancyDTO> vacancyDTOs = new CopyOnWriteArrayList<>();
 
