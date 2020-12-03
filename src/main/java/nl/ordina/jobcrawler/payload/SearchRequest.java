@@ -18,7 +18,7 @@ public class SearchRequest {
     private LocalDateTime fromDate;
     private LocalDateTime toDate;
 
-    private Long distance;
+    private Double distance;
     private String location;
     private double[] coord;
 
