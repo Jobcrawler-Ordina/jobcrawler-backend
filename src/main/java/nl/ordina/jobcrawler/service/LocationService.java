@@ -8,7 +8,6 @@ import nl.ordina.jobcrawler.model.Vacancy;
 import nl.ordina.jobcrawler.payload.opensearch.Coordinates;
 import nl.ordina.jobcrawler.payload.opensearch.Place;
 import nl.ordina.jobcrawler.repo.LocationRepository;
-import org.json.JSONException;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestTemplate;
@@ -51,21 +50,24 @@ public class LocationService {
 
     public Optional<Location> findByLocationNameInVacancyList(String locationName, List<Vacancy> allVacancies) {
         for(Vacancy vacancy : allVacancies) {
-            if(!(vacancy.getLocation()==null)) {
-                if (vacancy.getLocation().getName().equals(locationName)) {
+            if(vacancy.getLocation() != null && vacancy.getLocation().getName().equals(locationName)) {
                     return Optional.of(vacancy.getLocation());
-                }
             }
         }
         return Optional.empty();
     }
 
-    public String getLocation(double lat, double lon) throws IOException, JSONException {
+    public String getLocation(double lat, double lon) throws IOException {
         String jsonResponse = restTemplate.getForObject(GET_LOCNAME_URL, String.class, API_KEY, lat, lon);
         if (!ERROR_API_RESPONSE.equals(jsonResponse)) {
             Place place = objectMapper.readValue(jsonResponse, Place.class);
-            return !StringUtils.isEmpty(place.getAddress().getTown()) ? place.getAddress().getTown() : !StringUtils
-                    .isEmpty(place.getAddress().getCity()) ? place.getAddress().getCity() : "";
+            if (!StringUtils.isEmpty(place.getAddress().getTown()) ) {
+                return place.getAddress().getTown();
+            }
+            else if (!StringUtils.isEmpty(place.getAddress().getCity())) {
+                return place.getAddress().getCity();
+            }
+            return "";
         }
         return "";
     }
@@ -73,7 +75,7 @@ public class LocationService {
     public double[] getCoordinates(String location) throws IOException {
         double[] coord = new double[2];
         String jsonResponse = restTemplate.getForObject(GET_COORD_URL, String.class, API_KEY, location);
-        if (!StringUtils.isEmpty(jsonResponse) && !EMPTY_API_RESPONSE.equals(jsonResponse)) {
+        if (!StringUtils.isEmpty(jsonResponse) && !EMPTY_API_RESPONSE.equals(jsonResponse) && StringUtils.hasText(jsonResponse)) {
             jsonResponse = jsonResponse.substring(1, jsonResponse.length() - 1);
             Coordinates openSearchCoordinates = objectMapper.readValue(jsonResponse, Coordinates.class);
             coord[0] = openSearchCoordinates.getLat();

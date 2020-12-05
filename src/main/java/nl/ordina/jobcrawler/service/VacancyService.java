@@ -1,6 +1,7 @@
 package nl.ordina.jobcrawler.service;
 
 import lombok.extern.slf4j.Slf4j;
+import nl.ordina.jobcrawler.exception.LocationNotFoundException;
 import nl.ordina.jobcrawler.exception.VacancyURLMalformedException;
 import nl.ordina.jobcrawler.model.Skill;
 import nl.ordina.jobcrawler.model.Vacancy;
@@ -12,7 +13,6 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
-import org.springframework.dao.DataAccessException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -84,7 +84,7 @@ public class VacancyService {
         if (!StringUtils.isEmpty(searchRequest.getLocation())) {
             try {
                 searchRequest.setCoord(locationService.getCoordinates(searchRequest.getLocation()));
-            } catch (IOException e) {
+            } catch (IOException | LocationNotFoundException e) {
                 log.error(e.getMessage());
             }
         }
@@ -120,18 +120,10 @@ public class VacancyService {
      * Deletes the vacancy with the specified id.
      *
      * @param id The id of the vacancy to delete.
-     * @return True if the operation was successful, false otherwise.
      */
-    public boolean delete(UUID id) {
-
-        try {
-            vacancyRepository.deleteById(id);
-            return true;
-        } catch (DataAccessException e) {
-            return false;
-        }
-
-    }
+    public void delete(UUID id) {
+        vacancyRepository.deleteById(id);
+   }
 
     /**
      * Returns the vacancy with the specified url.
@@ -143,37 +135,16 @@ public class VacancyService {
         return vacancyRepository.findByVacancyURLEquals(url);
     }
 
-
     public boolean hasExistingURL(final Vacancy vacancy) {
-
         if (!vacancy.getVacancyURL().startsWith("http")) {
             vacancy.setVacancyURL("https://" + vacancy.getVacancyURL());
         }
 
         try {
-            URL url = new URL(vacancy.getVacancyURL());
-            HttpURLConnection huc = (HttpURLConnection) url.openConnection();
-            huc.setRequestProperty("User-Agent", "Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10.4; en-US; rv:1.9.2.2) Gecko/20100316 Firefox/3.6.2");
-            huc.setRequestMethod("HEAD");   // faster because it doesn't download the response body
-            /*
-             * Added a user agent as huxley gives a 403 forbidden error
-             * This user agent will make it as if we are making the request from a modern browser
-             */
+            HttpURLConnection huc = getHttpURLConnection(vacancy);
 
             if (vacancy.getBroker().equals("Jobbird")) {
-                if (huc.getResponseCode() != 200) {
-                    return false;
-                }
-
-                String userAgent = "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2228.0 Safari/537.36 ArabotScraper";
-                Document doc = Jsoup.connect(vacancy.getVacancyURL()).userAgent(userAgent).get();
-                Elements alertsDanger = doc.select(".alert-danger");
-                for (Element alert : alertsDanger) {
-                    if (alert.text().contains("niet langer actief")) {
-                        return false;
-                    }
-                }
-                return true;
+                return existsJobbirdURL(vacancy, huc);
             } else {
                 return huc.getResponseCode() == 200; //returns true if the website has a 200 OK response
             }
@@ -182,4 +153,39 @@ public class VacancyService {
         }
     }
 
+    private HttpURLConnection getHttpURLConnection(Vacancy vacancy) throws IOException {
+        URL url = new URL(vacancy.getVacancyURL());
+        HttpURLConnection huc = openConnection(url);
+        huc.setRequestProperty("User-Agent", "Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10.4; en-US; rv:1.9.2.2) Gecko/20100316 Firefox/3.6.2");
+        huc.setRequestMethod("HEAD");   // faster because it doesn't download the response body
+        return huc;
+    }
+
+    private boolean existsJobbirdURL(Vacancy vacancy, HttpURLConnection huc) throws IOException {
+        if (huc.getResponseCode() != 200) {
+            return false;
+        }
+
+        /*
+         * Added a user agent as huxley gives a 403 forbidden error
+         * This user agent will make it as if we are making the request from a modern browser
+         */
+        String userAgent = "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2228.0 Safari/537.36 ArabotScraper";
+        Document doc = getDocument(vacancy, userAgent);
+        Elements alertsDanger = doc.select(".alert-danger");
+        for (Element alert : alertsDanger) {
+            if (alert.text().contains("niet langer actief")) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    protected Document getDocument(Vacancy vacancy, String userAgent) throws IOException {
+        return Jsoup.connect(vacancy.getVacancyURL()).userAgent(userAgent).get();
+    }
+
+    protected HttpURLConnection openConnection(URL url) throws IOException {
+        return (HttpURLConnection) url.openConnection();
+    }
 }
