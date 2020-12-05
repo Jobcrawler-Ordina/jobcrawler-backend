@@ -4,10 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import nl.ordina.jobcrawler.payload.VacancyDTO;
 import org.jsoup.nodes.Document;
 import org.jsoup.select.Elements;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.http.converter.*;
 import org.springframework.http.converter.FormHttpMessageConverter;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
@@ -55,15 +52,10 @@ public class HeadfirstScraper extends VacancyScraper {
         // Configure headers for request
         HttpHeaders headers = new HttpHeaders();
 
-/*        headers.add("authority","portal.select.hr");
-        headers.add("method","POST");
-        headers.add("path","/login");
-        headers.add("scheme","https");*/
         headers.add("accept","application/json, text/plain, */*");
         headers.add("accept-encoding","gzip, deflate, br");
         headers.add("accept-language","en-US,en;q=0.9");
         headers.add("content-length","75");
-//        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
         headers.add("content-type","application/x-www-form-urlencoded; charset=UTF-8");
         headers.add("cookie","_ga=GA1.2.301182803.1606140276; _gid=GA1.2.1677578532.1606985551; SELECT-AUTH-TOKEN=YmU3ZDJiYTMtYjU4NS00MGE3LWExNTYtYWQ2YThiMmJkYjY3; SELECT-ORIGIN=/nl/nl/login; _gat=1");
         headers.add("origin","https://portal.select.hr");
@@ -81,15 +73,51 @@ public class HeadfirstScraper extends VacancyScraper {
         body.add("language", "nl");
 
         // Build and trigger the request
-        HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<MultiValueMap<String, String>>(body, headers);
-
+        HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(body, headers);
         restTemplate.getMessageConverters().add(new FormHttpMessageConverter());
 
-//        restTemplate.exchange("https://portal.select.hr/login",entity,Object.class)
+//        HeadfirstLoginResponse response = restTemplate.postForObject("https://portal.select.hr/login", request, HeadfirstLoginResponse.class);
+//        String response = restTemplate.postForObject("https://portal.select.hr/login", request, String.class);
 
-        //HeadfirstLoginResponse response = restTemplate.postForObject("https://portal.select.hr/login", request, HeadfirstLoginResponse.class);
+        ResponseEntity<String> response = restTemplate.exchange("https://portal.select.hr/login", HttpMethod.POST, request, String.class);
 
-        String response = restTemplate.postForObject("https://portal.select.hr/login", request, String.class);
+        HttpHeaders headers2 = new HttpHeaders();
+
+        headers2.add("cookie",   "hblid=gtf0kJQ0YlA2yKjm7q9Li0O6ab4Pb6ao; " +
+                "olfsk=olfsk035696944379663975; " +
+                "_ga=GA1.3.301182803.1606140276; " +
+                "SELECT-COUNT=0; " +
+                "wcsid=be55TmV5Tm8ZQtv57q9Li0OPbAa4aSoj; " +
+                "langKey=nl; " +
+                "_ok=3218-442-10-9527; " +
+                "_gid=GA1.3.1677578532.1606985551; " +
+                "SELECT-ORIGIN=/nl/nl/login; " +
+                "SELECT-JWT-TOKEN=NzllNWEyZWItN2ZmMy00ODNmLTliZjEtMzUzYmE1MjlmNDk1; " +
+                "_okdetect=%7B%22token%22%3A%2216069882122260%22%2C%22proto%22%3A%22https%3A%22%2C%22host%22%3A%22headfirst.select.hr%22%7D; " +
+                "_okbk=cd4%3Dtrue%2Ccd5%3Davailable%2Cvi5%3D0%2Cvi4%3D1606985566076%2Cvi3%3Dactive%2Cvi2%3Dfalse%2Cvi1%3Dfalse%2Ccd8%3Dchat%2Ccd6%3D0%2Ccd3%3Dfalse%2Ccd2%3D0%2Ccd1%3D0%2C; " +
+                "JSESSIONID=0133E98FAB04CF2107BADE1B805CFC67; " +
+                "_oklv=1607007280795%2Cbe55TmV5Tm8ZQtv57q9Li0OPbAa4aSoj");
+//        headers2.add("Postman-Token","");
+//        headers2.add("content-type","application/json");
+//        headers2.add("content-length","");
+//        headers2.add("Host","");
+//        headers2.add("user-agent","PostmanRuntime/7.26.8");
+//        headers2.add("accept","*/*");
+        headers2.add("accept-encoding","gzip, deflate, br");
+        headers2.add("connection","keep-alive");
+        headers2.add("accept","application/json, text/plain, */*");
+        headers2.add("X-Requested-With","XMLHttpRequest");
+        headers2.add("SELECT-JWT-TOKEN","OTZhNTZlN2QtMTM3YS00ZWUyLTgyNjYtMDlmMjMzZWY1OGJm");
+        headers2.add("user-agent","Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.88 Safari/537.36");
+        headers2.add("content-type","application/json;charset=UTF-8");
+
+//        MultiValueMap<String, Integer> body2= new LinkedMultiValueMap<String, Integer>();
+//        body2.add("page_start", 0);
+
+        String body2 = "{\"page_start\": 0}";
+
+        HttpEntity<String> request2 = new HttpEntity<String>(body2,headers2);
+        ResponseEntity<String> response2 = restTemplate.exchange("https://headfirst.select.hr/api/v2/jobrequest/search", HttpMethod.POST, request2, String.class);
 
         List<VacancyDTO> vacancyDTOs = new CopyOnWriteArrayList<>();
 
