@@ -2,6 +2,7 @@ package nl.ordina.jobcrawler.payload.opensearch;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -9,8 +10,10 @@ import lombok.Data;
 @Data
 public class Place {
 
-    private String place_id;
+    @JsonProperty("place_id")
+    private String placeId;
     private Address address;
-    private String display_name;
+    @JsonProperty("display_name")
+    private String displayName;
 
 }

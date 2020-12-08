@@ -58,36 +58,37 @@ public class YachtVacancyScraper extends VacancyScraper {
         for (int pageNumber = 1; pageNumber <= totalnumberOfPages; pageNumber++) {
             YachtVacancyResponse yachtVacancyResponse = scrapeVacancies(pageNumber);
 
-            if (pageNumber == 1) {
+            if (pageNumber == 1 && yachtVacancyResponse != null) {
                 totalnumberOfPages = yachtVacancyResponse.getPages();
                 log.info("{} -- Total number of pages: {}", getBroker(), totalnumberOfPages);
             }
 
-            log.info("{} -- Retrieving vacancy urls from page: {} of {}", getBroker(), yachtVacancyResponse.getCurrentPage(), yachtVacancyResponse.getPages());
+            if (yachtVacancyResponse != null) {
+                log.info("{} -- Retrieving vacancy urls from page: {} of {}", getBroker(), yachtVacancyResponse.getCurrentPage(), yachtVacancyResponse.getPages());
 
-            yachtVacancyResponse.getVacancies().parallelStream().forEach((Map<String, Object> vacancyData) -> {
-                Map<String, Object> vacancyMetaData = (Map<String, Object>) vacancyData.get("meta");
-                String vacancyURL = (String) vacancyData.get("detailUrl");
-                vacancyURL = vacancyURL.contains("?") ? vacancyURL.split("\\?")[0] : vacancyURL;
-                vacancyURL = vacancyURL.contains("http") ? vacancyURL : VACANCY_URL_PREFIX + vacancyURL;
-                Document vacancyDoc = getDocument(vacancyURL);
-                VacancyDTO vacancyDTO = VacancyDTO.builder()
-                        .vacancyURL(vacancyURL)
-                        .title((String) vacancyData.get("title"))
-                        .hours(getHours((String) vacancyMetaData.get("hours")))
-                        .broker(getBroker())
-                        .vacancyNumber((String) vacancyData.get("vacancyNumber"))
-                        .locationString((String) vacancyMetaData.get("location"))
-                        .postingDate(getPostingDate((String) vacancyData.get("date")))
-                        .about(getVacancyAbout(vacancyDoc))
-                        .salary((String) vacancyMetaData.get("salary"))
-                        .company((String) vacancyData.get("company"))
-                        .build();
+                yachtVacancyResponse.getVacancies().parallelStream().forEach((Map<String, Object> vacancyData) -> {
+                    Map<String, Object> vacancyMetaData = (Map<String, Object>) vacancyData.get("meta");
+                    String vacancyURL = (String) vacancyData.get("detailUrl");
+                    vacancyURL = vacancyURL.contains("?") ? vacancyURL.split("\\?")[0] : vacancyURL;
+                    vacancyURL = vacancyURL.contains("http") ? vacancyURL : VACANCY_URL_PREFIX + vacancyURL;
+                    Document vacancyDoc = getDocument(vacancyURL);
+                    VacancyDTO vacancyDTO = VacancyDTO.builder()
+                            .vacancyURL(vacancyURL)
+                            .title((String) vacancyData.get("title"))
+                            .hours(getHours((String) vacancyMetaData.get("hours")))
+                            .broker(getBroker())
+                            .vacancyNumber((String) vacancyData.get("vacancyNumber"))
+                            .locationString((String) vacancyMetaData.get("location"))
+                            .postingDate(getPostingDate((String) vacancyData.get("date")))
+                            .about(getVacancyAbout(vacancyDoc))
+                            .salary((String) vacancyMetaData.get("salary"))
+                            .company((String) vacancyData.get("company"))
+                            .build();
 
-                vacancyDTOs.add(vacancyDTO);
-                log.info("{} - Vacancy found: {}", getBroker(), vacancyDTO.getTitle());
-            });
-
+                    vacancyDTOs.add(vacancyDTO);
+                    log.info("{} - Vacancy found: {}", getBroker(), vacancyDTO.getTitle());
+                });
+            }
         }
         log.info("{} -- Returning scraped vacancies", getBroker());
         return vacancyDTOs;

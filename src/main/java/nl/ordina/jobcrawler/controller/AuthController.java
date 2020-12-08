@@ -37,6 +37,8 @@ import java.util.*;
 @RestController
 @RequestMapping("/auth")
 public class AuthController {
+    private static final String SUCCESS = "success";
+    private static final String MESSAGE = "message";
 
     private final AuthenticationManager authenticationManager;
     private final UserService userService;
@@ -73,7 +75,7 @@ public class AuthController {
     public ResponseEntity<Object> updateRegistration(@RequestParam(value = "newVal") boolean allow) {
         this.allowRegistration = allow;
         return ResponseEntity.status(HttpStatus.OK).body(Map.of(
-                "success", true,
+                SUCCESS, true,
                 "allow", this.allowRegistration));
     }
 
@@ -99,8 +101,8 @@ public class AuthController {
 
         if (!user.getRoles().contains(adminRole)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of(
-                    "success", false,
-                    "message", "You don't have admin access."));
+                    SUCCESS, false,
+                    MESSAGE, "You don't have admin access."));
         }
 
         SecurityContextHolder.getContext().setAuthentication(authentication);
@@ -120,8 +122,8 @@ public class AuthController {
         if (this.allowRegistration) {
             if (userService.existsByUsername(signUpRequest.getUsername())) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
-                        "success", false,
-                        "message", "Fail -> Username is already taken!"));
+                        SUCCESS, false,
+                        MESSAGE, "Fail -> Username is already taken!"));
             }
 
             User user = new User(signUpRequest.getUsername(), passwordEncoder.encode(signUpRequest.getPassword()));
@@ -141,12 +143,12 @@ public class AuthController {
             userService.save(user);
 
             return ResponseEntity.status(HttpStatus.CREATED).body(Map.of(
-                    "success", true,
-                    "message", "User registered successfully!"));
+                    SUCCESS, true,
+                    MESSAGE, "User registered successfully!"));
         } else {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of(
-                    "success", false,
-                    "message", "Registration is forbidden"));
+                    SUCCESS, false,
+                    MESSAGE, "Registration is forbidden"));
         }
     }
 
