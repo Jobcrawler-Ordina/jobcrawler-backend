@@ -1,9 +1,7 @@
 package nl.ordina.jobcrawler.scrapers;
 
 import lombok.extern.slf4j.Slf4j;
-import nl.ordina.jobcrawler.model.Vacancy;
 import nl.ordina.jobcrawler.payload.VacancyDTO;
-import nl.ordina.jobcrawler.repo.LocationRepository;
 import org.jsoup.Jsoup;
 import org.jsoup.safety.Whitelist;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,8 +38,6 @@ public class HuxleyITVacancyScraper extends VacancyScraper {
     private static final String VACANCY_URL_PREFIX = "https://www.huxley.com/nl-nl/job/kyc/";
 
     RestTemplate restTemplate = new RestTemplate();
-
-    LocationRepository locationRepository;
 
     /**
      * Default constructor that calls the constructor from the abstract class.
