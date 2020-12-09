@@ -34,13 +34,16 @@ public class LocationService {
     private final LocationRepository locationRepository;
 
     public static String normalizeName(String name) {
-        if (name.endsWith(", Nederland")) {
+        if (name.equals("Diverse locaties")) {
+            name = "";
+        }
+        else if (name.endsWith(", Nederland")) {
             name = name.substring(0, name.length() - 11);
         }
-        if (name.endsWith(", Netherlands")) {
+        else if (name.endsWith(", Netherlands")) {
             name = name.substring(0, name.length() - 13);
         }
-        if (name.endsWith(", the Netherlands")) {
+        else if (name.endsWith(", the Netherlands")) {
             name = name.substring(0, name.length() - 16);
         }
         if (name.equals("'s-Hertogenbosch")) {
