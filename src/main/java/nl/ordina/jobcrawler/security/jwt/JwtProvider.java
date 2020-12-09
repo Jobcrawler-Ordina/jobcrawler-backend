@@ -74,6 +74,10 @@ public class JwtProvider {
      * @param authToken current working token
      * @return new token
      */
+    @SuppressWarnings("java:S2583")
+    /**
+     *    SonarLint reports this issue on the line: if (claimsJws.isEmpty()) below; it is a false positive.
+     */
     public List<String> refreshToken(String authToken) {
         validateJwtToken(authToken);
         Optional<Jws<Claims>> claimsJws = getClaims(Optional.of(authToken));

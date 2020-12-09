@@ -9,6 +9,7 @@ import nl.ordina.jobcrawler.payload.SearchRequest;
 import nl.ordina.jobcrawler.payload.SearchResult;
 import nl.ordina.jobcrawler.payload.VacancyDTO;
 import nl.ordina.jobcrawler.service.VacancyService;
+import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -36,10 +37,12 @@ public class VacancyController {
 
     private final VacancyService vacancyService;
     private final VacancyModelAssembler vacancyModelAssembler;
+    private final ModelMapper modelMapper;
 
-    public VacancyController(VacancyService vacancyService, VacancyModelAssembler vacancyModelAssembler) {
+    public VacancyController(VacancyService vacancyService, VacancyModelAssembler vacancyModelAssembler, ModelMapper modelMapper) {
         this.vacancyService = vacancyService;
         this.vacancyModelAssembler = vacancyModelAssembler;
+        this.modelMapper = modelMapper;
     }
 
     /**
@@ -105,19 +108,19 @@ public class VacancyController {
     /**
      * Creates a new vacancy.
      *
-     * @param vacancy The vacancy to create.
+     * @param vacancyDTO The vacancy to create.
      * @return The created vacancy and code 201 Created
      * Code 400 Bad Request if the given body is invalid
      */
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<EntityModel<Vacancy>> createVacancy(@Valid @RequestBody Vacancy vacancy) {
+    public ResponseEntity<EntityModel<Vacancy>> createVacancy(@Valid @RequestBody VacancyDTO vacancyDTO) {
+        Vacancy vacancy = modelMapper.map(vacancyDTO, Vacancy.class);
         EntityModel<Vacancy> returnedVacancy = vacancyModelAssembler.toModel(vacancyService.save(vacancy));
         return ResponseEntity
                 .created(returnedVacancy.getRequiredLink(IanaLinkRelations.SELF).toUri())
                 .body(returnedVacancy);
     }
-
 
     /**
      * Returns the vacancy with the specified ID.
