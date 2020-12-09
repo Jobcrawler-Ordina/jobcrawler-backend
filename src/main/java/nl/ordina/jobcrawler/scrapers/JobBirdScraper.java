@@ -139,7 +139,7 @@ public class JobBirdScraper extends VacancyScraper {
         try {
             Document doc = documentService.getDocument(createSearchURL(1));
             boolean continueSearching = true;
-            int nrLastPage = getLastPageToScrape(doc);
+            int nrLastPage = getLastPageToScrape();
 
             for (int i = 1; continueSearching && i <= nrLastPage; i++) {
                 String searchURL = createSearchURL(i);
@@ -182,8 +182,8 @@ public class JobBirdScraper extends VacancyScraper {
      * @param doc The HTML document containing the URLs to the vacancies
      * @return the index of the last page to scrape
      */
-    private int getLastPageToScrape(Document doc) {
-        int totalNumberOfPages = getTotalNumberOfPages(doc);
+    private int getLastPageToScrape() {
+        int totalNumberOfPages = getTotalNumberOfPages();
         //int totalNumberOfPages = getTotalNumberOfPages(doc);
         // TODO: we could get more sophisticated logic in place to limit the number of pages.
         // For example, we could look at the posting date of each vacancy, and limit it to thirty days.
@@ -201,10 +201,8 @@ public class JobBirdScraper extends VacancyScraper {
      * these are <li elements with as attribute value the number of the page
      * continue until the page link with the text "next"
      */
-    private int getTotalNumberOfPages(Document doc) {
-        String oldURL = doc.location();
-        int i_o = oldURL.indexOf("page=") + 5;
-        String searchURLlastPage = oldURL.substring(0,i_o) + "1000" + oldURL.substring(i_o+1,oldURL.length());
+    private int getTotalNumberOfPages() {
+        String searchURLlastPage = createSearchURL(1000);
         Document docLastPage = documentService.getDocument(searchURLlastPage);
         String newURL = docLastPage.location();
         int i_n1 = newURL.indexOf("page=") + 5;
