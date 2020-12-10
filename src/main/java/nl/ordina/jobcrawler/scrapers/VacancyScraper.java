@@ -1,8 +1,6 @@
 package nl.ordina.jobcrawler.scrapers;
 
-import nl.ordina.jobcrawler.model.Vacancy;
 import nl.ordina.jobcrawler.payload.VacancyDTO;
-import nl.ordina.jobcrawler.repo.LocationRepository;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 
@@ -15,7 +13,6 @@ public abstract class VacancyScraper {
 
     private final String searchUrl;
     private final String broker;
-    private LocationRepository locationRepository;
 
     /**
      * Constructor for abstract class VacancyScraper
@@ -121,6 +118,6 @@ public abstract class VacancyScraper {
      *
      * @return List of vacancies
      */
-    abstract public List<VacancyDTO> getVacancies();
+    public abstract List<VacancyDTO> getVacancies();
 
 }

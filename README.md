@@ -74,6 +74,12 @@ create database jobcrawler;
 
 -- Add additional notes about how to deploy this on a live system --
 
+## Owasp dependency check
+
+As part of the maven build the dependencies are checked on vulnerabilities.
+The report (dependency-check-report.html) is placed in the target directory.
+
+
 ## Built With
 
 * [Maven](https://maven.apache.org/) - Dependency Management
