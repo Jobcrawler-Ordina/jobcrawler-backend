@@ -1,7 +1,6 @@
 package nl.ordina.jobcrawler.utils;
 
 import nl.ordina.jobcrawler.model.Vacancy;
-import org.assertj.core.util.Sets;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -19,7 +18,7 @@ public final class MockData {
                 .vacancyNumber("1")
                 .hours(30)
                 .postingDate(LocalDateTime.parse("2020-04-14 00:00", formatter))
-                .about("this is a description of the example job")
+                .about("The applicant should be fluent in Java")
                 .build();
     }
 

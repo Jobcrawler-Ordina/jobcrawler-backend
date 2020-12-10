@@ -83,15 +83,9 @@ public class SkillService {
      * Deletes the skill with the specified id.
      *
      * @param id The id of the skill to delete.
-     * @return True if the operation was successful, false otherwise.
      */
-    public boolean delete(UUID id) {
-        try {
-            skillRepository.deleteById(id);
-            return true;
-        } catch (JDBCConnectionException e) {
-            return false;
-        }
+    public void delete(UUID id) {
+        skillRepository.deleteById(id);
     }
 
 }
