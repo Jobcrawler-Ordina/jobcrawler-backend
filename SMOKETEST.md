@@ -2,59 +2,60 @@
 # Jobcrawler smoketest
 Smoketest for both front end and backend for the JobCrawler application
 
-
 ### Settings for JDK 
-
 Install JDK 11.0.6 (for example, the Oracle version, openJDK should also work).
 
 In project settings: project SDK is 11, Project name is jobcrawler, project language level is 11 - local variable syntax for lambda parameters
 Ditto (11 - local variable syntax for lambda parameters) for project modules
 
-Install lombok into the IDE
+Install lombok plugin into the IDE
 
 ### Test Backend run 1. Run from IntelliJ, separate Postgres docker file
-
 Test whether the application runs and is visible from the browser. Postgres is present in a separate docker container that must be run.
 
-### Creates the container, runs it and creates a database 'jobcrawler' in it:
-#### 1. Start the shell in the source folder of the backend project
-docker run --name jobcrawler-postgres -e POSTGRES_PASSWORD=admin -d -p 5432:5432 postgres
+### Create and run the container and create a database in it:
+#### 1. Run the container and start a shell
 
+```shell script
+docker run \
+--name jobcrawler-postgres \
+-e POSTGRES_PASSWORD=*password* \
+-d -p 5432:5432 postgres 
+```
+
+```shell script
 docker exec -it jobcrawler-postgres bash
+```
+#### 2. Create database jobcrawler
+While in the container shell:
 
+```shell script
 psql -U postgres
 
-create database jobcrawler;
-
-Exit from this database and the container
-
-Start IntelliJ in the backend project, edit application.properties and change spring.datasource-url to 'jdbc:postgresql://localhost:5432/jobcrawler'
-
-Run the application from IntelliJ
-
-What do I see: the application boots without problems and doesn't start scraping
+CREATE USER jobcrawler WITH PASSWORD 'changeme';
+CREATE DATABASE "jobcrawler";
+GRANT ALL PRIVILEGES ON DATABASE "jobcrawler" TO jobcrawler;
+```
+Exit from this database and the container by typing `exit` two times.
 
 #### 2. Start scraping
 
-Edit the ScraperService.java and uncomment line @ PostConstruct before the scrape() method. Run the application again.
+* Run the application from IntelliJ
+* What do I see: the application boots without problems but doesn't start scraping
+* Edit the ScraperService.java and uncomment line @PostConstruct before the scrape() method. Run the application again.
+* What do I see: application starts and starts scraping
 
-What do I see: application starts and starts scraping
+Enter the docker container:  
+`docker exec -it jobcrawler-postgres bash`
 
-Enter the docker container:
+Log in to Postgres:   
+`psql -U postgres`
 
-docker exec -it jobcrawler-postgres bash
+Connect to the jobcrawler database:    
+`\c jobcrawler`
 
-Log in to Postgres:
-
-psql -U postgres
-
-Connect to the jobcrawler database:
-
-\c jobcrawler
-
-Perform the query to find the vacancies:
-
-select title from vacancy;
+Perform the query to find the vacancies:   
+`select title from vacancy;`
 
 What do I see: I should now see a number of vacancies
 
@@ -86,15 +87,14 @@ What do I see: Java is added to the skills
 
 What do I see: When I enter the container again and the database the skill is present in the skills table.
 
-#### 3. Relink the skills
+### Adding local environment variables
+We can override the defaults used in the code eg: 
 
-Click the relink button
+```
+SPRING_DATASOURCE_PASSWORD=changeme
+SPRING_DATASOURCE_USERNAME=jobcrawler
+DB_HOSTNAME=localhost
+``` 
+We can add the environment variables in the run configuration:
 
-What do I see: in the IntelliJ console log it is visible that all vacancies are relinked to the Java skill.
-
-What do I see: in the container, in the database, I can see that the link table now has a number of entries.
-
-Click on "back to Vacancies".
-Click on "By skill:", select "Java", and click "Search".
-
-What do I see: The list of Vacancies is now updated with less entries, only those containing "Java".
+![Imgur](run_config_env.png)

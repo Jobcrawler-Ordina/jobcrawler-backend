@@ -46,6 +46,7 @@ public class ScraperService {
         this.modelMapper = modelMapper;
     }
 
+//    @PostConstruct
     @Scheduled(cron = "0 0 12,18 * * *")
     // Runs two times a day. At 12pm and 6pm
     @Transactional
