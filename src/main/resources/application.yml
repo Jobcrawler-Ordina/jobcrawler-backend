@@ -2,7 +2,7 @@ spring:
   main:
     banner-mode: off
   datasource:
-    url: jdbc:postgresql://${DB_HOSTNAME:localhost}:5432/jobcrawler
+    url: jdbc:postgresql://${DB_HOSTNAME:locahost}:5432/jobcrawler
     driverClassName: org.postgresql.Driver
     username: ${SPRING_DATASOURCE_USERNAME:jobcrawler}
     password: ${SPRING_DATASOURCE_PASSWORD:changeme}
@@ -15,8 +15,6 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         metadata_builder_contributor: nl.ordina.jobcrawler.configuration.SqlFunctionsMetadataBuilderContributor
-  scrapers:
-    headfirstpassword: ${HEADFIRST_PASSWORD}
 
 server.error.include-stacktrace: on_trace_param
 
