@@ -36,34 +36,39 @@ Install these things to be able to run the application locally:
 This application uses PostgreSQL as database.
 To run the database locally, perform the following commands:
 
-If you haven't created the container before, create and start the container with the "docker run" command. Replace the "\*password\*" part with your own password. This must be the same password as the "DB_PASS" variable declared [here](https://github.com/mostafa-221/jobcrawler-backend/blob/4f238dfdbbcb624aa1bf2215282a9dcc7edd289e/src/main/resources/application.properties#L10).
+If you haven't created the container before, create and start the container with the "docker run" command. Replace 
+the "\*password\*" part with your own password. This must be the same password as the "DB_PASS" variable declared 
+[here](https://github.com/mostafa-221/jobcrawler-backend/blob/4f238dfdbbcb624aa1bf2215282a9dcc7edd289e/src/main/resources/application.properties#L10).
+
 ```
 docker run --name jobcrawler-postgres -e POSTGRES_PASSWORD=*password* -d -p 5432:5432 postgres
 ```
-
 Otherwise, if you did create the container before, run this:
+
 ```
 docker start jobcrawler-postgres
 ```
-
 Now navigate into the postgres docker container and open bash:
+
 ```
 docker exec -it jobcrawler-postgres bash
 ```
-
 Log into the postgres server with the user "postgres"
+
 ```
 psql -U postgres
 ```
-
 Now check if the jobcrawler database is present:
+
 ```
 \list
 ```
-
 If the jobcrawler database is not there, create the jobcrawler database:
+
 ```
-create database jobcrawler;
+CREATE USER jobcrawler WITH PASSWORD 'changeme';
+CREATE DATABASE "jobcrawler";
+GRANT ALL PRIVILEGES ON DATABASE "jobcrawler" TO jobcrawler;
 ```
 
 ## Running the tests
