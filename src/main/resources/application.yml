@@ -2,7 +2,7 @@ spring:
   main:
     banner-mode: off
   datasource:
-    url: jdbc:postgresql://${DB_HOSTNAME:locahost}:5432/jobcrawler
+    url: jdbc:postgresql://${DB_HOSTNAME:localhost}:5432/jobcrawler
     driverClassName: org.postgresql.Driver
     username: ${SPRING_DATASOURCE_USERNAME:jobcrawler}
     password: ${SPRING_DATASOURCE_PASSWORD:changeme}
