@@ -4,7 +4,7 @@ spring:
   datasource:
     url: jdbc:postgresql://${DB_HOSTNAME:localhost}:5432/jobcrawler
     driverClassName: org.postgresql.Driver
-    username: ${SPRING_DATASOURCE_USERNAME:postgres}
+    username: ${SPRING_DATASOURCE_USERNAME:jobcrawler}
     password: ${SPRING_DATASOURCE_PASSWORD:changeme}
     #Execute data.sql upon initialization
     initialization-mode: always
