@@ -16,9 +16,9 @@ import java.util.Optional;
 @Slf4j
 public class JwtProvider {
 
-    private final String jwtSecret = "BE43B886805D7AAC35A6B7B4E8EC2A95A12067BDD6D0D51E9456AF14C78B8217";
+    private static final String JWT_SECRET = "BE43B886805D7AAC35A6B7B4E8EC2A95A12067BDD6D0D51E9456AF14C78B8217";
 
-    private final int jwtExpiration = 1800;
+    private static final int JWT_EXPIRATION = 1800;
 
     /**
      * Generates JWT Token based on user credentials
@@ -32,10 +32,10 @@ public class JwtProvider {
         jwtToken.add(Jwts.builder()
                 .setSubject((userPrincipal.getUsername()))
                 .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + jwtExpiration * 1000))
-                .signWith(SignatureAlgorithm.HS512, jwtSecret)
+                .setExpiration(new Date(System.currentTimeMillis() + JWT_EXPIRATION * 1000))
+                .signWith(SignatureAlgorithm.HS512, JWT_SECRET)
                 .compact());
-        jwtToken.add(String.valueOf(jwtExpiration));
+        jwtToken.add(String.valueOf(JWT_EXPIRATION));
 
         return jwtToken;
     }
@@ -47,7 +47,7 @@ public class JwtProvider {
      */
     public String getUserNameFromJwtToken(String token) {
         return Jwts.parser()
-                .setSigningKey(jwtSecret)
+                .setSigningKey(JWT_SECRET)
                 .parseClaimsJws(token)
                 .getBody().getSubject();
     }
@@ -59,7 +59,7 @@ public class JwtProvider {
      */
     public boolean validateJwtToken(String authToken) {
         try {
-            Jwts.parser().setSigningKey(jwtSecret).parseClaimsJws(authToken);
+            Jwts.parser().setSigningKey(JWT_SECRET).parseClaimsJws(authToken);
             return true;
         } catch (SignatureException | MalformedJwtException | ExpiredJwtException | UnsupportedJwtException | IllegalArgumentException e) {
             final String errorMessage = "Unable to validate the access token.";
@@ -74,6 +74,10 @@ public class JwtProvider {
      * @param authToken current working token
      * @return new token
      */
+    @SuppressWarnings("java:S2583")
+    /**
+     *    SonarLint reports this issue on the line: if (claimsJws.isEmpty()) below; it is a false positive.
+     */
     public List<String> refreshToken(String authToken) {
         validateJwtToken(authToken);
         Optional<Jws<Claims>> claimsJws = getClaims(Optional.of(authToken));
@@ -82,10 +86,10 @@ public class JwtProvider {
         }
         Claims claims = claimsJws.get().getBody();
         claims.setIssuedAt(new Date());
-        claims.setExpiration(new Date(System.currentTimeMillis() + jwtExpiration * 1000));
+        claims.setExpiration(new Date(System.currentTimeMillis() + JWT_EXPIRATION * 1000));
         List<String> refreshToken = new ArrayList<>();
-        refreshToken.add(Jwts.builder().setClaims(claims).signWith(SignatureAlgorithm.HS512, jwtSecret).compact());
-        refreshToken.add(String.valueOf(jwtExpiration));
+        refreshToken.add(Jwts.builder().setClaims(claims).signWith(SignatureAlgorithm.HS512, JWT_SECRET).compact());
+        refreshToken.add(String.valueOf(JWT_EXPIRATION));
 
         return refreshToken;
     }
@@ -94,6 +98,6 @@ public class JwtProvider {
         if (authToken.isEmpty()) {
             return Optional.empty();
         }
-        return Optional.of(Jwts.parser().setSigningKey(jwtSecret).parseClaimsJws(authToken.get()));
+        return Optional.of(Jwts.parser().setSigningKey(JWT_SECRET).parseClaimsJws(authToken.get()));
     }
 }

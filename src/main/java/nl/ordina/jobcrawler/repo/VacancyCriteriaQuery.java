@@ -87,10 +87,10 @@ public class VacancyCriteriaQuery {
 
         query.where(criteriaBuilder.and(predicateList.toArray(new Predicate[0])));
 
-        Expression expression;
+        Expression<String> expression;
         switch (sort[0]) {
             case "distance":
-                expression = criteriaBuilder.literal(1);
+                expression = criteriaBuilder.literal("1");
                 break;
             case "location.name":
                 expression = locationJoin.get("name");

@@ -9,6 +9,7 @@ import nl.ordina.jobcrawler.payload.opensearch.Coordinates;
 import nl.ordina.jobcrawler.payload.opensearch.Place;
 import nl.ordina.jobcrawler.repo.LocationRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestTemplate;
 
@@ -87,10 +88,10 @@ public class LocationService {
         String jsonResponse = restTemplate.getForObject(GET_LOCNAME_URL, String.class, API_KEY, lat, lon);
         if (!ERROR_API_RESPONSE.equals(jsonResponse)) {
             Place place = objectMapper.readValue(jsonResponse, Place.class);
-            if (!StringUtils.isEmpty(place.getAddress().getTown()) ) {
+            if (!ObjectUtils.isEmpty(place.getAddress().getTown()) ) {
                 return place.getAddress().getTown();
             }
-            else if (!StringUtils.isEmpty(place.getAddress().getCity())) {
+            else if (!ObjectUtils.isEmpty(place.getAddress().getCity())) {
                 return place.getAddress().getCity();
             }
             return "";
@@ -101,7 +102,7 @@ public class LocationService {
     public double[] getCoordinates(String location) throws IOException {
         double[] coord = new double[2];
         String jsonResponse = restTemplate.getForObject(GET_COORD_URL, String.class, API_KEY, location);
-        if (!StringUtils.isEmpty(jsonResponse) && !EMPTY_API_RESPONSE.equals(jsonResponse) && StringUtils.hasText(jsonResponse)) {
+        if (!ObjectUtils.isEmpty(jsonResponse) && !EMPTY_API_RESPONSE.equals(jsonResponse) && StringUtils.hasText(jsonResponse)) {
             jsonResponse = jsonResponse.substring(1, jsonResponse.length() - 1);
             Coordinates openSearchCoordinates = objectMapper.readValue(jsonResponse, Coordinates.class);
             coord[0] = openSearchCoordinates.getLat();

@@ -4,7 +4,9 @@ package nl.ordina.jobcrawler.controller;
 import nl.ordina.jobcrawler.exception.SkillNotFoundException;
 import nl.ordina.jobcrawler.model.Skill;
 import nl.ordina.jobcrawler.model.assembler.SkillModelAssembler;
+import nl.ordina.jobcrawler.payload.SkillDTO;
 import nl.ordina.jobcrawler.service.SkillService;
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.EntityModel;
@@ -23,11 +25,13 @@ public class SkillController {
 
     private final SkillService skillService;
     private final SkillModelAssembler skillModelAssembler;
+    private final ModelMapper modelMapper;
 
     @Autowired
-    public SkillController(SkillService skillService, SkillModelAssembler skillModelAssembler) {
+    public SkillController(SkillService skillService, SkillModelAssembler skillModelAssembler, ModelMapper modelMapper) {
         this.skillService = skillService;
         this.skillModelAssembler = skillModelAssembler;
+        this.modelMapper = modelMapper;
     }
 
     /**
@@ -44,13 +48,14 @@ public class SkillController {
     /**
      * Creates a new skill.
      *
-     * @param skill The skill to create.
+     * @param skillDTO The skill to create.
      * @return The created skill and code 201 Created
      * Code 400 Bad Request if the given body is invalid
      */
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<EntityModel<Skill>> createSkill(@Valid @RequestBody Skill skill) {
+        public ResponseEntity<EntityModel<Skill>> createSkill(@Valid @RequestBody SkillDTO skillDTO) {
+        Skill skill = modelMapper.map(skillDTO, Skill.class);
 
         EntityModel<Skill> returnedSkill = skillModelAssembler.toModel(skillService.save(skill));
         return ResponseEntity
@@ -76,8 +81,9 @@ public class SkillController {
 
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<EntityModel<Skill>> updateSkill(@PathVariable UUID id, @Valid @RequestBody Skill skill) {
+    public ResponseEntity<EntityModel<Skill>> updateSkill(@PathVariable UUID id, @Valid @RequestBody SkillDTO skillDTO) {
         skillService.findById(id).orElseThrow(() -> new SkillNotFoundException(id));
+        Skill skill = modelMapper.map(skillDTO, Skill.class);
         EntityModel<Skill> updatedSkillEntityModel = skillModelAssembler.toModel(skillService.update(id, skill));
 
         return ResponseEntity

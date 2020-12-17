@@ -17,7 +17,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
+import org.springframework.util.ObjectUtils;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;
@@ -81,7 +81,7 @@ public class VacancyService {
      */
     public Page<VacancyDTO> findByAnyValue(SearchRequest searchRequest, Pageable paging, String[] sort) {
 
-        if (!StringUtils.isEmpty(searchRequest.getLocation())) {
+        if (!ObjectUtils.isEmpty(searchRequest.getLocation())) {
             try {
                 searchRequest.setCoord(locationService.getCoordinates(searchRequest.getLocation()));
             } catch (IOException | LocationNotFoundException e) {

@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.PostConstruct;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -48,7 +49,6 @@ public class ScraperService {
         this.modelMapper = modelMapper;
     }
 
-    @PostConstruct
     @Scheduled(cron = "0 0 12,18 * * *")
     // Runs two times a day. At 12pm and 6pm
     @Transactional
@@ -67,22 +67,7 @@ public class ScraperService {
                     existVacancy++;
                 } else {
                     vacancy = modelMapper.map(vacancyDTO, Vacancy.class);
-                    String vacancyLocation = LocationService.normalizeName(vacancyDTO.getLocationString());
-                    if (!vacancyLocation.equals("")) {
-                        Optional<Location> existCheckLocation = locationService.findByLocationName(vacancyLocation);
-                        if (existCheckLocation.isEmpty()) {
-                            Location location = new Location(vacancyLocation, locationService.getCoordinates(vacancyLocation));
-                            locationService.save(location);
-                            vacancy.setLocation(location);
-                            vacancyService.save(vacancy);
-                        } else {
-                            Location location = existCheckLocation.get();
-                            vacancy.setLocation(location);
-                            vacancyService.save(vacancy);
-                        }
-                    } else {
-                        vacancyService.save(vacancy);
-                    }
+                    processVacancyLocation(vacancy, vacancyDTO);
                     newVacancy++;
                 }
             } catch (IncorrectResultSizeDataAccessException ie) {
@@ -95,6 +80,37 @@ public class ScraperService {
         log.info(existVacancy + " existing vacancies found.");
         log.info("Finished scraping");
         allVacancyDTOs.clear();
+    }
+
+    private void processVacancyLocation(Vacancy vacancy, VacancyDTO vacancyDTO) throws IOException {
+        String vacancyLocation = LocationService.normalizeName(vacancyDTO.getLocationString());
+        if (vacancyLocation.endsWith(", Nederland")) {
+            vacancyLocation = vacancyLocation.substring(0, vacancyLocation.length() - 11);
+        }
+        if (vacancyLocation.endsWith(", Netherlands")) {
+            vacancyLocation = vacancyLocation.substring(0, vacancyLocation.length() - 13);
+        }
+        if (vacancyLocation.endsWith(", the Netherlands")) {
+            vacancyLocation = vacancyLocation.substring(0, vacancyLocation.length() - 16);
+        }
+        if (vacancyLocation.equals("'s-Hertogenbosch")) {
+            vacancyLocation = "Den Bosch";
+        }
+        if (!vacancyLocation.equals("")) {
+            Optional<Location> existCheckLocation = locationService.findByLocationName(vacancyLocation);
+            if (existCheckLocation.isEmpty()) {
+                Location location = new Location(vacancyLocation, locationService.getCoordinates(vacancyLocation));
+                locationService.save(location);
+                vacancy.setLocation(location);
+                vacancyService.save(vacancy);
+            } else {
+                Location location = existCheckLocation.get();
+                vacancy.setLocation(location);
+                vacancyService.save(vacancy);
+            }
+        } else {
+            vacancyService.save(vacancy);
+        }
     }
 
     @Scheduled(cron = "0 30 11,17 * * *") // Runs two times a day. At 11.30am and 5.30pm.

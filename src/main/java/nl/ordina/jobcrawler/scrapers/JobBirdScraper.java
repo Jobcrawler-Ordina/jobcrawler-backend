@@ -3,7 +3,6 @@ package nl.ordina.jobcrawler.scrapers;
 import lombok.extern.slf4j.Slf4j;
 import nl.ordina.jobcrawler.exception.HTMLStructureException;
 import nl.ordina.jobcrawler.payload.VacancyDTO;
-import nl.ordina.jobcrawler.repo.LocationRepository;
 import nl.ordina.jobcrawler.service.DocumentService;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;

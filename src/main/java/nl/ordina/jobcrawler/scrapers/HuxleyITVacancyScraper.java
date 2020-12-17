@@ -1,9 +1,7 @@
 package nl.ordina.jobcrawler.scrapers;
 
 import lombok.extern.slf4j.Slf4j;
-import nl.ordina.jobcrawler.model.Vacancy;
 import nl.ordina.jobcrawler.payload.VacancyDTO;
-import nl.ordina.jobcrawler.repo.LocationRepository;
 import org.jsoup.Jsoup;
 import org.jsoup.safety.Whitelist;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,6 +29,7 @@ import java.util.regex.Pattern;
 @Component
 public class HuxleyITVacancyScraper extends VacancyScraper {
 
+    @SuppressWarnings("java:S5843")
     private final Pattern ymdPattern = Pattern
             .compile("^[0-9]{4}-(1[0-2]|0[1-9])-(3[01]|[12][0-9]|0[1-9])T[0-9]{2}:[0-9]{2}:[0-9]{2}.[0-9]{6}[0-9]?Z$");
     private final DateTimeFormatter ymdFormatter = DateTimeFormatter.ofPattern("[yyyy-MM-dd'T'HH:mm:ss.SSSSSSS'Z']" +
@@ -39,8 +38,6 @@ public class HuxleyITVacancyScraper extends VacancyScraper {
     private static final String VACANCY_URL_PREFIX = "https://www.huxley.com/nl-nl/job/kyc/";
 
     RestTemplate restTemplate = new RestTemplate();
-
-    LocationRepository locationRepository;
 
     /**
      * Default constructor that calls the constructor from the abstract class.
@@ -68,29 +65,52 @@ public class HuxleyITVacancyScraper extends VacancyScraper {
          */
         log.info("{} -- Start scraping", getBroker().toUpperCase());
 
-        int totalVacancies = scrapeVacancies(0).getHits();
-        List<Map<String, Object>> vacanciesData = scrapeVacancies(totalVacancies).getVacanciesData();
+
+        int totalVacancies = getTotalVacancies();
+        List<Map<String, Object>> vacanciesData = getVacanciesData(totalVacancies);
 
         List<VacancyDTO> vacancyDTOs = new ArrayList<>();
         for (Map<String, Object> vacancyData : vacanciesData) {
-            VacancyDTO vacancyDTO = VacancyDTO.builder()
-                    .vacancyURL(VACANCY_URL_PREFIX + vacancyData.get("jobReference"))
-                    .title((String) vacancyData.get("title"))
-                    .broker(getBroker())
-                    .vacancyNumber((String) vacancyData.get("jobReference"))
-                    .locationString((String) vacancyData.get("city"))
-                    .hours(retrieveWorkHours((String) vacancyData.get("description")))
-                    .salary((String) vacancyData.get("salaryText"))
-                    .postingDate(getPostingDate((String) vacancyData.get("postDate")))
-                    .about(Jsoup.clean((String) vacancyData.get("description"), Whitelist.basic()))
-                    .company("")
-                    .build();
-
+            VacancyDTO vacancyDTO = getVacancyDTO(vacancyData);
             vacancyDTOs.add(vacancyDTO);
             log.info("{} - Vacancy found: {}", getBroker(), vacancyDTO.getTitle());
         }
+
         log.info("{} -- Returning scraped vacancies", getBroker());
         return vacancyDTOs;
+    }
+
+    private VacancyDTO getVacancyDTO(Map<String, Object> vacancyData) {
+        return VacancyDTO.builder()
+                .vacancyURL(VACANCY_URL_PREFIX + vacancyData.get("jobReference"))
+                .title((String) vacancyData.get("title"))
+                .broker(getBroker())
+                .vacancyNumber((String) vacancyData.get("jobReference"))
+                .locationString((String) vacancyData.get("city"))
+                .hours(retrieveWorkHours((String) vacancyData.get("description")))
+                .salary((String) vacancyData.get("salaryText"))
+                .postingDate(getPostingDate((String) vacancyData.get("postDate")))
+                .about(Jsoup.clean((String) vacancyData.get("description"), Whitelist.basic()))
+                .company("")
+                .build();
+    }
+
+    private List<Map<String, Object>> getVacanciesData(int totalVacancies) {
+        List<Map<String, Object>> vacanciesData = null;
+        HuxleyITResponse huxleyITResponse = scrapeVacancies(totalVacancies);
+        if (huxleyITResponse != null) {
+            vacanciesData = huxleyITResponse.getVacanciesData();
+        }
+        return vacanciesData;
+    }
+
+    private int getTotalVacancies() {
+        int totalVacancies = 0;
+        HuxleyITResponse huxleyITResponse = scrapeVacancies(0);
+        if (huxleyITResponse != null) {
+            totalVacancies = huxleyITResponse.getHits();
+        }
+        return totalVacancies;
     }
 
     private LocalDateTime getPostingDate(final String date) {
