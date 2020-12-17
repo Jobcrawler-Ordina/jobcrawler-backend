@@ -2,6 +2,7 @@ package nl.ordina.jobcrawler.scrapers;
 
 import lombok.extern.slf4j.Slf4j;
 import nl.ordina.jobcrawler.payload.VacancyDTO;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.http.converter.FormHttpMessageConverter;
 import org.springframework.stereotype.Component;
@@ -21,6 +22,8 @@ import java.util.regex.Pattern;
 public class HeadfirstScraper extends VacancyScraper {
 
     RestTemplate restTemplate = new RestTemplate();
+    @Value("${spring.scrapers.headfirstpassword}")
+    private String password;
 
     public HeadfirstScraper() {
         super(
@@ -52,7 +55,7 @@ public class HeadfirstScraper extends VacancyScraper {
         headers1.add("referer","https://portal.select.hr/nl/nl/login");
         MultiValueMap<String, String> body1= new LinkedMultiValueMap<String, String>();
         body1.add("username","kees.hannema@ordina.nl");
-        body1.add("password","JC0112Jt*");
+        body1.add("password",password);
         HttpEntity<MultiValueMap<String, String>> request1 = new HttpEntity<>(body1, headers1);
         restTemplate.getMessageConverters().add(new FormHttpMessageConverter());
         ResponseEntity<String> response1 = restTemplate.exchange("https://portal.select.hr/login", HttpMethod.POST, request1, String.class);
