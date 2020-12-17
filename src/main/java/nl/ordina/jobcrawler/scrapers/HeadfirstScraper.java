@@ -115,7 +115,7 @@ public class HeadfirstScraper extends VacancyScraper {
 
     private List<VacancyDTO> getVacanciesFromPage(List<VacancyDTO> vacancyDTOs, ResponseEntity<HeadfirstResponse> response) {
         ArrayList<Map<String, Object>> vacanciesList = response.getBody().getResults();
-        vacanciesList.parallelStream().forEach((Map<String, Object> vacancyData) -> {
+        vacanciesList.forEach((Map<String, Object> vacancyData) -> {
             String id = vacancyData.get("id").toString();
             String vacancyURL = "https://headfirst.select.hr/assignment/" + id + "/description";
             String description = (String) vacancyData.get("description");

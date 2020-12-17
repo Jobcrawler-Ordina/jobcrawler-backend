@@ -49,8 +49,6 @@ public class JobBirdScraper extends VacancyScraper {
     private final Pattern ymdPattern = Pattern.compile("^[0-9]{4}-(1[0-2]|0[1-9])-(3[01]|[12][0-9]|0[1-9])$");
     private final DateTimeFormatter ymdFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
-    LocationRepository locationRepository;
-
     public void setDocumentService(DocumentService documentService) {
         this.documentService = documentService;
     }

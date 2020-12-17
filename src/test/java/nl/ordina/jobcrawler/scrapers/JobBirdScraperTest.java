@@ -33,7 +33,7 @@ class JobBirdScraperTest extends UseLocalSavedFiles {
 
     private Document getDocFromUrl(String aFilename) throws IOException {
         File inputFile = getFile(aFilename);
-        return Jsoup.parse(inputFile, "UTF-8", "https://www.jobbird.com/nl/vacature?s=&rad=30&page=1&ot=date&c[]=ict");
+        return Jsoup.parse(inputFile, "UTF-8", "https://www.jobcatcher.nl/opdrachten?currentpage=1&itemsperpage=25");
     }
 
     @BeforeEach

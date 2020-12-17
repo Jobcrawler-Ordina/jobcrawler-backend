@@ -29,11 +29,12 @@ import java.util.regex.Pattern;
 @Component
 public class JobCatcherScraper extends VacancyScraper {
 
-    private final Pattern dmyPattern = Pattern.compile("^(3[01]|[12][0-9]|0[1-9]) [a-z]+ [0-9]{4}$");
-    private final DateTimeFormatter dmyFormatter = DateTimeFormatter.ofLocalizedDate(FormatStyle.LONG)
-            .withLocale(new Locale("nl", "NL"));
-
     RestTemplate restTemplate = new RestTemplate();
+    private DocumentService documentService = new DocumentService();
+
+    public void setDocumentService(DocumentService documentService) {
+        this.documentService = documentService;
+    }
 
     public JobCatcherScraper() {
         super(
@@ -54,9 +55,10 @@ public class JobCatcherScraper extends VacancyScraper {
         List<VacancyDTO> vacancyDTOs = new CopyOnWriteArrayList<>();
 
         int nrVacancies = scrapeVacancies(0).getData().get(0).getAmount();
+        nrVacancies = 10;
         List<Map<String, Object>> vacanciesList = scrapeVacancies(nrVacancies).getData().get(0).getList();
 
-            vacanciesList.parallelStream().forEach((Map<String, Object> vacancyData) -> {
+            vacanciesList.forEach((Map<String, Object> vacancyData) -> {
                 String vacancyTitle = (String) vacancyData.get("jobrolename");
                 String vacancyCompany = (String) vacancyData.get("requesterpartyname");
                 String vacancyURL = "https://www.jobcatcher.nl/opdrachten/" + vacancyTitle.replace("/","-") + "/" + vacancyCompany.replace("/","-") + "/" + vacancyData.get("requestid");
@@ -65,8 +67,8 @@ public class JobCatcherScraper extends VacancyScraper {
                 vacancyURL = vacancyURL.replace("(","%28");
                 vacancyURL = vacancyURL.replace(")","%29");
                 vacancyURL = vacancyURL.replace("\"","%22");
-                Document vacancyDoc = getDocument(vacancyURL);
-                String vacancySalary = !(vacancyData.get("maximumpurchaseprice")==null)?((String) vacancyData.get("maximumpurchaseprice")) + ",- p/u":"";
+                Document vacancyDoc = documentService.getDocument(vacancyURL);
+                String vacancySalary = !(vacancyData.get("maximumpurchaseprice")==null)?(vacancyData.get("maximumpurchaseprice")) + ",- p/u":"";
 
                 VacancyDTO vacancyDTO = VacancyDTO.builder()
                         .vacancyURL(vacancyURL)
@@ -127,37 +129,4 @@ public class JobCatcherScraper extends VacancyScraper {
         }
         return about;
     }
-
-    private LocalDateTime getPostingDate(String date) {
-        return checkDatePattern(date) ? LocalDate.parse(date, dmyFormatter).atStartOfDay() : null;
-    }
-
-    private boolean checkDatePattern(String s) {
-        return s != null && dmyPattern.matcher(s).matches();
-    }
-
-    private Integer getHours(String input) {
-        if (input.length() > 2) {
-            String possibleHours = input.substring(0, 2);
-            try {
-                return Integer.parseInt(possibleHours);
-            } catch (NumberFormatException e) {
-                return null;
-            }
-        } else {
-            return null;
-        }
-    }
-
-    private String toTitleCase(String orig) {
-        orig = orig.toLowerCase();
-        orig = orig.substring(0,1).toUpperCase() + orig.substring(1,orig.length());
-        for(int i = 1; i<orig.length(); i++) {
-            if(orig.charAt(i-1)==' '||orig.charAt(i-1)=='-') {
-                orig = orig.substring(0,i) + orig.substring(i,i+1).toUpperCase() + orig.substring(i+1,orig.length());
-            }
-        }
-        return orig;
-    }
-
 }

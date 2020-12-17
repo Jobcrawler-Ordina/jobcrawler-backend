@@ -25,7 +25,10 @@ public class StaffingGroupScraper extends VacancyScraper {
 
     private DocumentService documentService = new DocumentService();
     private final Pattern ymdPattern = Pattern.compile("^[0-9]{4}-(1[0-2]|0[1-9])-(3[01]|[12][0-9]|0[1-9])$");
-    private final DateTimeFormatter ymdFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+
+    public void setDocumentService(DocumentService documentService) {
+        this.documentService = documentService;
+    }
 
     public StaffingGroupScraper() {
         super(
@@ -80,7 +83,7 @@ public class StaffingGroupScraper extends VacancyScraper {
 
     private List<VacancyDTO> retrieveVacancies(Map<String, LocalDate> vacancyURLsAndPubDates) {
         List<VacancyDTO> vacancies = new CopyOnWriteArrayList<>();
-        vacancyURLsAndPubDates.keySet().parallelStream().forEach(u -> {
+        vacancyURLsAndPubDates.keySet().forEach(u -> {
             System.out.println("retrieveVacancies-method: " + u);
             Document doc = documentService.getDocument(u);
             if (doc != null) {
