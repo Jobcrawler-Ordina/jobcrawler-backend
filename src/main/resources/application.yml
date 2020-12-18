@@ -15,6 +15,8 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         metadata_builder_contributor: nl.ordina.jobcrawler.configuration.SqlFunctionsMetadataBuilderContributor
+  scrapers:
+    headfirstpassword: ${HEADFIRST_PASSWORD}
 
 server.error.include-stacktrace: on_trace_param
 

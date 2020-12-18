@@ -32,23 +32,26 @@ public class ScraperService {
     private final YachtVacancyScraper yachtVacancyScraper;
     private final HuxleyITVacancyScraper huxleyITVacancyScraper;
     private final JobBirdScraper jobBirdScraper;
+    private final HeadfirstScraper headfirstScraper;
     private final StaffingGroupScraper staffingGroupScraper;
     private final JobCatcherScraper jobCatcherScraper;
     private final ModelMapper modelMapper;
 
     public ScraperService(VacancyService vacancyService, LocationService locationService,
                           YachtVacancyScraper yachtVacancyScraper, HuxleyITVacancyScraper huxleyITVacancyScraper,
-                          JobBirdScraper jobBirdScraper, JobCatcherScraper jobCatcherScraper, StaffingGroupScraper staffingGroupScraper, ModelMapper modelMapper) {
+                          JobBirdScraper jobBirdScraper, HeadfirstScraper headfirstScraper, JobCatcherScraper jobCatcherScraper, StaffingGroupScraper staffingGroupScraper, ModelMapper modelMapper) {
         this.vacancyService = vacancyService;
         this.locationService = locationService;
         this.yachtVacancyScraper = yachtVacancyScraper;
         this.huxleyITVacancyScraper = huxleyITVacancyScraper;
         this.jobBirdScraper = jobBirdScraper;
+        this.headfirstScraper = headfirstScraper;
         this.jobCatcherScraper = jobCatcherScraper;
         this.staffingGroupScraper = staffingGroupScraper;
         this.modelMapper = modelMapper;
     }
 
+    //@PostConstruct
     @Scheduled(cron = "0 0 12,18 * * *")
     // Runs two times a day. At 12pm and 6pm
     @Transactional
@@ -125,7 +128,7 @@ public class ScraperService {
 
     private List<VacancyDTO> startScraping() {
         List<VacancyDTO> vacancyDTOsList = new CopyOnWriteArrayList<>();
-        Arrays.asList(yachtVacancyScraper, huxleyITVacancyScraper, jobBirdScraper, staffingGroupScraper, jobCatcherScraper)
+        Arrays.asList(yachtVacancyScraper, huxleyITVacancyScraper, jobBirdScraper, headfirstScraper, staffingGroupScraper, jobCatcherScraper)
                 .parallelStream().forEach(vacancyScraper -> vacancyDTOsList
                 .addAll(vacancyScraper.getVacancies()));
         return vacancyDTOsList;
