@@ -5,18 +5,18 @@ import nl.ordina.jobcrawler.exception.VacancyURLMalformedException;
 import nl.ordina.jobcrawler.model.Skill;
 import nl.ordina.jobcrawler.model.Vacancy;
 import nl.ordina.jobcrawler.payload.SearchRequest;
+import nl.ordina.jobcrawler.payload.VacancyDTO;
+import nl.ordina.jobcrawler.repo.VacancyCriteriaQuery;
 import nl.ordina.jobcrawler.repo.VacancyRepository;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentMatchers;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.*;
-import org.springframework.data.jpa.domain.Specification;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;
@@ -38,6 +38,9 @@ class VacancyServiceTest {
 
     @Mock
     LocationService mockLocationService;
+
+    @Mock
+    VacancyCriteriaQuery mockVacancyCriteriaQuery;
 
     @InjectMocks
     VacancyService vacancyService;
@@ -111,45 +114,48 @@ class VacancyServiceTest {
 
     @Test
     void testFindByAnyValue() throws Exception {
-        final Vacancy vacancy = mockVacancy("title");
-        final Page<Vacancy> mockVacancyPage = new PageImpl<>(Collections.singletonList(vacancy));
+        VacancyDTO vacancy = new VacancyDTO();
+        List<VacancyDTO> vacancies = Collections.singletonList(vacancy);
         Pageable paging = PageRequest.of(1, 15, Sort.Direction.ASC, "postingDate");
         SearchRequest searchRequest = new SearchRequest();
         searchRequest.setLocation("Amsterdam");
         double[] coordinates = new double[]{52.3727598, 4.8936041};
+        String[] sort = new String[]{"distance"};
 
-        when(mockVacancyRepository.findAll(ArgumentMatchers.<Specification<Vacancy>>any(), any(PageRequest.class))).thenReturn(mockVacancyPage);
         // Multiple thenReturns for each of the testcases
         when(mockLocationService.getCoordinates(searchRequest.getLocation()))
                 .thenReturn(coordinates)
                 .thenThrow(IOException.class)
                 .thenThrow(LocationNotFoundException.class);
+        when(mockVacancyCriteriaQuery.getMatchingVacancies(any(SearchRequest.class),eq(paging), eq(sort))).thenReturn(vacancies);
+        when(mockVacancyCriteriaQuery.totalMatchingVacancies(any(SearchRequest.class))).thenReturn(1L);
 
         // 1. test without location set in search request (LocationService mock not used here)
-        Page<Vacancy> result = vacancyService.findByAnyValue(new SearchRequest(), paging);
+        Page<VacancyDTO> result = vacancyService.findByAnyValue(new SearchRequest(), paging, sort);
 
         assertSame(vacancy, result.getContent().get(0));
 
         // 2. test with location set in search request
-        result = vacancyService.findByAnyValue(searchRequest, paging);
+        result = vacancyService.findByAnyValue(searchRequest, paging, sort);
 
         assertSame(vacancy, result.getContent().get(0));
 
         // 3. test with IOException thrown
 
-        result = vacancyService.findByAnyValue(searchRequest, paging);
+        result = vacancyService.findByAnyValue(searchRequest, paging, sort);
 
         assertSame(vacancy, result.getContent().get(0));
 
         // 4. test with LocationNotFoundException thrown
 
-        result = vacancyService.findByAnyValue(searchRequest, paging);
+        result = vacancyService.findByAnyValue(searchRequest, paging, sort);
 
         assertSame(vacancy, result.getContent().get(0));
 
         // verify mock calls
         verify(mockLocationService, times(3)).getCoordinates(anyString());
-        verify(mockVacancyRepository, times(4)).findAll(ArgumentMatchers.<Specification<Vacancy>>any(), any(PageRequest.class));
+        verify(mockVacancyCriteriaQuery, times(4)).getMatchingVacancies(any(SearchRequest.class),eq(paging), eq(sort));
+        verify(mockVacancyCriteriaQuery, times(4)).totalMatchingVacancies(any(SearchRequest.class));
     }
 
     @Test
