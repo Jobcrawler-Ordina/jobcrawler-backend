@@ -1,0 +1,89 @@
+{
+  "total_results": 4,
+  "facet_info": {
+    "CLIENTNAME_FT": {
+      "Werkgever1": 1,
+      "Werkgever2": 0,
+      "Werkgever3": 0,
+      "Werkgever4": 0
+    },
+    "JOBREQUESTSTATE_F": {
+      "CANCELLED": 0,
+      "CHOSEN": 0,
+      "CLOSED": 0,
+      "ON_HOLD": 0,
+      "OPEN": 4
+    },
+    "REGIONNAME_FT": {}
+  },
+  "results": [
+    {
+      "hours_per_week": 36,
+      "distance": 5000,
+      "safe_client_id": 10001,
+      "end_date": "2021-10-24T00:00:00Z",
+      "published_at": "2020-12-16T16:46:15Z",
+      "region_name": "Bilthoven",
+      "description": "Beschrijving1",
+      "min_hours_per_week": 0,
+      "title": "Functioneel beheerder",
+      "safe_client_name": "Werkgever1",
+      "valid_until": "2020-12-28T09:00:00Z",
+      "id": 20001,
+      "state": "OPEN",
+      "reference_code": "HF20121633",
+      "start_date": "2021-01-25T00:00:00Z"
+    },
+    {
+      "hours_per_week": 5,
+      "distance": 5000,
+      "safe_client_id": 10002,
+      "end_date": "2021-06-30T00:00:00Z",
+      "published_at": "2020-12-16T16:39:38Z",
+      "region_name": "Utrecht",
+      "description": "Beschrijving2",
+      "min_hours_per_week": 0,
+      "title": "Sharepoint expert",
+      "safe_client_name": "Werkgever2",
+      "valid_until": "2020-12-23T09:00:00Z",
+      "id": 20002,
+      "state": "OPEN",
+      "reference_code": "HF20121632",
+      "start_date": "2021-01-04T00:00:00Z"
+    },
+    {
+      "hours_per_week": 36,
+      "distance": 5000,
+      "safe_client_id": 10003,
+      "end_date": "2021-04-06T00:00:00Z",
+      "published_at": "2020-12-16T16:10:41Z",
+      "region_name": "Den Haag",
+      "description": "Beschrijving3",
+      "min_hours_per_week": 0,
+      "title": "Senior Functioneel Beheerder RNI",
+      "safe_client_name": "Werkgever3",
+      "valid_until": "2020-12-22T09:00:00Z",
+      "id": 20003,
+      "state": "OPEN",
+      "reference_code": "HF20121630",
+      "start_date": "2021-01-07T00:00:00Z"
+    },
+    {
+      "hours_per_week": 38,
+      "distance": 5000,
+      "safe_client_id": 10004,
+      "end_date": "2021-12-31T00:00:00Z",
+      "published_at": "2020-12-16T15:50:31Z",
+      "region_name": "Amsterdam",
+      "description": "Beschrijving4",
+      "min_hours_per_week": 0,
+      "title": "ICT Projectmanager Europese aanbesteding & transitie applicatiebeheer GD",
+      "safe_client_name": "Werkgever4",
+      "valid_until": "2020-12-24T09:00:00Z",
+      "id": 20004,
+      "state": "OPEN",
+      "reference_code": "HF20121629",
+      "start_date": "2021-01-04T00:00:00Z"
+    }
+  ]
+}

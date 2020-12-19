@@ -54,7 +54,7 @@ public class JobBirdScraper extends VacancyScraper {
 
     private DocumentService documentService = new DocumentService();
 
-    private static final int MAX_NR_OF_PAGES = 25;  // 25 seems enough for demo purposes, can be up to approx 60
+    private static final int MAX_NR_OF_PAGES = 8;  // 25 seems enough for demo purposes, can be up to approx 60
     // at a certain point the vacancy date will be missing
 
 
@@ -64,7 +64,7 @@ public class JobBirdScraper extends VacancyScraper {
 
     public JobBirdScraper() {
         super(
-                "https://www.jobbird.com/nl/vacature?s=java&rad=30&page=", // Required search URL. Can be retrieved using getSEARCH_URL()
+                "https://www.jobbird.com/nl/vacature?s=&rad=30&page=", // Required search URL. Can be retrieved using getSEARCH_URL()
                 "Jobbird" // Required broker. Can be retrieved using getBROKER()
         );
     }
@@ -135,9 +135,10 @@ public class JobBirdScraper extends VacancyScraper {
 
         try {
             Document doc = documentService.getDocument(createSearchURL(1));
-
             boolean continueSearching = true;
-            for (int i = 1; continueSearching && i <= getLastPageToScrape(doc); i++) {
+            int nrLastPage = getLastPageToScrape();
+
+            for (int i = 1; continueSearching && i <= nrLastPage; i++) {
                 String searchURL = createSearchURL(i);
                 doc = documentService.getDocument(searchURL);
 
@@ -160,7 +161,7 @@ public class JobBirdScraper extends VacancyScraper {
      * Continue searching if this page only contains new vacancies. If any of the vacancies is already know, stop searching.
      *
      * @param vacancyURLs       known vacancyURLs for this scraping session
-     * @param vacancyUrlsOnPage VanacyURLS on the current page
+     * @param vacancyUrlsOnPage VacancyURLS on the current page
      * @return true if none of the vacancies on this page has been encountered before in this scraping session
      */
     private boolean continueSearching(ArrayList<String> vacancyURLs, ArrayList<String> vacancyUrlsOnPage) {
@@ -169,7 +170,6 @@ public class JobBirdScraper extends VacancyScraper {
                 return false;
             }
         }
-
         return true;
     }
 
@@ -179,8 +179,9 @@ public class JobBirdScraper extends VacancyScraper {
      * @param doc The HTML document containing the URLs to the vacancies
      * @return the index of the last page to scrape
      */
-    private int getLastPageToScrape(Document doc) {
-        int totalNumberOfPages = getTotalNumberOfPages(doc);
+    private int getLastPageToScrape() {
+        int totalNumberOfPages = getTotalNumberOfPages();
+        //int totalNumberOfPages = getTotalNumberOfPages(doc);
         // TODO: we could get more sophisticated logic in place to limit the number of pages.
         // For example, we could look at the posting date of each vacancy, and limit it to thirty days.
         return Math.min(totalNumberOfPages, MAX_NR_OF_PAGES);
@@ -197,23 +198,13 @@ public class JobBirdScraper extends VacancyScraper {
      * these are <li elements with as attribute value the number of the page
      * continue until the page link with the text "next"
      */
-    private int getTotalNumberOfPages(Document doc) {
-        try {
-            Elements elements = doc.select("span.page-link");
-            Element parent = elements.first().parent().parent();
-            Elements children = parent.children();
-            int count = 0;
-            for (Element child : children) {
-                String text = child.text();
-                if (!text.equalsIgnoreCase("volgende"))
-                    count++;
-            }
-
-            log.info("{} -- Total number of pages: {}", getBroker(), count);
-            return count;
-        } catch (Exception e) {
-            throw new HTMLStructureException(e.getLocalizedMessage());
-        }
+    private int getTotalNumberOfPages() {
+        String searchURLlastPage = createSearchURL(1000);
+        Document docLastPage = documentService.getDocument(searchURLlastPage);
+        String newURL = docLastPage.location();
+        int i_n1 = newURL.indexOf("page=") + 5;
+        int i_n2 = newURL.indexOf("&",i_n1);
+        return Integer.parseInt(newURL.substring(i_n1,i_n2));
     }
 
     /*
