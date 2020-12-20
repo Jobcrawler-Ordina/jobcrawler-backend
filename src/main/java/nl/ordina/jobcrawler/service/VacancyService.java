@@ -123,7 +123,7 @@ public class VacancyService {
      */
     public void delete(UUID id) {
         vacancyRepository.deleteById(id);
-   }
+    }
 
     /**
      * Returns the vacancy with the specified url.

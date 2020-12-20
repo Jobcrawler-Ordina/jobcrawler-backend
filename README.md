@@ -97,11 +97,22 @@ We use [SemVer](http://semver.org/) for versioning. For the versions available, 
 
 ## Authors
 
-* **Adriaan Bakker** - [adriaanbakker-java](https://github.com/adriaanbakker-java)
-* **Gijs Overvliet** - [ghyze](https://github.com/ghyze)
-* **Mostafa Abd Elrehim** - [mostafa-221](https://github.com/mostafa-221)
+### Current project members
+* **Rene Blom** - [rbl20241](https://github.com/rbl20241)
+* **Arti Flinkerbusch** - [arti00git](https://github.com/arti00git)
 * **Timo Koen** - [tkoen93](https://github.com/tkoen93)
+* **Martin van der Toorn** - [toornma](https://github.com/toornma)
+
+### Previous project members
+* **Mostafa Abd Elrehim** - [mostafa-221](https://github.com/mostafa-221)
+* **Adriaan Bakker** - [adriaanbakker-java](https://github.com/adriaanbakker-java)
+* **Narayan Choudhary** - [narayan190290](https://github.com/narayan190290)
+* **Gijs Overvliet** - [ghyze](https://github.com/ghyze)
+* **Bram Patelski** - [brampat](https://github.com/brampat)
 * **Jelmer Pijnappel** - [ChocolatePinecone](https://github.com/ChocolatePinecone)
+
+### Special thanks to
+* **Vadim Petrenko** - [vp-ordina](https://github.com/vp-ordina)
 
 ## Acknowledgments
 
