@@ -3,9 +3,7 @@ package nl.ordina.jobcrawler.service;
 import nl.ordina.jobcrawler.model.Location;
 import nl.ordina.jobcrawler.model.Vacancy;
 import nl.ordina.jobcrawler.payload.VacancyDTO;
-import nl.ordina.jobcrawler.scrapers.HuxleyITVacancyScraper;
-import nl.ordina.jobcrawler.scrapers.JobBirdScraper;
-import nl.ordina.jobcrawler.scrapers.YachtVacancyScraper;
+import nl.ordina.jobcrawler.scrapers.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -29,19 +27,20 @@ class ScraperServiceTest {
 
     @Mock
     VacancyService mockVacancyService;
-
     @Mock
     LocationService mockLocationService;
-
     @Mock
     YachtVacancyScraper mockYachtVacancyScraper;
-
     @Mock
     HuxleyITVacancyScraper mockHuxleyITVacancyScraper;
-
     @Mock
     JobBirdScraper mockJobBirdScraper;
-
+    @Mock
+    HeadfirstScraper mockHeadfirstScraper;
+    @Mock
+    JobCatcherScraper mockJobCatcherScraper;
+    @Mock
+    StaffingGroupScraper mockStaffingGroupScraper;
     @Mock
     ModelMapper mockModelMapper;
 
@@ -65,6 +64,9 @@ class ScraperServiceTest {
         lenient().when(mockYachtVacancyScraper.getVacancies()).thenReturn(vacancyDTOList);
         lenient().when(mockHuxleyITVacancyScraper.getVacancies()).thenReturn(vacancyDTOList);
         lenient().when(mockJobBirdScraper.getVacancies()).thenReturn(vacancyDTOList);
+        lenient().when(mockHeadfirstScraper.getVacancies()).thenReturn(vacancyDTOList);
+        lenient().when(mockJobCatcherScraper.getVacancies()).thenReturn(vacancyDTOList);
+        lenient().when(mockStaffingGroupScraper.getVacancies()).thenReturn(vacancyDTOList);
         lenient().when(mockModelMapper.map(vacancyDTO, Vacancy.class)).thenReturn(vacancy);
         lenient().when(mockVacancyService.save(vacancy)).thenReturn(vacancy);
     }
@@ -75,7 +77,7 @@ class ScraperServiceTest {
 
         scraperService.scrape();
 
-        verify(mockVacancyService, times(3)).findByURL(URL);
+        verify(mockVacancyService, times(6)).findByURL(URL);
         verifyScrapers();
     }
 
@@ -86,11 +88,11 @@ class ScraperServiceTest {
 
         scraperService.scrape();
 
-        verify(mockVacancyService, times(3)).findByURL(URL);
+        verify(mockVacancyService, times(6)).findByURL(URL);
         verifyScrapers();
-        verify(mockModelMapper, times(3)).map(vacancyDTO, Vacancy.class);
-        verify(mockLocationService, times(3)).findByLocationName("Den Bosch");
-        verify(mockVacancyService, times(3)).save(vacancy);
+        verify(mockModelMapper, times(6)).map(vacancyDTO, Vacancy.class);
+        verify(mockLocationService, times(6)).findByLocationName("Den Bosch");
+        verify(mockVacancyService, times(6)).save(vacancy);
 
         assertEquals("Den Bosch", vacancy.getLocation().getName());
     }
@@ -104,13 +106,13 @@ class ScraperServiceTest {
 
         scraperService.scrape();
 
-        verify(mockVacancyService, times(3)).findByURL(URL);
+        verify(mockVacancyService, times(6)).findByURL(URL);
         verifyScrapers();
-        verify(mockModelMapper, times(3)).map(vacancyDTO, Vacancy.class);
-        verify(mockLocationService, times(3)).findByLocationName("Den Bosch");
-        verify(mockLocationService, times(3)).getCoordinates("Den Bosch");
-        verify(mockLocationService, times(3)).save(any(Location.class));
-        verify(mockVacancyService, times(3)).save(vacancy);
+        verify(mockModelMapper, times(6)).map(vacancyDTO, Vacancy.class);
+        verify(mockLocationService, times(6)).findByLocationName("Den Bosch");
+        verify(mockLocationService, times(6)).getCoordinates("Den Bosch");
+        verify(mockLocationService, times(6)).save(any(Location.class));
+        verify(mockVacancyService, times(6)).save(vacancy);
 
         assertEquals("Den Bosch", vacancy.getLocation().getName());
     }
@@ -134,5 +136,8 @@ class ScraperServiceTest {
         verify(mockYachtVacancyScraper, times(1)).getVacancies();
         verify(mockHuxleyITVacancyScraper, times(1)).getVacancies();
         verify(mockJobBirdScraper, times(1)).getVacancies();
+        verify(mockHeadfirstScraper, times(1)).getVacancies();
+        verify(mockJobCatcherScraper, times(1)).getVacancies();
+        verify(mockStaffingGroupScraper, times(1)).getVacancies();
     }
 }
