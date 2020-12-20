@@ -6,7 +6,6 @@ import nl.ordina.jobcrawler.model.Vacancy;
 import nl.ordina.jobcrawler.payload.VacancyDTO;
 import nl.ordina.jobcrawler.scrapers.*;
 import org.modelmapper.ModelMapper;
-import org.springframework.dao.IncorrectResultSizeDataAccessException;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -73,9 +72,7 @@ public class ScraperService {
                     processVacancyLocation(vacancy, vacancyDTO);
                     newVacancy++;
                 }
-            } catch (IncorrectResultSizeDataAccessException ie) {
-                log.error("Record exists multiple times in database already!");
-            } catch (Exception e) {
+            } catch (IOException e) {
                 log.error(e.getMessage());
             }
         }
@@ -101,19 +98,16 @@ public class ScraperService {
         }
         if (!vacancyLocation.equals("")) {
             Optional<Location> existCheckLocation = locationService.findByLocationName(vacancyLocation);
+            Location location;
             if (existCheckLocation.isEmpty()) {
-                Location location = new Location(vacancyLocation, locationService.getCoordinates(vacancyLocation));
+                location = new Location(vacancyLocation, locationService.getCoordinates(vacancyLocation));
                 locationService.save(location);
-                vacancy.setLocation(location);
-                vacancyService.save(vacancy);
             } else {
-                Location location = existCheckLocation.get();
-                vacancy.setLocation(location);
-                vacancyService.save(vacancy);
+                location = existCheckLocation.get();
             }
-        } else {
-            vacancyService.save(vacancy);
+            vacancy.setLocation(location);
         }
+        vacancyService.save(vacancy);
     }
 
     @Scheduled(cron = "0 30 11,17 * * *") // Runs two times a day. At 11.30am and 5.30pm.
