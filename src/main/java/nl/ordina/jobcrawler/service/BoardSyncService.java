@@ -1,61 +1,146 @@
 package nl.ordina.jobcrawler.service;
 
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.http.converter.FormHttpMessageConverter;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
+import java.awt.*;
+import java.util.*;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+
 public class BoardSyncService {
 
     static RestTemplate restTemplate = new RestTemplate();
+    static boolean deleteExtras = true;
 
     public static void main(String[] args) {
 
-        // Request cookies: none
-        // Request params (also visible in below URL):
+        String url1 = "https://jobcrawler.atlassian.net/rest/api/latest/search?maxResults=";
+        HttpHeaders headers1 = new HttpHeaders();
+        headers1.add("Authorization","Basic YXJ0aS5mbGlua2VyYnVzY2hAb3JkaW5hLm5sOngxRlFNZnk4RlhaQXRDbTFYakluRjRGNA==");
+        headers1.add("content-type","application/json");
+        HttpEntity<String> request1 = new HttpEntity<>("",headers1);
+//        restTemplate.getMessageConverters().add(new FormHttpMessageConverter());
+        ResponseEntity<Map> response1 = restTemplate.exchange(url1 + "1000", HttpMethod.GET, request1, Map.class);
+        Map<String,Object> jsonIssues = (Map<String,Object>) response1.getBody().get("issues");
+        Map<String,String> issues = new HashMap<>();
+        jsonIssues.forEach((String s, Object o) -> {if()
 
-        String url7 = "https://auth.atlassian.com/authorize?client_id=tDP5by46cc3gEck7d2vbHZsqsfrDK6t9&redirect_uri=https%3A%2F%2Fid.atlassian.com%2Flogin%2Fcallback%3Fapplication%3Djira%26continue%3Dhttps%253A%252F%252Fjobcrawler.atlassian.net%252Flogin%253FredirectCount%253D1%2526application%253Djira%26email%3Darti.flinkerbusch%2540ordina.nl%26errorCode&response_type=code&state=eyJjc3JmVG9rZW4iOiIyOGRiMWM5NDkzMTRjNzc0YjNkOTBlZDM3ZGYwZmE0MTQwZmYzNTIxIiwiYW5vbnltb3VzSWQiOiI2NTM2ZjIyYi1jNTNjLTQwOWUtOGI5YS00NDI0NzU2YmVmOWYifQ%3D%3D&realm=eyJhcHBsaWNhdGlvbktleSI6ImppcmEifQ%3D%3D&scope=openid%20profile&login_ticket=Jde9Ru4zS_oLLtihg2YVOcMuI29qdjbP&auth0Client=eyJuYW1lIjoiYXV0aDAuanMiLCJ2ZXJzaW9uIjoiOS4xMy4yIn0%3D";
+                                                    String key = (String) jsonIssues.get("key");
+                                                    Map<String,Object> fields = (Map<String,Object>) jsonIssues.get("fields");
+                                                    String text = "<b>" + key + "</b>\r\n<i>" + fields.get("assignee") + "</i>\r\n" + fields.get("summary");
+                                                    issues.put(key, text);});
 
-        // Request cookies:
-//              atlassian.account.ffs.id=e2e02527-44fc-44fb-8400-5e19fd8f58a5;
-//              atlassian.account.xsrf.token=0971bd1146ded35480552e53402d000b52b05d61
-        String url8 = "https://id.atlassian.com/login/callback?application=jira&continue=https%3A%2F%2Fjobcrawler.atlassian.net%2Flogin%3FredirectCount%3D1%26application%3Djira&email=arti.flinkerbusch%40ordina.nl&errorCode=&code=jsoE0iMaTQac_oJ9&state=eyJjc3JmVG9rZW4iOiJmZDIxNzc0MDM0YjdjYmJhZTAzNjQyZGVmZmYxMTAyYzc5NDkyNjljIiwiYW5vbnltb3VzSWQiOiJhNjdkMTJkNi04ODY4LTRiMzQtOGY3NC1jOTQ3MDdjOTJlODEifQ%3D%3D";
-//GET, response status = 303. URL voor volgende zit in response header: location.
-        //
-        // response cookie bij Postman:
-        //          atlassian.account.xsrf.token=0971bd1146ded35480552e53402d000b52b05d61; Path=/; Secure; HttpOnly
+        Integer totalResults = (Integer) response1.getBody().get("total");
+        Integer resultsPerPage = (Integer) response1.getBody().get("maxResults");
+        int nrRequests = (int) Math.ceil(totalResults / resultsPerPage);
+        for (int i = 1; i<nrRequests; i++) {
+            ResponseEntity<Map> response = restTemplate.exchange(url1 + resultsPerPage, HttpMethod.GET, request1, Map.class);
+        }
 
-//request cookies:  atlassian.account.ffs.id=e2e02527-44fc-44fb-8400-5e19fd8f58a5;
-//                  atlassian.account.xsrf.token=e058c878f146793ba65c8e041deb2dd64afe9786
-        String url9 = "https://id.atlassian.com/login?application=jira&continue=https%3A//jobcrawler.atlassian.net/login?redirectCount%3D1%26application%3Djira&token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJzaWdudXAiLCJpYXQiOjE2MDc1Mjc2NjgsImV4cCI6MTYwNzUyNzc4OCwidXNlcklkIjoiNWVlMjAwOTUyMmI4N2QwYWFmY2RlODk2IiwibG9naW5UeXBlIjoicGFzc3dvcmRMb2dpbiIsIm1hcmtlZFZlcmlmaWVkIjoiZmFsc2UiLCJzY29wZSI6IkxvZ2luIn0.ee7rrWgTz75qKkSCCvL1tzs83uit72GThdsY6DuEA6M";
-//GET, reponse status = 200. cookie cloud.session.token for next request is in response
-        HttpHeaders headers9 = new HttpHeaders();
-        headers9.add("cookie","cloud.session.token=eyJraWQiOiJzZXNzaW9uLXNlcnZpY2VcL3Byb2QtMTU5Mjg1ODM5NCIsImFsZyI6IlJTMjU2In0.eyJhc3NvY2lhdGlvbnMiOltdLCJzdWIiOiI1ZWUyMDA5NTIyYjg3ZDBhYWZjZGU4OTYiLCJlbWFpbERvbWFpbiI6Im9yZGluYS5ubCIsImltcGVyc29uYXRpb24iOltdLCJjcmVhdGVkIjoxNTk3OTk2MDk0LCJyZWZyZXNoVGltZW91dCI6MTYwNzUyNzM3OSwidmVyaWZpZWQiOnRydWUsImlzcyI6InNlc3Npb24tc2VydmljZSIsInNlc3Npb25JZCI6IjNjYTdkNGNiLTE1MTktNGE0Yy1hZmViLWFlMWY3YmMxN2Q2MSIsImF1ZCI6ImF0bGFzc2lhbiIsIm5iZiI6MTYwNzUyNjc3OSwiZXhwIjoxNjEwMTE4Nzc5LCJpYXQiOjE2MDc1MjY3NzksImVtYWlsIjoiYXJ0aS5mbGlua2VyYnVzY2hAb3JkaW5hLm5sIiwianRpIjoiM2NhN2Q0Y2ItMTUxOS00YTRjLWFmZWItYWUxZjdiYzE3ZDYxIn0.ng9fp30DXuDRpqx5_ZVmMDISK9GtqxAhy7E01n-tNp9puQav-TGyisyCW2KZHva-fRYVB5srmx1c-ATvNilxHbMxJG0UYolwgpgQBLtNlFy-auzxUdv3ul_RbsSVyX1bDhPjiosIueTZM571gCflUiy4Vpc2wvxI14Gtyr5V0PGjVcZiXeeOsz3p6tBsRM-WrsnQjBNVXUNOkjsp5AL42lxNYJ6artrCbcetqDMXXfmVQNA8K-yPgLj4Sq0Di_IaQXZgjKDRZfC7AN9DyNOw-lJ1sca2jif-dz4aghd6cPRhHiILsokXQlNeVg6cR5GZ875_v6Zz946YO-UOYzlSaQ");
-        headers9.add("content-type","application/json");
-        MultiValueMap<String, String> body9 = new LinkedMultiValueMap<String, String>();
-        HttpEntity<String> request9 = new HttpEntity<>("{\"operationName\":\"SoftwareBoardScopeData\",\"query\":\"query SoftwareBoardScopeData ($boardId: ID!) {\\n            boardScope(boardId: $boardId) {\\n                userSwimlaneStrategy\\n                board {\\n                    name\\n                    swimlaneStrategy\\n                    hasClearedIssues\\n                    rankCustomFieldId\\n                    assignees { \\n                        accountId\\n                        displayName\\n                        avatarUrl\\n                    }\\n                    columns {\\n                        id\\n                        name\\n                        maxIssueCount\\n                        status {\\n                            id\\n                            name\\n                        }\\n                        columnStatus {\\n            status {\\n                id\\n                name\\n                category\\n            }\\n            transitions {\\n                id\\n                name\\n                status { \\n                    id\\n                }\\n                originStatus { id }\\n                cardType { id }\\n                isGlobal\\n                isInitial\\n                hasConditions\\n            }\\n        }\\n                        isDone\\n                        isInitial\\n                        transitionId\\n                        cards {\\n                            id\\n                            flagged\\n                            done\\n                            parentId\\n                            estimate { storyPoints }\\n                            issue {\\n                                id\\n                                key\\n                                summary\\n                                labels\\n                                assignee {\\n                                    accountId\\n                                    displayName\\n                                    avatarUrl\\n                                }\\n                                type { id, name, iconUrl }\\n                                status { id }\\n                            }\\n                            coverMedia {\\n                                attachmentId\\n                                endpointUrl\\n                                clientId\\n                                token\\n                                attachmentMediaApiId\\n                                hiddenByUser\\n                            }\\n                            priority {\\n                                name\\n                                iconUrl\\n                            }\\n                            dueDate\\n                            childIssuesMetadata { complete, total }\\n                        }\\n                    }\\n                    issueTypes {\\n                        id\\n                        name\\n                        iconUrl\\n                        hierarchyLevelType\\n                    }\\n                    inlineIssueCreate { enabled }\\n                    cardMedia { enabled }\\n                    issueChildren {\\n                id\\n                flagged\\n                done\\n                parentId\\n                estimate { storyPoints }\\n                issue {\\n                    id\\n                    key\\n                    summary\\n                    labels\\n                    assignee {\\n                        accountId\\n                        displayName\\n                        avatarUrl\\n                    }\\n                    type { id, name, iconUrl }\\n                    status { id }\\n                }\\n                coverMedia {\\n                    attachmentId\\n                    endpointUrl\\n                    clientId\\n                    token\\n                    attachmentMediaApiId\\n                    hiddenByUser\\n                }\\n                priority {\\n                    name\\n                    iconUrl\\n                }\\n                dueDate\\n            }\\n                    cards { id }\\n                    \\n                }\\n                backlog {\\n                    boardIssueListKey\\n                    requestColumnMigration\\n                }\\n                sprints(state: [ACTIVE]) { \\n                    id\\n                    name\\n                    goal\\n                    startDate\\n                    endDate\\n                    daysRemaining\\n                }\\n                features { key, status, toggle, category }\\n                projectLocation {\\n                    id\\n                    key\\n                    name\\n                    isSimplifiedProject\\n                    issueTypes {\\n                        id\\n                        name\\n                        iconUrl\\n                        hierarchyLevelType\\n                    }\\n                }\\n                issueParents {\\n                    id\\n                    key\\n                    summary\\n                    issue { status { id } }\\n                    issueType {\\n                        id\\n                        name\\n                        iconUrl\\n                    }\\n                    color\\n                }\\n                currentUser { permissions }\\n            }\\n        }\",\"variables\":{\"boardId\":5}}", headers10);
-        restTemplate.getMessageConverters().add(new FormHttpMessageConverter());
-        ResponseEntity<String> response9 = restTemplate.exchange(url9, HttpMethod.POST, request9, String.class);
 
-        HttpHeaders headers10 = new HttpHeaders();
-        headers10.add("cookie","cloud.session.token=eyJraWQiOiJzZXNzaW9uLXNlcnZpY2VcL3Byb2QtMTU5Mjg1ODM5NCIsImFsZyI6IlJTMjU2In0.eyJhc3NvY2lhdGlvbnMiOltdLCJzdWIiOiI1ZWUyMDA5NTIyYjg3ZDBhYWZjZGU4OTYiLCJlbWFpbERvbWFpbiI6Im9yZGluYS5ubCIsImltcGVyc29uYXRpb24iOltdLCJjcmVhdGVkIjoxNTk3OTk2MDk0LCJyZWZyZXNoVGltZW91dCI6MTYwNzUyNzM3OSwidmVyaWZpZWQiOnRydWUsImlzcyI6InNlc3Npb24tc2VydmljZSIsInNlc3Npb25JZCI6IjNjYTdkNGNiLTE1MTktNGE0Yy1hZmViLWFlMWY3YmMxN2Q2MSIsImF1ZCI6ImF0bGFzc2lhbiIsIm5iZiI6MTYwNzUyNjc3OSwiZXhwIjoxNjEwMTE4Nzc5LCJpYXQiOjE2MDc1MjY3NzksImVtYWlsIjoiYXJ0aS5mbGlua2VyYnVzY2hAb3JkaW5hLm5sIiwianRpIjoiM2NhN2Q0Y2ItMTUxOS00YTRjLWFmZWItYWUxZjdiYzE3ZDYxIn0.ng9fp30DXuDRpqx5_ZVmMDISK9GtqxAhy7E01n-tNp9puQav-TGyisyCW2KZHva-fRYVB5srmx1c-ATvNilxHbMxJG0UYolwgpgQBLtNlFy-auzxUdv3ul_RbsSVyX1bDhPjiosIueTZM571gCflUiy4Vpc2wvxI14Gtyr5V0PGjVcZiXeeOsz3p6tBsRM-WrsnQjBNVXUNOkjsp5AL42lxNYJ6artrCbcetqDMXXfmVQNA8K-yPgLj4Sq0Di_IaQXZgjKDRZfC7AN9DyNOw-lJ1sca2jif-dz4aghd6cPRhHiILsokXQlNeVg6cR5GZ875_v6Zz946YO-UOYzlSaQ");
-        headers10.add("content-type","application/json");
-        MultiValueMap<String, String> body10 = new LinkedMultiValueMap<String, String>();
-        HttpEntity<String> request10 = new HttpEntity<>("{\"operationName\":\"SoftwareBoardScopeData\",\"query\":\"query SoftwareBoardScopeData ($boardId: ID!) {\\n            boardScope(boardId: $boardId) {\\n                userSwimlaneStrategy\\n                board {\\n                    name\\n                    swimlaneStrategy\\n                    hasClearedIssues\\n                    rankCustomFieldId\\n                    assignees { \\n                        accountId\\n                        displayName\\n                        avatarUrl\\n                    }\\n                    columns {\\n                        id\\n                        name\\n                        maxIssueCount\\n                        status {\\n                            id\\n                            name\\n                        }\\n                        columnStatus {\\n            status {\\n                id\\n                name\\n                category\\n            }\\n            transitions {\\n                id\\n                name\\n                status { \\n                    id\\n                }\\n                originStatus { id }\\n                cardType { id }\\n                isGlobal\\n                isInitial\\n                hasConditions\\n            }\\n        }\\n                        isDone\\n                        isInitial\\n                        transitionId\\n                        cards {\\n                            id\\n                            flagged\\n                            done\\n                            parentId\\n                            estimate { storyPoints }\\n                            issue {\\n                                id\\n                                key\\n                                summary\\n                                labels\\n                                assignee {\\n                                    accountId\\n                                    displayName\\n                                    avatarUrl\\n                                }\\n                                type { id, name, iconUrl }\\n                                status { id }\\n                            }\\n                            coverMedia {\\n                                attachmentId\\n                                endpointUrl\\n                                clientId\\n                                token\\n                                attachmentMediaApiId\\n                                hiddenByUser\\n                            }\\n                            priority {\\n                                name\\n                                iconUrl\\n                            }\\n                            dueDate\\n                            childIssuesMetadata { complete, total }\\n                        }\\n                    }\\n                    issueTypes {\\n                        id\\n                        name\\n                        iconUrl\\n                        hierarchyLevelType\\n                    }\\n                    inlineIssueCreate { enabled }\\n                    cardMedia { enabled }\\n                    issueChildren {\\n                id\\n                flagged\\n                done\\n                parentId\\n                estimate { storyPoints }\\n                issue {\\n                    id\\n                    key\\n                    summary\\n                    labels\\n                    assignee {\\n                        accountId\\n                        displayName\\n                        avatarUrl\\n                    }\\n                    type { id, name, iconUrl }\\n                    status { id }\\n                }\\n                coverMedia {\\n                    attachmentId\\n                    endpointUrl\\n                    clientId\\n                    token\\n                    attachmentMediaApiId\\n                    hiddenByUser\\n                }\\n                priority {\\n                    name\\n                    iconUrl\\n                }\\n                dueDate\\n            }\\n                    cards { id }\\n                    \\n                }\\n                backlog {\\n                    boardIssueListKey\\n                    requestColumnMigration\\n                }\\n                sprints(state: [ACTIVE]) { \\n                    id\\n                    name\\n                    goal\\n                    startDate\\n                    endDate\\n                    daysRemaining\\n                }\\n                features { key, status, toggle, category }\\n                projectLocation {\\n                    id\\n                    key\\n                    name\\n                    isSimplifiedProject\\n                    issueTypes {\\n                        id\\n                        name\\n                        iconUrl\\n                        hierarchyLevelType\\n                    }\\n                }\\n                issueParents {\\n                    id\\n                    key\\n                    summary\\n                    issue { status { id } }\\n                    issueType {\\n                        id\\n                        name\\n                        iconUrl\\n                    }\\n                    color\\n                }\\n                currentUser { permissions }\\n            }\\n        }\",\"variables\":{\"boardId\":5}}", headers10);
-        restTemplate.getMessageConverters().add(new FormHttpMessageConverter());
-        ResponseEntity<String> response10 = restTemplate.exchange("https://jobcrawler.atlassian.net/jsw/graphql?operation=SoftwareBoardScopeData", HttpMethod.POST, request10, String.class);
-/*        String cookie = response10.getHeaders().get("Set-Cookie").get(0);
-        String cookieName = "SELECT-AUTH-TOKEN=";
-        int bi = cookie.indexOf(cookieName) + cookieName.length();
-        String authToken = cookie.substring(bi,bi+48);*/
+/*      Requests done to GitHub (with option to delete superfluous):
+        2: Find project id
+        3: Find column ID's
+        4 (o): Delete unnecessary columns
+        5: Add columns if necessary
+        6: Put the columns in order
+        7: Per column:
+            a: Find what cards are there
+            b (o): For each card with a name that doesn't belong there, delete it.
+            c: Update/add cards
+            d: Sort cards
+*/
 
+        //2. Find Project id
+        String url2 = "https://api.github.com/orgs/OrdinaNederland/projects";
+        HttpHeaders headers2 = new HttpHeaders();
+        headers2.add("Authorization","token 5171f3d1fda2fd8b9b5c0007bfd71d31e0fcd487");
+        headers2.add("Accept","application/vnd.github.inertia-preview+json");
+        HttpEntity<String> request2 = new HttpEntity<>("",headers2);
+        ResponseEntity<List> response2 = restTemplate.exchange(url2, HttpMethod.GET, request2, List.class);
+
+        Integer projectId = 0;
+        for(int i = 0; i<response2.getBody().size(); i++) {
+            Map<String,Object> project = (Map<String,Object>) response2.getBody().get(i);
+            if (project.get("name").equals("Jobcrawler")) {
+                projectId = (Integer) project.get("id");
+            }
+        }
+
+        //3. Finding column names
+        String url3 = "https://api.github.com/projects/" + projectId + "/columns";
+        HttpHeaders headers3 = new HttpHeaders();
+        headers3.add("Authorization","token 5171f3d1fda2fd8b9b5c0007bfd71d31e0fcd487");
+        headers3.add("Accept","application/vnd.github.inertia-preview+json");
+        HttpEntity<String> request3 = new HttpEntity<>("",headers3);
+        ResponseEntity<List> response3 = restTemplate.exchange(url3, HttpMethod.GET, request3, List.class);
+
+        Map<String,Integer> columnIds = new HashMap<>();
+        for(int i = 0; i<response3.getBody().size(); i++) {
+            Map<String,Object> column = (Map<String,Object>) response3.getBody().get(i);
+            columnIds.put((String) column.get("name"),(Integer) column.get("id"));
+        }
+
+        //4. Later, add option here to delete extra columns
+        //     columnNames.forEach((String s) -> {if(s.equals(column.get("name"))) columnIds.put(s,(Integer) column.get("id"));});
+
+        //5. Add columns that aren't there yet
+        String[] desiredColumnNames = {"Backlog", "To do", "Doing", "Review", "Done"};
+        for(String s : desiredColumnNames) {
+            if(!columnIds.containsKey(s)) {
+                String url5 = "https://api.github.com/projects/" + projectId + "/columns";
+                HttpHeaders headers5 = new HttpHeaders();
+                headers5.add("Authorization","token 5171f3d1fda2fd8b9b5c0007bfd71d31e0fcd487");
+                headers5.add("Accept","application/vnd.github.inertia-preview+json");
+                String body5 = "{\"name\": \"" + s + "\"}";
+                HttpEntity<String> request5 = new HttpEntity<>(body5,headers5);
+                ResponseEntity<Map> response5 = restTemplate.exchange(url5, HttpMethod.POST, request5, Map.class);
+                columnIds.put(s,(Integer) response5.getBody().get("id"));
+            }
+        }
+
+        //6. Move columns to the right order
+        for(int i = 1; i<desiredColumnNames.length; i++) {
+            String url6 = "https://api.github.com/projects/columns/" + columnIds.get(desiredColumnNames[i]) + "/moves";
+            HttpHeaders headers6 = new HttpHeaders();
+            headers6.add("Authorization","token 5171f3d1fda2fd8b9b5c0007bfd71d31e0fcd487");
+            headers6.add("Accept","application/vnd.github.inertia-preview+json");
+            String body6 = "{\"position\": \"after:" + columnIds.get(desiredColumnNames[i-1]) + "\"}";
+            HttpEntity<String> request6 = new HttpEntity<>(body6,headers6);
+            ResponseEntity<Map> response6 = restTemplate.exchange(url6, HttpMethod.POST, request6, Map.class);
+        }
+
+        //7a. Per column, obtain cards. Id and text
+        Map<String,Map<Integer,String>> cards = new HashMap<>();
+        for(int i = 0; i<desiredColumnNames.length; i++) {
+            Map<Integer,String> cards4oneColumn = new HashMap<>();
+            String url7a = "https://api.github.com/projects/columns/" + columnIds.get(desiredColumnNames[i]) + "/cards";
+            HttpHeaders headers7a = new HttpHeaders();
+            headers7a.add("Authorization", "token 5171f3d1fda2fd8b9b5c0007bfd71d31e0fcd487");
+            headers7a.add("Accept", "application/vnd.github.inertia-preview+json");
+            HttpEntity<String> request7a = new HttpEntity<>("", headers7a);
+            ResponseEntity<ArrayList> response7a = restTemplate.exchange(url7a, HttpMethod.GET, request7a, ArrayList.class);
+            for(int j = 0; j<response7a.getBody().size(); j++) {
+                Map<String,Object> card = (Map<String,Object>) response7a.getBody().get(j);
+                cards4oneColumn.put((Integer) card.get("id"),(String) card.get("note"));
+            }
+
+        //7b. Delete superfluous cards
+
+        //7c. Update/add cards  (if not possible to add at specific locaiton, sorting needs to be moved to after
+
+        //7d. Sort cards
+
+        }
+
+        System.out.println(projectId);
         System.out.println("Finished");
     }
-
 
 
 }
